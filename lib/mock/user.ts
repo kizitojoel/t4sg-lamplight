@@ -4,6 +4,6 @@ export interface mockUser {
   email: string,
   role: string,
   joinedAt: number,
-  phone?: number,
+  phone?: string,
   program?: string;
 }
