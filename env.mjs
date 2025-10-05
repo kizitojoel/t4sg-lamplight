@@ -37,6 +37,10 @@ export const env = createEnv({
 
     // Replacing the anon key with the publishable key
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+
+    // Adding the new keys for google auth here
+    SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID: process.env.SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID,
+    SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET: process.env.SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation.

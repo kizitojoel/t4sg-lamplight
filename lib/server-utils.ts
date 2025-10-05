@@ -3,7 +3,7 @@ import "server-only";
 // For more info on how to avoid poisoning your server/client components: https://www.youtube.com/watch?v=BZlwtR9pDp4
 import { env } from "@/env.mjs";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import { cookies as nextCookies } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
 import { type Database } from "./schema";
 
@@ -31,7 +31,7 @@ export const createServerSupabaseClient = () => {
     See the Next.js docs to learn more about opting out of data caching:
     https://nextjs.org/docs/app/building-your-application/data-fetching/fetching-caching-and-revalidating#opting-out-of-data-caching
   */
-  const cookieStore = cookies();
+  // const cookieStore = cookies();
 
   // Injects type dependencies from database schema (<Database>)
   const supabase = createServerClient<Database>(
@@ -39,10 +39,12 @@ export const createServerSupabaseClient = () => {
     env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
     {
       cookies: {
-        get(name: string) {
+        async get(name: string) {
+          const cookieStore = await nextCookies();
           return cookieStore.get(name)?.value;
         },
-        set(name: string, value: string, options: CookieOptions) {
+        async set(name: string, value: string, options: CookieOptions) {
+          const cookieStore = await nextCookies();
           try {
             cookieStore.set({ name, value, ...options });
           } catch (error) {
@@ -51,7 +53,8 @@ export const createServerSupabaseClient = () => {
             // user sessions.
           }
         },
-        remove(name: string, options: CookieOptions) {
+        async remove(name: string, options: CookieOptions) {
+          const cookieStore = await nextCookies();
           try {
             cookieStore.set({ name, value: "", ...options });
           } catch (error) {
