@@ -38,8 +38,8 @@ export default async function SettingsLayout({ children }: SettingsLayoutProps) 
         <PageSubHeader1>Manage your account and profile settings.</PageSubHeader1>
       </div>
       <Separator className="my-6" />
-      <div className="flex flex-col space-y-8 lg:flex-row lg:space-x-12 lg:space-y-0">
-        <aside className="-mx-4 lg:w-1/5">
+      <div className="flex flex-col space-y-8 lg:flex-row lg:space-y-0 lg:space-x-12">
+        <aside className="lg:w-1/5">
           <SidebarNav items={sidebarNavItems} />
         </aside>
         <div className="flex-1 lg:max-w-2xl">{children}</div>
