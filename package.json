@@ -16,7 +16,7 @@
     "prettier": "npx prettier . --check",
     "prettier:fix": "npm run prettier -- --write",
     "format": "npm run prettier:fix && npm run lint:fix",
-    "_types": "cross-env-shell \"supabase gen types typescript --db-url $SECRET_SUPABASE_CONNECTION_STRING > ./lib/schema.ts && prettier lib/schema.ts --write\"",
+    "_types": "supabase gen types typescript --project-id otdxgxloepizrblqbpji --schema public > ./lib/schema.ts && prettier lib/schema.ts --write",
     "types": "dotenv -- npm run _types"
   },
   "dependencies": {
