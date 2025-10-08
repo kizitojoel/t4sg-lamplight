@@ -38,6 +38,8 @@ export const env = createEnv({
     // Replacing the anon key with the publishable key
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
 
+    SUPABASE_PROJECT_REF: process.env.SUPABASE_PROJECT_REF,
+
     // Adding the new keys for google auth here
     SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID: process.env.SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID,
     SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET: process.env.SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET,
