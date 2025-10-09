@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
 import { createBrowserSupabaseClient } from "@/lib/client-utils";
 import { type Database } from "@/lib/schema";
+import parsePhoneNumberFromString from "libphonenumber-js";
 import { useRouter } from "next/navigation";
 import { useState, type BaseSyntheticEvent, type MouseEvent } from "react";
 
@@ -32,6 +33,34 @@ const profileFormSchema = z.object({
     .nullable()
     // Transform empty string or only whitespace input to null before form submission, and trim whitespace otherwise
     .transform((val) => (!val || val.trim() === "" ? null : val.trim())),
+  phone: z
+    .string()
+    .transform((arg, ctx) => {
+      if (arg == "") return arg;
+      const phone = parsePhoneNumberFromString(arg, {
+        // set this to use a default country when the phone number omits country code
+        defaultCountry: "US",
+
+        // set to false to require that the whole string is exactly a phone number,
+        // otherwise, it will search for a phone number anywhere within the string
+        extract: false,
+      });
+
+      // when it's good
+      if (phone && phone.isValid()) {
+        return phone.number;
+      }
+
+      // when it's not
+      ctx.addIssue({
+        code: "custom",
+        message: "Invalid phone number",
+      });
+      return z.NEVER;
+    })
+    .nullable()
+    // Transform empty string or only whitespace input to null before form submission, and trim whitespace otherwise
+    .transform((val) => (!val || val.trim() === "" ? null : val.trim())),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -49,6 +78,7 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
   const defaultValues = {
     username: profile.display_name,
     bio: profile.biography,
+    phone: profile.phone,
   };
 
   const form = useForm<ProfileFormValues>({
@@ -63,7 +93,7 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
     const supabase = createBrowserSupabaseClient();
     const { error } = await supabase
       .from("profiles")
-      .update({ biography: data.bio, display_name: data.username })
+      .update({ biography: data.bio, display_name: data.username, phone: data.phone })
       .eq("id", profile.id);
 
     if (error) {
@@ -126,6 +156,24 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
           <FormDescription>This is your verified email address.</FormDescription>
           <FormMessage />
         </FormItem>
+        <FormField
+          control={form.control}
+          name="phone"
+          render={({ field }) => {
+            // We must extract value from field and convert a potential defaultValue of `null` to "" because textareas can't handle null values: https://github.com/orgs/react-hook-form/discussions/4091
+            const { value, ...rest } = field;
+            return (
+              <FormItem>
+                <FormLabel>Phone Number</FormLabel>
+                <FormControl>
+                  <Input readOnly={!isEditing} placeholder="Phone Number" value={value ?? ""} {...rest} />
+                </FormControl>
+                <FormDescription>This is your phone number.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
+        />
         <FormField
           control={form.control}
           name="bio"
