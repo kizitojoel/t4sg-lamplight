@@ -1,5 +1,6 @@
 import { TypographyH2, TypographyP } from "@/components/ui/typography";
 import { createServerSupabaseClient } from "@/lib/server-utils";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 export default async function Dashboard() {
@@ -29,6 +30,23 @@ export default async function Dashboard() {
       <TypographyH2>Dashboard</TypographyH2>
       <TypographyP>This is a protected route accessible only to signed-in users.</TypographyP>
       {userEmail && <TypographyP>{`Your email is ${userEmail}`}</TypographyP>}
+
+      {/* temp button to students page */}
+      <div style={{ marginTop: "20px" }}>
+        <Link
+          href="/dashboard/students"
+          style={{
+            display: "inline-block",
+            padding: "10px 20px",
+            backgroundColor: "#0070f3",
+            color: "white",
+            textDecoration: "none",
+            borderRadius: "5px",
+          }}
+        >
+          View Students
+        </Link>
+      </div>
     </>
   );
 }
