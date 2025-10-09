@@ -7,6 +7,7 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
 import { createBrowserSupabaseClient } from "@/lib/client-utils";
@@ -14,6 +15,8 @@ import { type Database } from "@/lib/schema";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { useRouter } from "next/navigation";
 import { useState, type BaseSyntheticEvent, type MouseEvent } from "react";
+
+const roles = z.enum(["admin", "teacher"]);
 
 const profileFormSchema = z.object({
   username: z
@@ -33,6 +36,7 @@ const profileFormSchema = z.object({
     .nullable()
     // Transform empty string or only whitespace input to null before form submission, and trim whitespace otherwise
     .transform((val) => (!val || val.trim() === "" ? null : val.trim())),
+  // phone validation from https://stackoverflow.com/a/78046054
   phone: z
     .string()
     .transform((arg, ctx) => {
@@ -61,6 +65,7 @@ const profileFormSchema = z.object({
     .nullable()
     // Transform empty string or only whitespace input to null before form submission, and trim whitespace otherwise
     .transform((val) => (!val || val.trim() === "" ? null : val.trim())),
+  role: roles,
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -79,6 +84,7 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
     username: profile.display_name,
     bio: profile.biography,
     phone: profile.phone,
+    role: profile.role,
   };
 
   const form = useForm<ProfileFormValues>({
@@ -173,6 +179,36 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
               </FormItem>
             );
           }}
+        />
+        <FormField
+          control={form.control}
+          name="role"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Role</FormLabel>
+              <Select
+                onValueChange={(value) => field.onChange(roles.parse(value))}
+                disabled={profile.role == "admin" ? false : true}
+                value={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a role" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectGroup>
+                    {roles.options.map((role, index) => (
+                      <SelectItem key={index} value={role}>
+                        {role}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
         />
         <FormField
           control={form.control}
