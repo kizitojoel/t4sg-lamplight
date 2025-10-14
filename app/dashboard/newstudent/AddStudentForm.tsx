@@ -152,7 +152,8 @@ export default function AddStudentForm() {
 
   const router = useRouter();
 
-  const onSubmit = (data: AddStudentFormValues) => { // Make it async (data: AddStudentFormValues) ... after uncommenting out the database saving stuff
+  const onSubmit = (data: AddStudentFormValues) => {
+    // Make it async (data: AddStudentFormValues) ... after uncommenting out the database saving stuff
     setIsSubmitting(true);
 
     try {
