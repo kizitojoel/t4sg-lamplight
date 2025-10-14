@@ -7,12 +7,16 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
 import { createBrowserSupabaseClient } from "@/lib/client-utils";
 import { type Database } from "@/lib/schema";
+import parsePhoneNumberFromString from "libphonenumber-js";
 import { useRouter } from "next/navigation";
 import { useState, type BaseSyntheticEvent, type MouseEvent } from "react";
+
+const roles = z.enum(["admin", "teacher"]);
 
 const profileFormSchema = z.object({
   username: z
@@ -32,6 +36,36 @@ const profileFormSchema = z.object({
     .nullable()
     // Transform empty string or only whitespace input to null before form submission, and trim whitespace otherwise
     .transform((val) => (!val || val.trim() === "" ? null : val.trim())),
+  // phone validation from https://stackoverflow.com/a/78046054
+  phone: z
+    .string()
+    .transform((arg, ctx) => {
+      if (arg == "") return arg;
+      const phone = parsePhoneNumberFromString(arg, {
+        // set this to use a default country when the phone number omits country code
+        defaultCountry: "US",
+
+        // set to false to require that the whole string is exactly a phone number,
+        // otherwise, it will search for a phone number anywhere within the string
+        extract: false,
+      });
+
+      // when it's good
+      if (phone && phone.isValid()) {
+        return phone.number;
+      }
+
+      // when it's not
+      ctx.addIssue({
+        code: "custom",
+        message: "Invalid phone number",
+      });
+      return z.NEVER;
+    })
+    .nullable()
+    // Transform empty string or only whitespace input to null before form submission, and trim whitespace otherwise
+    .transform((val) => (!val || val.trim() === "" ? null : val.trim())),
+  role: roles,
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -49,6 +83,8 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
   const defaultValues = {
     username: profile.display_name,
     bio: profile.biography,
+    phone: profile.phone,
+    role: profile.role,
   };
 
   const form = useForm<ProfileFormValues>({
@@ -63,7 +99,7 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
     const supabase = createBrowserSupabaseClient();
     const { error } = await supabase
       .from("profiles")
-      .update({ biography: data.bio, display_name: data.username })
+      .update({ biography: data.bio, display_name: data.username, phone: data.phone })
       .eq("id", profile.id);
 
     if (error) {
@@ -126,6 +162,54 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
           <FormDescription>This is your verified email address.</FormDescription>
           <FormMessage />
         </FormItem>
+        <FormField
+          control={form.control}
+          name="phone"
+          render={({ field }) => {
+            // We must extract value from field and convert a potential defaultValue of `null` to "" because textareas can't handle null values: https://github.com/orgs/react-hook-form/discussions/4091
+            const { value, ...rest } = field;
+            return (
+              <FormItem>
+                <FormLabel>Phone Number</FormLabel>
+                <FormControl>
+                  <Input readOnly={!isEditing} placeholder="Phone Number" value={value ?? ""} {...rest} />
+                </FormControl>
+                <FormDescription>This is your phone number.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
+        />
+        <FormField
+          control={form.control}
+          name="role"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Role</FormLabel>
+              <Select
+                onValueChange={(value) => field.onChange(roles.parse(value))}
+                disabled={profile.role == "admin" ? false : true}
+                value={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a role" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectGroup>
+                    {roles.options.map((role, index) => (
+                      <SelectItem key={index} value={role}>
+                        {role}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormField
           control={form.control}
           name="bio"
