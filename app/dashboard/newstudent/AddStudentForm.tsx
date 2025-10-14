@@ -152,7 +152,7 @@ export default function AddStudentForm() {
 
   const router = useRouter();
 
-  const onSubmit = async (data: AddStudentFormValues) => {
+  const onSubmit = (data: AddStudentFormValues) => { // Make it async (data: AddStudentFormValues) ... after uncommenting out the database saving stuff
     setIsSubmitting(true);
 
     try {
@@ -169,7 +169,7 @@ export default function AddStudentForm() {
       // }
 
       // For now, just simulate success
-      console.log("Form data:", data);
+      // console.log("Form data:", data);    //commented out the console logging
 
       // Reset form to default values
       form.reset(defaultValues);
@@ -181,7 +181,7 @@ export default function AddStudentForm() {
         title: "Student form submitted!",
         description: "Form data logged to console (database save disabled).",
       });
-    } catch (error) {
+    } catch {
       return toast({
         title: "Something went wrong.",
         description: "An unexpected error occurred. Please try again.",
