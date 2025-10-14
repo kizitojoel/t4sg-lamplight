@@ -37,6 +37,23 @@ export default async function Dashboard() {
       <div className="border-b"></div>
       <TypographyP>This is a protected route accessible only to signed-in users.</TypographyP>
       {userEmail && <TypographyP>{`Your email is ${userEmail}`}</TypographyP>}
+
+      {/* temp button to students page */}
+      <div style={{ marginTop: "20px" }}>
+        <Link
+          href="/dashboard/students"
+          style={{
+            display: "inline-block",
+            padding: "10px 20px",
+            backgroundColor: "#0070f3",
+            color: "white",
+            textDecoration: "none",
+            borderRadius: "5px",
+          }}
+        >
+          View Students
+        </Link>
+      </div>
     </>
   );
 }
