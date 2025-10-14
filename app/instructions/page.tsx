@@ -11,7 +11,5 @@ export default async function Dashboard() {
     redirect("/");
   }
 
-  const userEmail = user.email;
-
   return <>This is the instructions page</>;
 }

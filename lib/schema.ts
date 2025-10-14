@@ -14,18 +14,24 @@ export interface Database {
           display_name: string;
           email: string;
           id: string;
+          phone: string | null;
+          role: Database["public"]["Enums"]["role"];
         };
         Insert: {
           biography?: string | null;
           display_name: string;
           email: string;
           id: string;
+          phone?: string | null;
+          role?: Database["public"]["Enums"]["role"];
         };
         Update: {
           biography?: string | null;
           display_name?: string;
           email?: string;
           id?: string;
+          phone?: string | null;
+          role?: Database["public"]["Enums"]["role"];
         };
         Relationships: [];
       };
@@ -131,6 +137,7 @@ export interface Database {
         | "Other";
       enrollment_status_enum: "active" | "inactive";
       program_enum: "ESOL" | "HCP";
+      role: "admin" | "teacher";
     };
     CompositeTypes: Record<never, never>;
   };
@@ -266,6 +273,7 @@ export const Constants = {
       ],
       enrollment_status_enum: ["active", "inactive"],
       program_enum: ["ESOL", "HCP"],
+      role: ["admin", "teacher"],
     },
   },
 } as const;
