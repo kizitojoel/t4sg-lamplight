@@ -20,6 +20,12 @@ import type { Database } from "./schema";
 
 // Function to access Supabase from Client Components, which run in the browser.
 
+// Creating a type for env and what we expect it to have
+interface PublicEnv {
+  NEXT_PUBLIC_SUPABASE_URL: string;
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: string;
+}
+
 /*
  * Note: You should create a new client for every route! On the client,
  * createBrowserClient already uses a singleton pattern, so you only ever
@@ -28,11 +34,11 @@ import type { Database } from "./schema";
  */
 
 export const createBrowserSupabaseClient = () => {
+  // Get the strings from the environment
+  const { NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY } = env as PublicEnv;
+
   // Injects type dependencies from database schema (<Database>)
-  const supabaseClient = createBrowserClient<Database>(
-    env.NEXT_PUBLIC_SUPABASE_URL,
-    env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
-  );
+  const supabaseClient = createBrowserClient<Database>(NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
 
   return supabaseClient;
 };
