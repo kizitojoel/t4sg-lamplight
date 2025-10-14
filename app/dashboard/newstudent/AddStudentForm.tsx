@@ -37,18 +37,18 @@ const addStudentFormSchema = z.object({
       message: "Preferred name must not be longer than 30 characters.",
     })
     .nullable()
-    .transform((val) => (val?.trim() === "" ? null : val?.trim() ?? null)),
+    .transform((val) => (val?.trim() === "" ? null : (val?.trim() ?? null))),
   email: z
     .string()
     .email({
       message: "Please enter a valid email address.",
     })
     .nullable()
-    .transform((val) => (val?.trim() === "" ? null : val?.trim() ?? null)),
+    .transform((val) => (val?.trim() === "" ? null : (val?.trim() ?? null))),
   phone: z
     .string()
     .nullable()
-    .transform((val) => (val?.trim() === "" ? null : val?.trim() ?? null)),
+    .transform((val) => (val?.trim() === "" ? null : (val?.trim() ?? null))),
   age: z
     .number()
     .min(1, {
@@ -59,41 +59,41 @@ const addStudentFormSchema = z.object({
   gender: z
     .string()
     .nullable()
-    .transform((val) => (val?.trim() === "" ? null : val?.trim() ?? null)),
+    .transform((val) => (val?.trim() === "" ? null : (val?.trim() ?? null))),
   address_street: z
     .string()
     .nullable()
-    .transform((val) => (val?.trim() === "" ? null : val?.trim() ?? null)),
+    .transform((val) => (val?.trim() === "" ? null : (val?.trim() ?? null))),
 
   address_city: z
     .string()
     .nullable()
-    .transform((val) => (val?.trim() === "" ? null : val?.trim() ?? null)),
+    .transform((val) => (val?.trim() === "" ? null : (val?.trim() ?? null))),
 
   address_state: z
     .string()
     .nullable()
-    .transform((val) => (val?.trim() === "" ? null : val?.trim() ?? null)),
+    .transform((val) => (val?.trim() === "" ? null : (val?.trim() ?? null))),
 
   address_zip: z
     .string()
     .nullable()
-    .transform((val) => (val?.trim() === "" ? null : val?.trim() ?? null)),
+    .transform((val) => (val?.trim() === "" ? null : (val?.trim() ?? null))),
 
   country_of_birth: z
     .string()
     .nullable()
-    .transform((val) => (val?.trim() === "" ? null : val?.trim() ?? null)),
+    .transform((val) => (val?.trim() === "" ? null : (val?.trim() ?? null))),
 
   language_spoken_at_home: z
     .string()
     .nullable()
-    .transform((val) => (val?.trim() === "" ? null : val?.trim() ?? null)),
+    .transform((val) => (val?.trim() === "" ? null : (val?.trim() ?? null))),
 
   native_language: z
     .string()
     .nullable()
-    .transform((val) => (val?.trim() === "" ? null : val?.trim() ?? null)),
+    .transform((val) => (val?.trim() === "" ? null : (val?.trim() ?? null))),
   race: z.string().nullable().optional(),
   ethnicity_hispanic_latino: z.boolean().nullable(),
   course_placement: z.enum([
