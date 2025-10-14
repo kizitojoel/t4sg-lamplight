@@ -37,57 +37,63 @@ const addStudentFormSchema = z.object({
       message: "Preferred name must not be longer than 30 characters.",
     })
     .nullable()
-    .transform((val) => (!val || val.trim() === "" ? null : val.trim())),
+    .transform((val) => (val?.trim() === "" ? null : val?.trim() ?? null)),
   email: z
     .string()
     .email({
       message: "Please enter a valid email address.",
     })
     .nullable()
-    .transform((val) => (!val || val.trim() === "" ? null : val.trim())),
+    .transform((val) => (val?.trim() === "" ? null : val?.trim() ?? null)),
   phone: z
     .string()
     .nullable()
-    .transform((val) => (!val || val.trim() === "" ? null : val.trim())),
+    .transform((val) => (val?.trim() === "" ? null : val?.trim() ?? null)),
   age: z
     .number()
     .min(1, {
       message: "Age must be at least 1.",
     })
     .nullable()
-    .transform((val) => val || null),
+    .transform((val) => val ?? null),
   gender: z
     .string()
     .nullable()
-    .transform((val) => (!val || val.trim() === "" ? null : val.trim())),
+    .transform((val) => (val?.trim() === "" ? null : val?.trim() ?? null)),
   address_street: z
     .string()
     .nullable()
-    .transform((val) => (!val || val.trim() === "" ? null : val.trim())),
+    .transform((val) => (val?.trim() === "" ? null : val?.trim() ?? null)),
+
   address_city: z
     .string()
     .nullable()
-    .transform((val) => (!val || val.trim() === "" ? null : val.trim())),
+    .transform((val) => (val?.trim() === "" ? null : val?.trim() ?? null)),
+
   address_state: z
     .string()
     .nullable()
-    .transform((val) => (!val || val.trim() === "" ? null : val.trim())),
+    .transform((val) => (val?.trim() === "" ? null : val?.trim() ?? null)),
+
   address_zip: z
     .string()
     .nullable()
-    .transform((val) => (!val || val.trim() === "" ? null : val.trim())),
+    .transform((val) => (val?.trim() === "" ? null : val?.trim() ?? null)),
+
   country_of_birth: z
     .string()
     .nullable()
-    .transform((val) => (!val || val.trim() === "" ? null : val.trim())),
+    .transform((val) => (val?.trim() === "" ? null : val?.trim() ?? null)),
+
   language_spoken_at_home: z
     .string()
     .nullable()
-    .transform((val) => (!val || val.trim() === "" ? null : val.trim())),
+    .transform((val) => (val?.trim() === "" ? null : val?.trim() ?? null)),
+
   native_language: z
     .string()
     .nullable()
-    .transform((val) => (!val || val.trim() === "" ? null : val.trim())),
+    .transform((val) => (val?.trim() === "" ? null : val?.trim() ?? null)),
   race: z.string().nullable().optional(),
   ethnicity_hispanic_latino: z.boolean().nullable(),
   course_placement: z.enum([
@@ -235,7 +241,7 @@ export default function AddStudentForm() {
               <FormItem className="max-w-md">
                 <FormLabel>Preferred Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter preferred name (optional)" {...field} value={field.value || ""} />
+                  <Input placeholder="Enter preferred name (optional)" {...field} value={field.value ?? ""} />
                 </FormControl>
                 <FormDescription>The name the student prefers to be called.</FormDescription>
                 <FormMessage />
@@ -251,7 +257,7 @@ export default function AddStudentForm() {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input type="email" placeholder="Enter email address" {...field} value={field.value || ""} />
+                    <Input type="email" placeholder="Enter email address" {...field} value={field.value ?? ""} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -265,7 +271,7 @@ export default function AddStudentForm() {
                 <FormItem>
                   <FormLabel>Phone</FormLabel>
                   <FormControl>
-                    <Input type="tel" placeholder="Enter phone number" {...field} value={field.value || ""} />
+                    <Input type="tel" placeholder="Enter phone number" {...field} value={field.value ?? ""} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -285,7 +291,7 @@ export default function AddStudentForm() {
                       type="number"
                       placeholder="Enter age"
                       {...field}
-                      value={field.value || ""}
+                      value={field.value ?? ""}
                       onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
                     />
                   </FormControl>
@@ -301,7 +307,7 @@ export default function AddStudentForm() {
                 <FormItem>
                   <FormLabel>Gender</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter gender" {...field} value={field.value || ""} />
+                    <Input placeholder="Enter gender" {...field} value={field.value ?? ""} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -321,7 +327,7 @@ export default function AddStudentForm() {
               <FormItem className="max-w-lg">
                 <FormLabel>Street Address</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter street address" {...field} value={field.value || ""} />
+                  <Input placeholder="Enter street address" {...field} value={field.value ?? ""} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -336,7 +342,7 @@ export default function AddStudentForm() {
                 <FormItem>
                   <FormLabel>City</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter city" {...field} value={field.value || ""} />
+                    <Input placeholder="Enter city" {...field} value={field.value ?? ""} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -350,7 +356,7 @@ export default function AddStudentForm() {
                 <FormItem>
                   <FormLabel>State</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter state" {...field} value={field.value || ""} />
+                    <Input placeholder="Enter state" {...field} value={field.value ?? ""} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -364,7 +370,7 @@ export default function AddStudentForm() {
                 <FormItem>
                   <FormLabel>ZIP Code</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter ZIP code" {...field} value={field.value || ""} />
+                    <Input placeholder="Enter ZIP code" {...field} value={field.value ?? ""} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -385,7 +391,7 @@ export default function AddStudentForm() {
                 <FormItem>
                   <FormLabel>Country of Birth</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter country of birth" {...field} value={field.value || ""} />
+                    <Input placeholder="Enter country of birth" {...field} value={field.value ?? ""} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -399,7 +405,7 @@ export default function AddStudentForm() {
                 <FormItem>
                   <FormLabel>Native Language</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter native language" {...field} value={field.value || ""} />
+                    <Input placeholder="Enter native language" {...field} value={field.value ?? ""} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -414,7 +420,7 @@ export default function AddStudentForm() {
               <FormItem className="max-w-md">
                 <FormLabel>Language Spoken at Home</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter language spoken at home" {...field} value={field.value || ""} />
+                  <Input placeholder="Enter language spoken at home" {...field} value={field.value ?? ""} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -449,7 +455,7 @@ export default function AddStudentForm() {
             render={({ field }) => (
               <FormItem className="max-w-md">
                 <FormLabel>Race</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value || ""}>
+                <Select onValueChange={field.onChange} value={field.value ?? ""}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select race" />
