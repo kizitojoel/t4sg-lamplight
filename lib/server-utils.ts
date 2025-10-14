@@ -23,6 +23,13 @@ import { type Database } from "./schema";
  * Note: You should create a new client for every route! On the server, it basically configures a fetch call.
  * You need to reconfigure the fetch call anew for every request to your server, because you need the cookies from the request.
  */
+
+// Creating a type for env and what we expect it to have
+interface PublicEnv {
+  NEXT_PUBLIC_SUPABASE_URL: string;
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: string;
+}
+
 export const createServerSupabaseClient = () => {
   /*
     Note that cookies is called before any calls to Supabase, which opts fetch calls out of Next.js's caching.
@@ -33,39 +40,37 @@ export const createServerSupabaseClient = () => {
   */
   // const cookieStore = cookies();
 
+  const { NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY } = env as PublicEnv;
+
   // Injects type dependencies from database schema (<Database>)
-  const supabase = createServerClient<Database>(
-    env.NEXT_PUBLIC_SUPABASE_URL,
-    env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
-    {
-      cookies: {
-        async get(name: string) {
-          const cookieStore = await nextCookies();
-          return cookieStore.get(name)?.value;
-        },
-        async set(name: string, value: string, options: CookieOptions) {
-          const cookieStore = await nextCookies();
-          try {
-            cookieStore.set({ name, value, ...options });
-          } catch (error) {
-            // The `set` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
-          }
-        },
-        async remove(name: string, options: CookieOptions) {
-          const cookieStore = await nextCookies();
-          try {
-            cookieStore.set({ name, value: "", ...options });
-          } catch (error) {
-            // The `delete` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
-          }
-        },
+  const supabase = createServerClient<Database>(NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
+    cookies: {
+      async get(name: string) {
+        const cookieStore = await nextCookies();
+        return cookieStore.get(name)?.value;
+      },
+      async set(name: string, value: string, options: CookieOptions) {
+        const cookieStore = await nextCookies();
+        try {
+          cookieStore.set({ name, value, ...options });
+        } catch {
+          // The `set` method was called from a Server Component.
+          // This can be ignored if you have middleware refreshing
+          // user sessions.
+        }
+      },
+      async remove(name: string, options: CookieOptions) {
+        const cookieStore = await nextCookies();
+        try {
+          cookieStore.set({ name, value: "", ...options });
+        } catch {
+          // The `delete` method was called from a Server Component.
+          // This can be ignored if you have middleware refreshing
+          // user sessions.
+        }
       },
     },
-  );
+  });
   return supabase;
 
   /*
