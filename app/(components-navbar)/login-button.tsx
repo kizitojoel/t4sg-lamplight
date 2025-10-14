@@ -28,5 +28,19 @@ export default function LoginButton() {
 
     return;
   };
-  return <Button onClick={handleSignIn}>Log in with Google</Button>;
+  return (
+    <Button
+      onClick={() => {
+        handleSignIn().catch((_error) => {
+          toast({
+            title: "Unexpected Error",
+            description: "Unexpected error occured",
+            variant: "destructive",
+          });
+        });
+      }}
+    >
+      Log in with Google
+    </Button>
+  );
 }
