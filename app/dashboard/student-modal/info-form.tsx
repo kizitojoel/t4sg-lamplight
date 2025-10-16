@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
+import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { TypographyH3 } from "@/components/ui/typography";
@@ -106,6 +107,18 @@ export default function InfoForm({ student }: { student: Student }) {
   return (
     <Form {...form}>
       <form onSubmit={(e: BaseSyntheticEvent) => void form.handleSubmit(onSubmit)(e)} className="space-y-8">
+        <Button
+          onClick={() => {
+            if (editing) {
+              form.reset(defaultValues);
+              setEditing(false);
+            } else {
+              setEditing(true);
+            }
+          }}
+        >
+          {editing ? "Cancel" : "Edit"}
+        </Button>
         <TypographyH3>Contact Info</TypographyH3>
         <FormField
           control={form.control}
