@@ -1,6 +1,6 @@
 "use client";
 
-import { Database } from "@/lib/schema";
+import type { Database } from "@/lib/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -11,7 +11,6 @@ import { Input } from "@/components/ui/input";
 import { TypographyH3 } from "@/components/ui/typography";
 import { toast } from "@/components/ui/use-toast";
 import { createBrowserSupabaseClient } from "@/lib/client-utils";
-import { Checkbox } from "@radix-ui/react-checkbox";
 import { useRouter } from "next/navigation";
 import { useState, type BaseSyntheticEvent } from "react";
 
@@ -40,19 +39,19 @@ export default function InfoForm({ student }: { student: Student }) {
   const router = useRouter();
 
   const defaultValues = {
-    email: student.email || "",
-    phone: student.phone || "",
-    address_street: student.address_street || "",
-    address_city: student.address_city || "",
-    address_state: student.address_state || "",
-    address_zip: student.address_zip || "",
-    gender: student.gender || "",
-    age: student.age || 0,
-    ethnicity: student.ethnicity_hispanic_latino || false,
-    race: student.race || [],
-    country_of_birth: student.country_of_birth || "",
-    native_language: student.native_language || "",
-    language_spoken_at_home: student.language_spoken_at_home || "",
+    email: student.email ?? "",
+    phone: student.phone ?? "",
+    address_street: student.address_street ?? "",
+    address_city: student.address_city ?? "",
+    address_state: student.address_state ?? "",
+    address_zip: student.address_zip ?? "",
+    gender: student.gender ?? "",
+    age: student.age ?? 0,
+    ethnicity: student.ethnicity_hispanic_latino ?? false,
+    race: student.race ?? [],
+    country_of_birth: student.country_of_birth ?? "",
+    native_language: student.native_language ?? "",
+    language_spoken_at_home: student.language_spoken_at_home ?? "",
   };
 
   const form = useForm<StudentInfoValues>({
@@ -249,7 +248,12 @@ export default function InfoForm({ student }: { student: Student }) {
               <FormItem>
                 <FormLabel>Hispanic or Latino</FormLabel>
                 <FormControl>
-                  <Checkbox />
+                  <input
+                    type="checkbox"
+                    checked={field.value === true}
+                    onChange={(e) => field.onChange(e.target.checked ? true : null)}
+                    className="mt-1"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
