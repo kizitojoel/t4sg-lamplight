@@ -1,4 +1,6 @@
+// app/dashboard/students/page.tsx
 import { createServerSupabaseClient } from "@/lib/server-utils";
+import { Table } from "@radix-ui/themes";
 import { redirect } from "next/navigation";
 
 export default async function StudentsPage() {
@@ -25,10 +27,6 @@ export default async function StudentsPage() {
       program,
       email,
       phone,
-      address_street,
-      address_city,
-      address_state,
-      address_zip,
       course_placement
     `,
     )
@@ -39,16 +37,13 @@ export default async function StudentsPage() {
   }
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h1 style={{ fontSize: "24px", fontWeight: "600", marginBottom: "24px" }}>Student Roster</h1>
-
+    <div style={{ padding: "10px 40px", backgroundColor: "#ffffff" }}>
       {/* Header Controls */}
       <div
         style={{
           display: "flex",
-          gap: "12px",
-          marginBottom: "24px",
-          flexWrap: "wrap",
+          gap: "16px",
+          marginBottom: "32px",
           alignItems: "center",
         }}
       >
@@ -57,21 +52,28 @@ export default async function StudentsPage() {
           type="text"
           placeholder="Search"
           style={{
-            flex: "1",
-            minWidth: "250px",
-            padding: "8px 12px",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
+            width: "364px",
+            height: "38px",
+            padding: "10px",
+            border: "1px solid #000",
+            backgroundColor: "#F6F6F6",
+            fontSize: "15px",
+            fontWeight: "400",
           }}
         />
 
         {/* All Programs Dropdown */}
         <select
           style={{
-            padding: "8px 12px",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
-            backgroundColor: "#f5f5f5",
+            width: "134px",
+            height: "38px",
+            paddingLeft: "10px",
+            paddingRight: "10px",
+            border: "none",
+            backgroundColor: "#E9E9E9",
+            cursor: "pointer",
+            fontSize: "15px",
+            textAlign: "center",
           }}
         >
           <option>All Programs</option>
@@ -80,10 +82,15 @@ export default async function StudentsPage() {
         {/* All Sessions Dropdown */}
         <select
           style={{
-            padding: "8px 12px",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
-            backgroundColor: "#f5f5f5",
+            width: "134px",
+            height: "38px",
+            paddingLeft: "10px",
+            paddingRight: "10px",
+            border: "none",
+            backgroundColor: "#E9E9E9",
+            cursor: "pointer",
+            fontSize: "15px",
+            textAlign: "center",
           }}
         >
           <option>All Sessions</option>
@@ -92,10 +99,15 @@ export default async function StudentsPage() {
         {/* All Courses Dropdown */}
         <select
           style={{
-            padding: "8px 12px",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
-            backgroundColor: "#f5f5f5",
+            width: "134px",
+            height: "38px",
+            paddingLeft: "10px",
+            paddingRight: "10px",
+            border: "none",
+            backgroundColor: "#E9E9E9",
+            cursor: "pointer",
+            fontSize: "15px",
+            textAlign: "center",
           }}
         >
           <option>All Courses</option>
@@ -107,12 +119,13 @@ export default async function StudentsPage() {
         {/* Export CSV Button */}
         <button
           style={{
-            padding: "8px 16px",
-            backgroundColor: "#f5f5f5",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
+            padding: "10px 24px",
+            backgroundColor: "#C5C5C5",
+            border: "none",
+            borderRadius: "16px",
             cursor: "pointer",
-            fontWeight: "500",
+            fontSize: "16px",
+            fontWeight: "400",
           }}
         >
           Export CSV
@@ -121,31 +134,103 @@ export default async function StudentsPage() {
         {/* Add Student Button */}
         <button
           style={{
-            padding: "8px 16px",
-            backgroundColor: "#f5f5f5",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
+            padding: "10px 24px",
+            backgroundColor: "#C5C5C5",
+            border: "none",
+            borderRadius: "20px",
             cursor: "pointer",
-            fontWeight: "500",
+            fontSize: "16px",
+            fontWeight: "400",
           }}
         >
           Add Student
         </button>
       </div>
 
-      {/* Placeholder for table */}
-      <div
-        style={{
-          border: "1px solid #ddd",
-          borderRadius: "4px",
-          padding: "20px",
-          backgroundColor: "#f9f9f9",
-        }}
-      >
-        <p>Student table will be implemented here</p>
-        <p style={{ fontSize: "14px", color: "#666", marginTop: "8px" }}>
-          {students?.length ?? 0} students loaded from database
-        </p>
+      {/* Radix Table */}
+      <Table.Root variant="surface" style={{ border: "1px solid #ccc" }}>
+        <Table.Header>
+          <Table.Row>
+            <Table.ColumnHeaderCell
+              style={{ width: "60px", textAlign: "center", padding: "8px 8px", borderRight: "1px solid #e5e5e5" }}
+            ></Table.ColumnHeaderCell>
+            <Table.ColumnHeaderCell
+              style={{ textAlign: "center", padding: "8px 8px", borderRight: "1px solid #e5e5e5" }}
+            >
+              Name
+            </Table.ColumnHeaderCell>
+            <Table.ColumnHeaderCell
+              style={{ textAlign: "center", padding: "8px 8px", borderRight: "1px solid #e5e5e5" }}
+            >
+              Email
+            </Table.ColumnHeaderCell>
+            <Table.ColumnHeaderCell
+              style={{ textAlign: "center", padding: "8px 8px", borderRight: "1px solid #e5e5e5" }}
+            >
+              Phone
+            </Table.ColumnHeaderCell>
+            <Table.ColumnHeaderCell
+              style={{ textAlign: "center", padding: "8px 8px", borderRight: "1px solid #e5e5e5" }}
+            >
+              Program
+            </Table.ColumnHeaderCell>
+            <Table.ColumnHeaderCell
+              style={{ textAlign: "center", padding: "8px 8px", borderRight: "1px solid #e5e5e5" }}
+            >
+              Session
+            </Table.ColumnHeaderCell>
+            <Table.ColumnHeaderCell
+              style={{ textAlign: "center", padding: "8px 8px", borderRight: "1px solid #e5e5e5" }}
+            >
+              Current Course
+            </Table.ColumnHeaderCell>
+            <Table.ColumnHeaderCell style={{ textAlign: "center", padding: "8px 8px" }}>
+              View More
+            </Table.ColumnHeaderCell>
+          </Table.Row>
+        </Table.Header>
+
+        <Table.Body>
+          {students?.map((student) => (
+            <Table.Row key={student.id}>
+              <Table.Cell style={{ textAlign: "center", padding: "8px 8px", borderRight: "1px solid #e5e5e5" }}>
+                <input type="checkbox" style={{ width: "18px", height: "18px", alignContent: "center" }} />
+              </Table.Cell>
+              <Table.Cell style={{ padding: "8px 8px", borderRight: "1px solid #e5e5e5" }}>
+                {student.preferred_name ?? student.legal_first_name} {student.legal_last_name.charAt(0)}
+              </Table.Cell>
+              <Table.Cell style={{ padding: "8px 8px", borderRight: "1px solid #e5e5e5" }}>{student.email}</Table.Cell>
+              <Table.Cell style={{ padding: "8px 8px", borderRight: "1px solid #e5e5e5" }}>{student.phone}</Table.Cell>
+              <Table.Cell style={{ padding: "8px 8px", borderRight: "1px solid #e5e5e5" }}>
+                {student.program}
+              </Table.Cell>
+              <Table.Cell style={{ padding: "8px 8px", borderRight: "1px solid #e5e5e5" }}>
+                {/* Session - to be added */}
+              </Table.Cell>
+              <Table.Cell style={{ padding: "8px 8px", borderRight: "1px solid #e5e5e5" }}>
+                {student.course_placement}
+              </Table.Cell>
+              <Table.Cell style={{ textAlign: "center", fontSize: "20px", fontWeight: "bold" }}>+</Table.Cell>
+            </Table.Row>
+          ))}
+        </Table.Body>
+      </Table.Root>
+
+      {/* Import from Google Sheets button at bottom */}
+      <div style={{ marginTop: "40px" }}>
+        <button
+          style={{
+            padding: "12px 24px",
+            backgroundColor: "#d9d9d9",
+            border: "none",
+            borderRadius: "20px",
+            cursor: "pointer",
+            fontSize: "16px",
+            fontWeight: "500",
+          }}
+        >
+          Import from Google Sheets
+        </button>
       </div>
     </div>
   );
