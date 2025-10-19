@@ -1,9 +1,6 @@
-import { Database } from "@/lib/schema";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
 import InfoForm from "./info-form";
 import { createServerSupabaseClient } from "@/lib/server-utils";
-
-type Student = Database["public"]["Tables"]["students"]["Row"];
 
 export default async function StudentModal({studentId} : {studentId: string}) {
   const supabase = createServerSupabaseClient();
