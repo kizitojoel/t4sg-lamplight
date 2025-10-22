@@ -1,5 +1,6 @@
 "use client";
 
+import { createBrowserSupabaseClient } from "@/lib/client-utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -152,25 +153,27 @@ export default function AddStudentForm() {
 
   const router = useRouter();
 
-  const onSubmit = (_data: AddStudentFormValues) => {
-    // Make it async (data: AddStudentFormValues) ... after uncommenting out the database saving stuff
+  const onSubmit = async (_data: AddStudentFormValues) => {
     setIsSubmitting(true);
 
     try {
-      // TODO: Uncomment when ready to save to database
-      // const supabase = createBrowserSupabaseClient();
-      // const { error } = await supabase.from("students").insert([data]);
+      const supabase = createBrowserSupabaseClient();
 
-      // if (error) {
-      //   return toast({
-      //     title: "Something went wrong.",
-      //     description: error.message,
-      //     variant: "destructive",
-      //   });
-      // }
+      // Transform the data to match database schema
+      const transformedData = {
+        ..._data,
+        race: _data.race ? [_data.race] : null,
+      };
 
-      // For now, just simulate success
-      // console.log("Form data:", data);    //commented out the console logging
+      const { error } = await supabase.from("students").insert(transformedData);
+
+      if (error) {
+        return toast({
+          title: "Something went wrong.",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
 
       // Reset form to default values
       form.reset(defaultValues);
