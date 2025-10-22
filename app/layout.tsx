@@ -1,5 +1,6 @@
 import { ModeToggle } from "@/app/(components-navbar)/mode-toggle";
 import { Toaster } from "@/components/ui/toaster";
+import "@radix-ui/themes/styles.css";
 import AuthStatus from "./(components-navbar)/auth-status";
 import Navbar from "./(components-navbar)/navbar";
 import "./globals.css";

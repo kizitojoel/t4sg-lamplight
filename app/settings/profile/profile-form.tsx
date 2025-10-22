@@ -51,7 +51,7 @@ const profileFormSchema = z.object({
       });
 
       // when it's good
-      if (phone && phone.isValid()) {
+      if (phone?.isValid()) {
         return phone.number;
       }
 
