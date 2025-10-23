@@ -22,21 +22,20 @@ export default function StudentModal({ studentId }: { studentId: string }) {
   const [open, setOpen] = useState<boolean>(false);
   const supabase = createBrowserSupabaseClient();
 
-  const [studentList, setStudentList] = useState<Student>();
+  const [student, setStudent] = useState<Student>();
 
   useEffect(() => {
     const fetchData = async () => {
       const { data: studentList, error } = await supabase.from("students").select().eq("id", studentId);
 
       if (error) console.error(error);
-      else setStudentList(studentList);
+      else setStudent(studentList[0]);
     };
 
     fetchData();
   }, []);
 
-  if (!studentList || !Array.isArray(studentList)) return;
-  const student: Student = studentList[0];
+  if (!student) return;
 
   return (
     <div>
