@@ -164,51 +164,53 @@ export default function InfoForm({ student }: { student: Student }) {
             );
           }}
         />
-        <FormField
-          control={form.control}
-          name="address_city"
-          render={({ field }) => {
-            return (
-              <FormItem>
-                <FormLabel>City</FormLabel>
-                <FormControl>
-                  <Input readOnly={!editing} placeholder="City" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            );
-          }}
-        />
-        <FormField
-          control={form.control}
-          name="address_state"
-          render={({ field }) => {
-            return (
-              <FormItem>
-                <FormLabel>State</FormLabel>
-                <FormControl>
-                  <Input readOnly={!editing} placeholder="State" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            );
-          }}
-        />
-        <FormField
-          control={form.control}
-          name="address_zip"
-          render={({ field }) => {
-            return (
-              <FormItem>
-                <FormLabel>Zip Code</FormLabel>
-                <FormControl>
-                  <Input readOnly={!editing} placeholder="Zip Code" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            );
-          }}
-        />
+        <div className="grid">
+          <FormField
+            control={form.control}
+            name="address_city"
+            render={({ field }) => {
+              return (
+                <FormItem>
+                  <FormLabel>City</FormLabel>
+                  <FormControl>
+                    <Input readOnly={!editing} placeholder="City" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
+          />
+          <FormField
+            control={form.control}
+            name="address_state"
+            render={({ field }) => {
+              return (
+                <FormItem>
+                  <FormLabel>State</FormLabel>
+                  <FormControl>
+                    <Input readOnly={!editing} placeholder="State" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
+          />
+          <FormField
+            control={form.control}
+            name="address_zip"
+            render={({ field }) => {
+              return (
+                <FormItem>
+                  <FormLabel>Zip Code</FormLabel>
+                  <FormControl>
+                    <Input readOnly={!editing} placeholder="Zip Code" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
+          />
+        </div>
         <TypographyH3>Demographics and Eligiblity</TypographyH3>
         <FormField
           control={form.control}

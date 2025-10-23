@@ -2,6 +2,7 @@
 import { createServerSupabaseClient } from "@/lib/server-utils";
 import { Table } from "@radix-ui/themes";
 import { redirect } from "next/navigation";
+import StudentModal from "../student-modal/student-modal";
 
 export default async function StudentsPage() {
   const supabase = createServerSupabaseClient();
@@ -210,7 +211,9 @@ export default async function StudentsPage() {
               <Table.Cell style={{ padding: "8px 8px", borderRight: "1px solid #e5e5e5" }}>
                 {student.course_placement}
               </Table.Cell>
-              <Table.Cell style={{ textAlign: "center", fontSize: "20px", fontWeight: "bold" }}>+</Table.Cell>
+              <Table.Cell style={{ textAlign: "center", fontSize: "20px", fontWeight: "bold" }}>
+                <StudentModal studentId={student.id}></StudentModal>
+              </Table.Cell>
             </Table.Row>
           ))}
         </Table.Body>
