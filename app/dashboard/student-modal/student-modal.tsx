@@ -34,6 +34,13 @@ export default function StudentModal({ studentId }: { studentId: string }) {
     fetchData();
   }, []);
 
+  const updateInfo = async () => {
+    const { data: studentList, error } = await supabase.from("students").select().eq("id", studentId);
+
+    if (error) console.error(error);
+    else setStudent(studentList[0]);
+  };
+
   if (!student) return;
 
   return (
@@ -62,7 +69,7 @@ export default function StudentModal({ studentId }: { studentId: string }) {
               </TabsTrigger>
             </TabsList>
             <TabsContent value="info">
-              <InfoForm student={student}></InfoForm>
+              <InfoForm student={student} updateFunction={updateInfo}></InfoForm>
             </TabsContent>
             <TabsContent value="learning-profile">Learning Profile</TabsContent>
             <TabsContent value="advising">Advising</TabsContent>

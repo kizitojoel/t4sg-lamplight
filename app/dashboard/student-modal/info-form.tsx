@@ -61,7 +61,7 @@ const studentInfoSchema = z.object({
 type Student = Database["public"]["Tables"]["students"]["Row"];
 type StudentInfoValues = z.infer<typeof studentInfoSchema>;
 
-export default function InfoForm({ student }: { student: Student }) {
+export default function InfoForm({ student, updateFunction }: { student: Student; updateFunction: Function }) {
   const [editing, setEditing] = useState(false);
 
   const router = useRouter();
@@ -125,6 +125,7 @@ export default function InfoForm({ student }: { student: Student }) {
 
     // Router.refresh does not affect ProfileForm because it is a client component, but it will refresh the initials in the user-nav in the event of a username change
     router.refresh();
+    updateFunction();
 
     return toast({
       title: "Profile updated successfully!",
