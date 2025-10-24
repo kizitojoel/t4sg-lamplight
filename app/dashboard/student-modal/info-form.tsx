@@ -11,12 +11,40 @@ import { Input } from "@/components/ui/input";
 import { TypographyH3 } from "@/components/ui/typography";
 import { toast } from "@/components/ui/use-toast";
 import { createBrowserSupabaseClient } from "@/lib/client-utils";
+import parsePhoneNumberFromString from "libphonenumber-js";
 import { useRouter } from "next/navigation";
 import { useState, type BaseSyntheticEvent } from "react";
 
 const studentInfoSchema = z.object({
   email: z.string(),
-  phone: z.string(),
+  phone: z
+    .string()
+    .transform((arg, ctx) => {
+      if (arg == "") return arg;
+      const phone = parsePhoneNumberFromString(arg, {
+        // set this to use a default country when the phone number omits country code
+        defaultCountry: "US",
+
+        // set to false to require that the whole string is exactly a phone number,
+        // otherwise, it will search for a phone number anywhere within the string
+        extract: false,
+      });
+
+      // when it's good
+      if (phone?.isValid()) {
+        return phone.number;
+      }
+
+      // when it's not
+      ctx.addIssue({
+        code: "custom",
+        message: "Invalid phone number",
+      });
+      return z.NEVER;
+    })
+    .nullable()
+    // Transform empty string or only whitespace input to null before form submission, and trim whitespace otherwise
+    .transform((val) => (!val || val.trim() === "" ? null : val.trim())),
   address_street: z.string(),
   address_city: z.string(),
   address_state: z.string(),
@@ -63,7 +91,7 @@ export default function InfoForm({ student }: { student: Student }) {
   const onSubmit = async (data: StudentInfoValues) => {
     const supabase = createBrowserSupabaseClient();
     const { error } = await supabase
-      .from("profiles")
+      .from("students")
       .update({
         email: data.email,
         phone: data.phone,
@@ -73,7 +101,7 @@ export default function InfoForm({ student }: { student: Student }) {
         address_zip: data.address_zip,
         gender: data.gender,
         age: data.age,
-        ethnicity: data.ethnicity,
+        ethnicity_hispanic_latino: data.ethnicity,
         race: data.race,
         country_of_birth: data.country_of_birth,
         native_language: data.native_language,
@@ -106,18 +134,25 @@ export default function InfoForm({ student }: { student: Student }) {
   return (
     <Form {...form}>
       <form onSubmit={(e: BaseSyntheticEvent) => void form.handleSubmit(onSubmit)(e)} className="space-y-8">
-        <Button
-          onClick={() => {
-            if (editing) {
-              form.reset(defaultValues);
-              setEditing(false);
-            } else {
-              setEditing(true);
-            }
-          }}
-        >
-          {editing ? "Cancel" : "Edit"}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            className="ml-auto block"
+            onClick={() => {
+              if (editing) {
+                form.reset(defaultValues);
+                setEditing(false);
+              } else {
+                setEditing(true);
+              }
+            }}
+          >
+            {editing ? "Cancel" : "Edit"}
+          </Button>
+          <Button type="submit" className={editing ? "" : "hidden"}>
+            Save
+          </Button>
+        </div>
         <TypographyH3>Contact Info</TypographyH3>
         <FormField
           control={form.control}
@@ -138,11 +173,13 @@ export default function InfoForm({ student }: { student: Student }) {
           control={form.control}
           name="phone"
           render={({ field }) => {
+            // We must extract value from field and convert a potential defaultValue of `null` to "" because textareas can't handle null values: https://github.com/orgs/react-hook-form/discussions/4091
+            const { value, ...rest } = field;
             return (
               <FormItem>
                 <FormLabel>Phone Number</FormLabel>
                 <FormControl>
-                  <Input readOnly={!editing} placeholder="Phone Number" {...field} />
+                  <Input readOnly={!editing} placeholder="Phone Number" value={value ?? ""} {...rest} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -164,7 +201,7 @@ export default function InfoForm({ student }: { student: Student }) {
             );
           }}
         />
-        <div className="grid">
+        <div className="grid grid-cols-3 gap-3">
           <FormField
             control={form.control}
             name="address_city"
@@ -256,21 +293,6 @@ export default function InfoForm({ student }: { student: Student }) {
                     onChange={(e) => field.onChange(e.target.checked ? true : null)}
                     className="mt-1"
                   />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            );
-          }}
-        />
-        <FormField
-          control={form.control}
-          name="age"
-          render={({ field }) => {
-            return (
-              <FormItem>
-                <FormLabel>Age</FormLabel>
-                <FormControl>
-                  <Input readOnly={!editing} placeholder="Age" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

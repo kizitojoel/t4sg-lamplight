@@ -14,7 +14,6 @@ import { Database } from "@/lib/schema";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
 import { useEffect, useState } from "react";
 import InfoForm from "./info-form";
-import "./student-modal.css";
 
 type Student = Database["public"]["Tables"]["students"]["Row"];
 
@@ -52,13 +51,13 @@ export default function StudentModal({ studentId }: { studentId: string }) {
           </DialogHeader>
           <Tabs defaultValue="info">
             <TabsList>
-              <TabsTrigger value="info" className="studentTab bg-primary text-primary-foreground text-sm">
+              <TabsTrigger value="info" className="cursor-pointer p-2">
                 Basic Info
               </TabsTrigger>
-              <TabsTrigger value="learning-profile" className="studentTab bg-primary text-primary-foreground text-sm">
+              <TabsTrigger value="learning-profile" className="cursor-pointer">
                 Learning Profile
               </TabsTrigger>
-              <TabsTrigger value="advising" className="studentTab bg-primary text-primary-foreground text-sm">
+              <TabsTrigger value="advising" className="cursor-pointer">
                 Advising
               </TabsTrigger>
             </TabsList>
