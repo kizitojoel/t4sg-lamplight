@@ -57,18 +57,21 @@ export default function StudentModal({ studentId }: { studentId: string }) {
             <DialogDescription>{student.preferred_name}</DialogDescription>
           </DialogHeader>
           <Tabs defaultValue="info">
-            <TabsList>
-              <TabsTrigger value="info" className="cursor-pointer p-2">
+            <TabsList className="mb-0.5">
+              <TabsTrigger value="info" className="outline-accent hover:bg-accent cursor-pointer p-2 outline-2">
                 Basic Info
               </TabsTrigger>
-              <TabsTrigger value="learning-profile" className="cursor-pointer">
+              <TabsTrigger
+                value="learning-profile"
+                className="outline-accent hover:bg-accent cursor-pointer p-2 outline-2"
+              >
                 Learning Profile
               </TabsTrigger>
-              <TabsTrigger value="advising" className="cursor-pointer">
+              <TabsTrigger value="advising" className="outline-accent hover:bg-accent cursor-pointer p-2 outline-2">
                 Advising
               </TabsTrigger>
             </TabsList>
-            <TabsContent value="info">
+            <TabsContent value="info" className="outline-accent/50 bg-accent/50 p-2 outline-2">
               <InfoForm student={student} updateFunction={updateInfo}></InfoForm>
             </TabsContent>
             <TabsContent value="learning-profile">Learning Profile</TabsContent>

@@ -16,7 +16,7 @@ import { useRouter } from "next/navigation";
 import { useState, type BaseSyntheticEvent } from "react";
 
 const studentInfoSchema = z.object({
-  email: z.string(),
+  email: z.email(),
   phone: z
     .string()
     .transform((arg, ctx) => {
@@ -48,9 +48,9 @@ const studentInfoSchema = z.object({
   address_street: z.string(),
   address_city: z.string(),
   address_state: z.string(),
-  address_zip: z.string(),
+  address_zip: z.string().regex(RegExp("^\\d{5}(-\\d{4})?$"), "Please enter a correct ZIP Code."),
   gender: z.string(),
-  age: z.number(),
+  age: z.number().min(0).max(130),
   ethnicity: z.boolean(),
   race: z.array(z.string()),
   country_of_birth: z.string(),
@@ -136,6 +136,7 @@ export default function InfoForm({ student, updateFunction }: { student: Student
     <Form {...form}>
       <form onSubmit={(e: BaseSyntheticEvent) => void form.handleSubmit(onSubmit)(e)} className="space-y-8">
         <div className="flex gap-2">
+          <TypographyH3 className="mt-1">Contact Info</TypographyH3>
           <Button
             type="button"
             className="ml-auto block"
@@ -150,11 +151,11 @@ export default function InfoForm({ student, updateFunction }: { student: Student
           >
             {editing ? "Cancel" : "Edit"}
           </Button>
-          <Button type="submit" className={editing ? "" : "hidden"}>
+          <Button type="submit" className={editing ? "bg-green-700 hover:bg-green-900" : "hidden"}>
             Save
           </Button>
         </div>
-        <TypographyH3>Contact Info</TypographyH3>
+
         <FormField
           control={form.control}
           name="email"
@@ -163,7 +164,7 @@ export default function InfoForm({ student, updateFunction }: { student: Student
               <FormItem>
                 <FormLabel>Email Address</FormLabel>
                 <FormControl>
-                  <Input readOnly={!editing} placeholder="Email Address" {...field} />
+                  <Input disabled={!editing} placeholder="Email Address" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -180,7 +181,7 @@ export default function InfoForm({ student, updateFunction }: { student: Student
               <FormItem>
                 <FormLabel>Phone Number</FormLabel>
                 <FormControl>
-                  <Input readOnly={!editing} placeholder="Phone Number" value={value ?? ""} {...rest} />
+                  <Input disabled={!editing} placeholder="Phone Number" value={value ?? ""} {...rest} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -195,7 +196,7 @@ export default function InfoForm({ student, updateFunction }: { student: Student
               <FormItem>
                 <FormLabel>Street Address</FormLabel>
                 <FormControl>
-                  <Input readOnly={!editing} placeholder="Street Address" {...field} />
+                  <Input disabled={!editing} placeholder="Street Address" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -211,7 +212,7 @@ export default function InfoForm({ student, updateFunction }: { student: Student
                 <FormItem>
                   <FormLabel>City</FormLabel>
                   <FormControl>
-                    <Input readOnly={!editing} placeholder="City" {...field} />
+                    <Input disabled={!editing} placeholder="City" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -226,7 +227,7 @@ export default function InfoForm({ student, updateFunction }: { student: Student
                 <FormItem>
                   <FormLabel>State</FormLabel>
                   <FormControl>
-                    <Input readOnly={!editing} placeholder="State" {...field} />
+                    <Input disabled={!editing} placeholder="State" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -241,7 +242,7 @@ export default function InfoForm({ student, updateFunction }: { student: Student
                 <FormItem>
                   <FormLabel>Zip Code</FormLabel>
                   <FormControl>
-                    <Input readOnly={!editing} placeholder="Zip Code" {...field} />
+                    <Input disabled={!editing} placeholder="Zip Code" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -258,7 +259,7 @@ export default function InfoForm({ student, updateFunction }: { student: Student
               <FormItem>
                 <FormLabel>Gender</FormLabel>
                 <FormControl>
-                  <Input readOnly={!editing} placeholder="Gender" {...field} />
+                  <Input disabled={!editing} placeholder="Gender" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -273,7 +274,7 @@ export default function InfoForm({ student, updateFunction }: { student: Student
               <FormItem>
                 <FormLabel>Age</FormLabel>
                 <FormControl>
-                  <Input readOnly={!editing} placeholder="Age" {...field} />
+                  <Input disabled={!editing} placeholder="Age" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -291,8 +292,9 @@ export default function InfoForm({ student, updateFunction }: { student: Student
                   <input
                     type="checkbox"
                     checked={field.value === true}
-                    onChange={(e) => field.onChange(e.target.checked ? true : null)}
-                    className="mt-1"
+                    onChange={(e) => field.onChange(e.target.checked ? true : false)}
+                    className="ml-1.5"
+                    disabled={!editing}
                   />
                 </FormControl>
                 <FormMessage />
@@ -308,7 +310,7 @@ export default function InfoForm({ student, updateFunction }: { student: Student
               <FormItem>
                 <FormLabel>Country of Birth</FormLabel>
                 <FormControl>
-                  <Input readOnly={!editing} placeholder="Country of Birth" {...field} />
+                  <Input disabled={!editing} placeholder="Country of Birth" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -323,7 +325,7 @@ export default function InfoForm({ student, updateFunction }: { student: Student
               <FormItem>
                 <FormLabel>Native Language</FormLabel>
                 <FormControl>
-                  <Input readOnly={!editing} placeholder="Native Language" {...field} />
+                  <Input disabled={!editing} placeholder="Native Language" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -338,7 +340,7 @@ export default function InfoForm({ student, updateFunction }: { student: Student
               <FormItem>
                 <FormLabel>Language Spoken at Home</FormLabel>
                 <FormControl>
-                  <Input readOnly={!editing} placeholder="Language Spoken at Home" {...field} />
+                  <Input disabled={!editing} placeholder="Language Spoken at Home" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
