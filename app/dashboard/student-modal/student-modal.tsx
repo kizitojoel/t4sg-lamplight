@@ -10,7 +10,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { createBrowserSupabaseClient } from "@/lib/client-utils";
-import { Database } from "@/lib/schema";
+import { type Database } from "@/lib/schema";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
 import { useEffect, useState } from "react";
 import InfoForm from "./info-form";
@@ -27,17 +27,17 @@ export default function StudentModal({ studentId }: { studentId: string }) {
     const fetchData = async () => {
       const { data: studentList, error } = await supabase.from("students").select().eq("id", studentId);
 
-      if (error) console.error(error);
+      if (error) return <div>Failed to get student with id: {studentId}</div>;
       else setStudent(studentList[0]);
     };
 
-    fetchData();
-  }, []);
+    void fetchData();
+  }, [supabase, studentId, student, setStudent]);
 
   const updateInfo = async () => {
     const { data: studentList, error } = await supabase.from("students").select().eq("id", studentId);
 
-    if (error) console.error(error);
+    if (error) return <div>Failed to get student with id: {studentId}</div>;
     else setStudent(studentList[0]);
   };
 
@@ -72,7 +72,7 @@ export default function StudentModal({ studentId }: { studentId: string }) {
               </TabsTrigger>
             </TabsList>
             <TabsContent value="info" className="outline-accent/50 bg-accent/50 p-2 outline-2">
-              <InfoForm student={student} updateFunction={updateInfo}></InfoForm>
+              <InfoForm student={student} updateFunctionAction={updateInfo}></InfoForm>
             </TabsContent>
             <TabsContent value="learning-profile">Learning Profile</TabsContent>
             <TabsContent value="advising">Advising</TabsContent>

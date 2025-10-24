@@ -13,7 +13,7 @@ import { toast } from "@/components/ui/use-toast";
 import { createBrowserSupabaseClient } from "@/lib/client-utils";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { useRouter } from "next/navigation";
-import { useState, type BaseSyntheticEvent } from "react";
+import { useState, type BaseSyntheticEvent, type JSX } from "react";
 
 const studentInfoSchema = z.object({
   email: z.email(),
@@ -61,7 +61,13 @@ const studentInfoSchema = z.object({
 type Student = Database["public"]["Tables"]["students"]["Row"];
 type StudentInfoValues = z.infer<typeof studentInfoSchema>;
 
-export default function InfoForm({ student, updateFunction }: { student: Student; updateFunction: Function }) {
+export default function InfoForm({
+  student,
+  updateFunctionAction,
+}: {
+  student: Student;
+  updateFunctionAction: () => Promise<JSX.Element | undefined>;
+}) {
   const [editing, setEditing] = useState(false);
 
   const router = useRouter();
@@ -125,7 +131,7 @@ export default function InfoForm({ student, updateFunction }: { student: Student
 
     // Router.refresh does not affect ProfileForm because it is a client component, but it will refresh the initials in the user-nav in the event of a username change
     router.refresh();
-    updateFunction();
+    void updateFunctionAction();
 
     return toast({
       title: "Profile updated successfully!",
