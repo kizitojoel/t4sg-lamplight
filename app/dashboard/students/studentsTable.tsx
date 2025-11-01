@@ -15,22 +15,19 @@ type Student = {
   course_placement: string;
 };
 
-export default function StudentsTable({ students }: { students: Student[] }) {
+export default function StudentsTable({ students, courses }: { students: Student[]; courses: { name: string }[] }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [programFilter, setProgramFilter] = useState("all");
   const [courseFilter, setCourseFilter] = useState("all");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
   // Filter students based on search and filters
   const filteredStudents = students.filter((student) => {
     // Search filter (name, email, phone)
     const fullName = `${student.preferred_name ?? student.legal_first_name} ${student.legal_last_name}`.toLowerCase();
     const email = (student.email ?? "").toLowerCase();
-    const phone = (student.phone ?? "").toLowerCase();
     const matchesSearch =
-      searchTerm === "" ||
-      fullName.includes(searchTerm.toLowerCase()) ||
-      email.includes(searchTerm.toLowerCase()) ||
-      phone.includes(searchTerm.toLowerCase());
+      searchTerm === "" || fullName.includes(searchTerm.toLowerCase()) || email.includes(searchTerm.toLowerCase());
 
     // Program filter
     const matchesProgram = programFilter === "all" || student.program === programFilter;
@@ -41,8 +38,29 @@ export default function StudentsTable({ students }: { students: Student[] }) {
     return matchesSearch && matchesProgram && matchesCourse;
   });
 
-  // Get unique courses for the dropdown
-  const uniqueCourses = Array.from(new Set(students.map((s) => s.course_placement)));
+  // Sort students by name
+  const sortedStudents = [...filteredStudents].sort((a, b) => {
+    const nameA = `${a.preferred_name ?? a.legal_first_name} ${a.legal_last_name}`.toLowerCase();
+    const nameB = `${b.preferred_name ?? b.legal_first_name} ${b.legal_last_name}`.toLowerCase();
+
+    if (sortOrder === "asc") {
+      return nameA.localeCompare(nameB);
+    } else {
+      return nameB.localeCompare(nameA);
+    }
+  });
+
+  // Toggle sort order
+  const toggleSort = () => {
+    setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+  };
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const rowsPerPage = 10;
+
+  const totalPages = Math.ceil(sortedStudents.length / rowsPerPage);
+  const paginatedStudents = sortedStudents.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
 
   return (
     <div style={{ padding: "10px 40px", backgroundColor: "#ffffff" }}>
@@ -110,7 +128,7 @@ export default function StudentsTable({ students }: { students: Student[] }) {
           <option>All Sessions</option>
         </select>
 
-        {/* All Courses Dropdown */}
+        {/* Course Dropdown */}
         <select
           value={courseFilter}
           onChange={(e) => setCourseFilter(e.target.value)}
@@ -127,9 +145,9 @@ export default function StudentsTable({ students }: { students: Student[] }) {
           }}
         >
           <option value="all">All Courses</option>
-          {uniqueCourses.map((course) => (
-            <option key={course} value={course}>
-              {course}
+          {courses.map((course) => (
+            <option key={course.name} value={course.name}>
+              {course.name}
             </option>
           ))}
         </select>
@@ -176,9 +194,16 @@ export default function StudentsTable({ students }: { students: Student[] }) {
               style={{ width: "60px", textAlign: "center", padding: "8px 8px", borderRight: "1px solid #e5e5e5" }}
             ></Table.ColumnHeaderCell>
             <Table.ColumnHeaderCell
-              style={{ textAlign: "center", padding: "8px 8px", borderRight: "1px solid #e5e5e5" }}
+              onClick={toggleSort} // Add this
+              style={{
+                textAlign: "center",
+                padding: "8px 8px",
+                borderRight: "1px solid #e5e5e5",
+                cursor: "pointer", // Add this
+                userSelect: "none", // Add this (prevents text selection on click)
+              }}
             >
-              Name
+              Name {sortOrder === "asc" ? "▲" : "▼"} {/* Add arrow indicator */}
             </Table.ColumnHeaderCell>
             <Table.ColumnHeaderCell
               style={{ textAlign: "center", padding: "8px 8px", borderRight: "1px solid #e5e5e5" }}
@@ -212,7 +237,7 @@ export default function StudentsTable({ students }: { students: Student[] }) {
         </Table.Header>
 
         <Table.Body>
-          {filteredStudents.map((student) => (
+          {paginatedStudents.map((student) => (
             <Table.Row key={student.id}>
               <Table.Cell style={{ textAlign: "center", padding: "8px 8px", borderRight: "1px solid #e5e5e5" }}>
                 <input type="checkbox" style={{ width: "18px", height: "18px", alignContent: "center" }} />
@@ -239,9 +264,30 @@ export default function StudentsTable({ students }: { students: Student[] }) {
         </Table.Body>
       </Table.Root>
 
+      {/* Pagination Controls */}
+      <div style={{ display: "flex", justifyContent: "center", marginTop: "20px", gap: "10px" }}>
+        <button
+          onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+          disabled={currentPage === 1}
+          style={{ padding: "6px 12px", borderRadius: "8px", backgroundColor: "#E9E9E9", border: "none" }}
+        >
+          Prev
+        </button>
+        <span>
+          Page {currentPage} of {totalPages}
+        </span>
+        <button
+          onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+          disabled={currentPage === totalPages}
+          style={{ padding: "6px 12px", borderRadius: "8px", backgroundColor: "#E9E9E9", border: "none" }}
+        >
+          Next
+        </button>
+      </div>
+
       {/* Results count */}
       <div style={{ marginTop: "16px", color: "#666", fontSize: "14px" }}>
-        Showing {filteredStudents.length} of {students.length} students
+        Showing {sortedStudents.length} of {students.length} students
       </div>
 
       {/* Import from Google Sheets button at bottom */}

@@ -14,8 +14,8 @@ export default async function StudentsPage() {
     redirect("/");
   }
 
-  // Fetch student data
-  const { data: students, error } = await supabase
+  // Fetch students
+  const { data: students, error: studentsError } = await supabase
     .from("students")
     .select(
       `
@@ -31,9 +31,16 @@ export default async function StudentsPage() {
     )
     .order("legal_last_name", { ascending: true });
 
-  if (error) {
-    return <div>Error loading students: {error.message}</div>;
+  if (studentsError) {
+    return <div>Error loading students: {studentsError.message}</div>;
   }
 
-  return <StudentsTable students={students ?? []} />;
+  // Fetch all available course placements from separate table
+  const { data: courses, error: coursesError } = await supabase.from("course_placement").select("name"); // change "name" if your column is named differently
+
+  if (coursesError) {
+    return <div>Error loading courses: {coursesError.message}</div>;
+  }
+
+  return <StudentsTable students={students ?? []} courses={courses ?? []} />;
 }
