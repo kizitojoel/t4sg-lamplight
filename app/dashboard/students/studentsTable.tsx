@@ -15,7 +15,24 @@ type Student = {
   course_placement: string;
 };
 
-export default function StudentsTable({ students, courses }: { students: Student[]; courses: { name: string }[] }) {
+export default function StudentsTable({
+  students,
+  programs,
+  courses,
+}: {
+  students: {
+    id: string;
+    legal_first_name: string;
+    legal_last_name: string;
+    preferred_name: string | null;
+    program: string;
+    email: string | null;
+    phone: string | null;
+    course_placement: string;
+  }[];
+  programs: { id: string; name: string }[];
+  courses: { id: string; name: string }[];
+}) {
   const [searchTerm, setSearchTerm] = useState("");
   const [programFilter, setProgramFilter] = useState("all");
   const [courseFilter, setCourseFilter] = useState("all");
@@ -107,8 +124,11 @@ export default function StudentsTable({ students, courses }: { students: Student
           }}
         >
           <option value="all">All Programs</option>
-          <option value="ESOL">ESOL</option>
-          <option value="HCP">HCP</option>
+          {programs.map((program) => (
+            <option key={program.id} value={program.name}>
+              {program.name}
+            </option>
+          ))}
         </select>
 
         {/* All Sessions Dropdown */}
@@ -146,7 +166,7 @@ export default function StudentsTable({ students, courses }: { students: Student
         >
           <option value="all">All Courses</option>
           {courses.map((course) => (
-            <option key={course.name} value={course.name}>
+            <option key={course.id} value={course.name}>
               {course.name}
             </option>
           ))}
@@ -194,16 +214,16 @@ export default function StudentsTable({ students, courses }: { students: Student
               style={{ width: "60px", textAlign: "center", padding: "8px 8px", borderRight: "1px solid #e5e5e5" }}
             ></Table.ColumnHeaderCell>
             <Table.ColumnHeaderCell
-              onClick={toggleSort} // Add this
+              onClick={toggleSort}
               style={{
                 textAlign: "center",
                 padding: "8px 8px",
                 borderRight: "1px solid #e5e5e5",
-                cursor: "pointer", // Add this
-                userSelect: "none", // Add this (prevents text selection on click)
+                cursor: "pointer",
+                userSelect: "none",
               }}
             >
-              Name {sortOrder === "asc" ? "▲" : "▼"} {/* Add arrow indicator */}
+              Name {sortOrder === "asc" ? "▲" : "▼"}
             </Table.ColumnHeaderCell>
             <Table.ColumnHeaderCell
               style={{ textAlign: "center", padding: "8px 8px", borderRight: "1px solid #e5e5e5" }}
@@ -251,7 +271,7 @@ export default function StudentsTable({ students, courses }: { students: Student
                 {student.program}
               </Table.Cell>
               <Table.Cell style={{ padding: "8px 8px", borderRight: "1px solid #e5e5e5" }}>
-                {/* Session - to be added */}
+                {/* Session - to be added later*/}
               </Table.Cell>
               <Table.Cell style={{ padding: "8px 8px", borderRight: "1px solid #e5e5e5" }}>
                 {student.course_placement}

@@ -35,12 +35,18 @@ export default async function StudentsPage() {
     return <div>Error loading students: {studentsError.message}</div>;
   }
 
-  // Fetch all available course placements from separate table
-  const { data: courses, error: coursesError } = await supabase.from("course_placement").select("name"); // change "name" if your column is named differently
+  // Fetch programs
+  const { data: programs, error: programsError } = await supabase.from("program").select("id, name");
+  if (programsError) {
+    return <div>Error loading programs: {programsError.message}</div>;
+  }
+
+  // Fetch course placements
+  const { data: courses, error: coursesError } = await supabase.from("course_placement").select("id, name");
 
   if (coursesError) {
     return <div>Error loading courses: {coursesError.message}</div>;
   }
 
-  return <StudentsTable students={students ?? []} courses={courses ?? []} />;
+  return <StudentsTable students={students ?? []} programs={programs ?? []} courses={courses ?? []} />;
 }
