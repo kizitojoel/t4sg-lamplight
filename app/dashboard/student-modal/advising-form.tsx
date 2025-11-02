@@ -12,7 +12,7 @@ import { TypographyH3 } from "@/components/ui/typography";
 import { toast } from "@/components/ui/use-toast";
 import { createBrowserSupabaseClient } from "@/lib/client-utils";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, type BaseSyntheticEvent, type JSX } from "react";
+import { useEffect, useState, type BaseSyntheticEvent } from "react";
 
 const enrollment_statuses = z.enum(["active", "inactive"]);
 
@@ -27,13 +27,7 @@ type CoursePlacement = Database["public"]["Tables"]["course_placement"]["Row"];
 type Program = Database["public"]["Tables"]["program"]["Row"];
 type AdvisingValues = z.infer<typeof advisingSchema>;
 
-export default function AdvisingForm({
-  student,
-  updateFunctionAction,
-}: {
-  student: Student;
-  updateFunctionAction: () => Promise<JSX.Element | undefined>;
-}) {
+export default function AdvisingForm({ student }: { student: Student }) {
   const [editing, setEditing] = useState(false);
 
   const router = useRouter();
@@ -108,7 +102,6 @@ export default function AdvisingForm({
 
     // Router.refresh does not affect ProfileForm because it is a client component, but it will refresh the initials in the user-nav in the event of a username change
     router.refresh();
-    void updateFunctionAction();
 
     return toast({
       title: "Profile updated successfully!",

@@ -35,13 +35,6 @@ export default function StudentModal({ studentId }: { studentId: string }) {
     void fetchData();
   });
 
-  const updateInfo = async () => {
-    const { data: studentList, error } = await supabase.from("students").select().eq("id", studentId);
-
-    if (error) return <div>Failed to get student with id: {studentId}</div>;
-    else setStudent(studentList[0]);
-  };
-
   if (!student) return;
 
   return (
@@ -76,8 +69,8 @@ export default function StudentModal({ studentId }: { studentId: string }) {
               <InfoForm student={student}></InfoForm>
             </TabsContent>
             <TabsContent value="learning-profile"></TabsContent>
-            <TabsContent value="advising">
-              <AdvisingForm student={student} updateFunctionAction={updateInfo}></AdvisingForm>
+            <TabsContent value="advising" className="outline-accent/50 p-2 outline-2">
+              <AdvisingForm student={student}></AdvisingForm>
             </TabsContent>
           </Tabs>
         </DialogContent>
