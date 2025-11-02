@@ -3,6 +3,7 @@ import { createServerSupabaseClient } from "@/lib/server-utils";
 import { Table } from "@radix-ui/themes";
 import { redirect } from "next/navigation";
 import StudentModal from "../student-modal/student-modal";
+import StudentImportButton from "./components/StudentImportButton";
 
 export default async function StudentsPage() {
   const supabase = createServerSupabaseClient();
@@ -220,20 +221,9 @@ export default async function StudentsPage() {
       </Table.Root>
 
       {/* Import from Google Sheets button at bottom */}
+
       <div style={{ marginTop: "40px" }}>
-        <button
-          style={{
-            padding: "12px 24px",
-            backgroundColor: "#d9d9d9",
-            border: "none",
-            borderRadius: "20px",
-            cursor: "pointer",
-            fontSize: "16px",
-            fontWeight: "500",
-          }}
-        >
-          Import from Google Sheets
-        </button>
+        <StudentImportButton />
       </div>
     </div>
   );
