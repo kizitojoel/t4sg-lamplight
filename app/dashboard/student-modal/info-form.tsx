@@ -268,7 +268,7 @@ export default function InfoForm({ student }: { student: Student }) {
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a kingdom" />
+                      <SelectValue placeholder="Select a gender" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
