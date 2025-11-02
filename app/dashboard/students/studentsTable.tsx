@@ -4,7 +4,7 @@ import { Table } from "@radix-ui/themes";
 import { useState } from "react";
 import StudentModal from "../student-modal/student-modal";
 
-type Student = {
+interface Student {
   id: string;
   legal_first_name: string;
   legal_last_name: string;
@@ -13,23 +13,14 @@ type Student = {
   email: string | null;
   phone: string | null;
   course_placement: string;
-};
+}
 
 export default function StudentsTable({
   students,
   programs,
   courses,
 }: {
-  students: {
-    id: string;
-    legal_first_name: string;
-    legal_last_name: string;
-    preferred_name: string | null;
-    program: string;
-    email: string | null;
-    phone: string | null;
-    course_placement: string;
-  }[];
+  students: Student[];
   programs: { id: string; name: string }[];
   courses: { id: string; name: string }[];
 }) {
