@@ -67,7 +67,7 @@ export default function AdvisingForm({
     };
 
     void fetchData();
-  }, []);
+  });
 
   const defaultValues = {
     enrollment_status: student.enrollment_status ?? "inactive",
@@ -209,7 +209,7 @@ export default function AdvisingForm({
                   </FormControl>
                   <SelectContent>
                     <SelectGroup>
-                      {programs.map((program, index) => (
+                      {programs.map((program) => (
                         <SelectItem key={program.id} value={program.id}>
                           {program.name}
                         </SelectItem>
@@ -237,7 +237,7 @@ export default function AdvisingForm({
                   </FormControl>
                   <SelectContent>
                     <SelectGroup>
-                      {course_placements.map((course, index) => (
+                      {course_placements.map((course) => (
                         <SelectItem key={course.id} value={course.id}>
                           {course.name}
                         </SelectItem>

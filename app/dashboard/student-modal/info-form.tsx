@@ -15,12 +15,11 @@ import { toast } from "@/components/ui/use-toast";
 import { createBrowserSupabaseClient } from "@/lib/client-utils";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { useRouter } from "next/navigation";
-import { useState, type BaseSyntheticEvent, type JSX } from "react";
+import { useState, type BaseSyntheticEvent } from "react";
 
 type Student = Database["public"]["Tables"]["students"]["Row"];
 type StudentInfoValues = z.infer<typeof studentInfoSchema>;
 const genders = z.enum(["Male", "Female", "Non-binary", "Other", "Prefer not to say"]);
-type Gender = Database["public"]["Enums"]["gender"];
 
 const studentInfoSchema = z.object({
   email: z.email(),
@@ -65,13 +64,7 @@ const studentInfoSchema = z.object({
   language_spoken_at_home: z.string(),
 });
 
-export default function InfoForm({
-  student,
-  updateFunctionAction,
-}: {
-  student: Student;
-  updateFunctionAction: () => Promise<JSX.Element | undefined>;
-}) {
+export default function InfoForm({ student }: { student: Student }) {
   const [editing, setEditing] = useState(false);
 
   const router = useRouter();
