@@ -13,6 +13,7 @@ import { createBrowserSupabaseClient } from "@/lib/client-utils";
 import { type Database } from "@/lib/schema";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
 import { useEffect, useState } from "react";
+import AdvisingForm from "./advising-form";
 import InfoForm from "./info-form";
 
 type Student = Database["public"]["Tables"]["students"]["Row"];
@@ -25,14 +26,14 @@ export default function StudentModal({ studentId }: { studentId: string }) {
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data: studentList, error } = await supabase.from("students").select().eq("id", studentId);
+      const { data: studentList, error } = await supabase.from("students").select("*").eq("id", studentId);
 
       if (error) return <div>Failed to get student with id: {studentId}</div>;
       else setStudent(studentList[0]);
     };
 
     void fetchData();
-  }, [supabase, studentId, student, setStudent]);
+  }, []);
 
   const updateInfo = async () => {
     const { data: studentList, error } = await supabase.from("students").select().eq("id", studentId);
@@ -49,7 +50,7 @@ export default function StudentModal({ studentId }: { studentId: string }) {
         <DialogTrigger asChild>
           <Button>+</Button>
         </DialogTrigger>
-        <DialogContent className="max-h-screen overflow-y-auto sm:max-w-[600px]">
+        <DialogContent className="max-h-screen overflow-y-auto sm:max-w-[700px]">
           <DialogHeader>
             <DialogTitle>
               {student.legal_first_name} {student.legal_last_name}
@@ -71,11 +72,13 @@ export default function StudentModal({ studentId }: { studentId: string }) {
                 Advising
               </TabsTrigger>
             </TabsList>
-            <TabsContent value="info" className="outline-accent/50 bg-accent/50 p-2 outline-2">
+            <TabsContent value="info" className="outline-accent/50 p-2 outline-2">
               <InfoForm student={student} updateFunctionAction={updateInfo}></InfoForm>
             </TabsContent>
-            <TabsContent value="learning-profile">Learning Profile</TabsContent>
-            <TabsContent value="advising">Advising</TabsContent>
+            <TabsContent value="learning-profile"></TabsContent>
+            <TabsContent value="advising">
+              <AdvisingForm student={student} updateFunctionAction={updateInfo}></AdvisingForm>
+            </TabsContent>
           </Tabs>
         </DialogContent>
       </Dialog>

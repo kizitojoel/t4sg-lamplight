@@ -6,14 +6,21 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 
 import { Button } from "@/components/ui/button";
+import { CountryDropdown } from "@/components/ui/country-dropdown";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TypographyH3 } from "@/components/ui/typography";
 import { toast } from "@/components/ui/use-toast";
 import { createBrowserSupabaseClient } from "@/lib/client-utils";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { useRouter } from "next/navigation";
 import { useState, type BaseSyntheticEvent, type JSX } from "react";
+
+type Student = Database["public"]["Tables"]["students"]["Row"];
+type StudentInfoValues = z.infer<typeof studentInfoSchema>;
+const genders = z.enum(["Male", "Female", "Non-binary", "Other", "Prefer not to say"]);
+type Gender = Database["public"]["Enums"]["gender"];
 
 const studentInfoSchema = z.object({
   email: z.email(),
@@ -48,8 +55,8 @@ const studentInfoSchema = z.object({
   address_street: z.string(),
   address_city: z.string(),
   address_state: z.string(),
-  address_zip: z.string().regex(RegExp("^\\d{5}(-\\d{4})?$"), "Please enter a correct ZIP Code."),
-  gender: z.string(),
+  address_zip: z.string().regex(RegExp(/\d{5}(-\d{4})?$/), "Please enter a correct ZIP Code."),
+  gender: genders,
   age: z.number().min(0).max(130),
   ethnicity: z.boolean(),
   race: z.array(z.string()),
@@ -57,9 +64,6 @@ const studentInfoSchema = z.object({
   native_language: z.string(),
   language_spoken_at_home: z.string(),
 });
-
-type Student = Database["public"]["Tables"]["students"]["Row"];
-type StudentInfoValues = z.infer<typeof studentInfoSchema>;
 
 export default function InfoForm({
   student,
@@ -79,7 +83,7 @@ export default function InfoForm({
     address_city: student.address_city ?? "",
     address_state: student.address_state ?? "",
     address_zip: student.address_zip ?? "",
-    gender: student.gender ?? "",
+    gender: student.gender ?? undefined,
     age: student.age ?? 0,
     ethnicity: student.ethnicity_hispanic_latino ?? false,
     race: student.race ?? [],
@@ -131,7 +135,7 @@ export default function InfoForm({
 
     // Router.refresh does not affect ProfileForm because it is a client component, but it will refresh the initials in the user-nav in the event of a username change
     router.refresh();
-    void updateFunctionAction();
+    // void updateFunctionAction();
 
     return toast({
       title: "Profile updated successfully!",
@@ -264,9 +268,26 @@ export default function InfoForm({
             return (
               <FormItem>
                 <FormLabel>Gender</FormLabel>
-                <FormControl>
-                  <Input disabled={!editing} placeholder="Gender" {...field} />
-                </FormControl>
+                <Select
+                  onValueChange={(value) => field.onChange(genders.parse(value))}
+                  value={field.value}
+                  disabled={!editing}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a kingdom" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectGroup>
+                      {genders.options.map((gender, index) => (
+                        <SelectItem key={index} value={gender}>
+                          {gender}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             );
@@ -315,9 +336,14 @@ export default function InfoForm({
             return (
               <FormItem>
                 <FormLabel>Country of Birth</FormLabel>
-                <FormControl>
-                  <Input disabled={!editing} placeholder="Country of Birth" {...field} />
-                </FormControl>
+                <CountryDropdown
+                  placeholder="Country"
+                  disabled={!editing}
+                  defaultValue={field.value}
+                  onChange={(country) => {
+                    field.onChange(country.name);
+                  }}
+                />
                 <FormMessage />
               </FormItem>
             );
