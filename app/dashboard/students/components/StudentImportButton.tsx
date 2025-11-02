@@ -104,7 +104,7 @@ export default function StudentImportButton() {
             } else {
               showToast(`Import failed: ${result.error}`, "error");
             }
-          } catch (error) {
+          } catch {
             showToast("Failed to import students.", "error");
             setIsImporting(false);
           }
