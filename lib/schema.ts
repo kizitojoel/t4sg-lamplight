@@ -107,7 +107,7 @@ export type Database = {
           created_by: string | null;
           email: string | null;
           employment: string | null;
-          enrollment_status: Database["public"]["Enums"]["enrollment_status_enum"];
+          enrollment_status: Database["public"]["Enums"]["enrollment_status_enum"] | null;
           enrollment_status_id: string | null;
           ethnicity_hispanic_latino: boolean | null;
           gender: Database["public"]["Enums"]["gender"] | null;
@@ -142,7 +142,7 @@ export type Database = {
           created_by?: string | null;
           email?: string | null;
           employment?: string | null;
-          enrollment_status?: Database["public"]["Enums"]["enrollment_status_enum"];
+          enrollment_status?: Database["public"]["Enums"]["enrollment_status_enum"] | null;
           enrollment_status_id?: string | null;
           ethnicity_hispanic_latino?: boolean | null;
           gender?: Database["public"]["Enums"]["gender"] | null;
@@ -177,7 +177,7 @@ export type Database = {
           created_by?: string | null;
           email?: string | null;
           employment?: string | null;
-          enrollment_status?: Database["public"]["Enums"]["enrollment_status_enum"];
+          enrollment_status?: Database["public"]["Enums"]["enrollment_status_enum"] | null;
           enrollment_status_id?: string | null;
           ethnicity_hispanic_latino?: boolean | null;
           gender?: Database["public"]["Enums"]["gender"] | null;

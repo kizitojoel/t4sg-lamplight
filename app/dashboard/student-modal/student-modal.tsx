@@ -41,7 +41,9 @@ export default function StudentModal({ studentId }: { studentId: string }) {
     <div>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button>+</Button>
+          <Button variant="outline" className="h-auto px-2 py-1">
+            +
+          </Button>
         </DialogTrigger>
         <DialogContent className="max-h-screen overflow-y-auto sm:max-w-[700px]">
           <DialogHeader>
