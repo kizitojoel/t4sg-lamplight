@@ -2,6 +2,8 @@
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Shield } from "lucide-react";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -60,6 +62,12 @@ export default function UserNav({ profile }: { profile: Profile }) {
             <Link href="/settings/general">
               <Settings className="mr-2 h-4 w-4" />
               <span>Settings</span>
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/settings/admin">
+              <Shield className="mr-2 h-4 w-4" />
+              <span>Admin</span>
             </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
