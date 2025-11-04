@@ -8,6 +8,45 @@ export type Database = {
   };
   public: {
     Tables: {
+      course_placement: {
+        Row: {
+          created_at: string;
+          id: string;
+          name: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          name: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          name?: string;
+        };
+        Relationships: [];
+      };
+      enrollment_status: {
+        Row: {
+          created_at: string;
+          id: string;
+          name: string;
+          program_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          name: string;
+          program_id?: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          name?: string;
+          program_id?: string;
+        };
+        Relationships: [];
+      };
       profiles: {
         Row: {
           biography: string | null;
@@ -35,6 +74,24 @@ export type Database = {
         };
         Relationships: [];
       };
+      program: {
+        Row: {
+          created_at: string;
+          id: string;
+          name: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          name?: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          name?: string;
+        };
+        Relationships: [];
+      };
       students: {
         Row: {
           address_city: string | null;
@@ -42,14 +99,20 @@ export type Database = {
           address_street: string | null;
           address_zip: string | null;
           age: number | null;
+          computer_access: string | null;
           country_of_birth: string | null;
           course_placement: Database["public"]["Enums"]["course_placement_enum"];
+          course_placement_id: string | null;
           created_at: string;
           created_by: string | null;
           email: string | null;
-          enrollment_status: Database["public"]["Enums"]["enrollment_status_enum"];
+          employment: string | null;
+          enrollment_status: Database["public"]["Enums"]["enrollment_status_enum"] | null;
+          enrollment_status_id: string | null;
           ethnicity_hispanic_latino: boolean | null;
-          gender: string | null;
+          gender: Database["public"]["Enums"]["gender"] | null;
+          highest_education: string | null;
+          household_income: string | null;
           id: string;
           language_spoken_at_home: string | null;
           legal_first_name: string;
@@ -58,7 +121,10 @@ export type Database = {
           phone: string | null;
           preferred_name: string | null;
           program: Database["public"]["Enums"]["program_enum"];
+          program_id: string | null;
           race: string[] | null;
+          referral: string | null;
+          residence: string | null;
           updated_at: string;
           updated_by: string | null;
         };
@@ -68,14 +134,20 @@ export type Database = {
           address_street?: string | null;
           address_zip?: string | null;
           age?: number | null;
+          computer_access?: string | null;
           country_of_birth?: string | null;
           course_placement: Database["public"]["Enums"]["course_placement_enum"];
+          course_placement_id?: string | null;
           created_at?: string;
           created_by?: string | null;
           email?: string | null;
-          enrollment_status?: Database["public"]["Enums"]["enrollment_status_enum"];
+          employment?: string | null;
+          enrollment_status?: Database["public"]["Enums"]["enrollment_status_enum"] | null;
+          enrollment_status_id?: string | null;
           ethnicity_hispanic_latino?: boolean | null;
-          gender?: string | null;
+          gender?: Database["public"]["Enums"]["gender"] | null;
+          highest_education?: string | null;
+          household_income?: string | null;
           id?: string;
           language_spoken_at_home?: string | null;
           legal_first_name: string;
@@ -84,7 +156,10 @@ export type Database = {
           phone?: string | null;
           preferred_name?: string | null;
           program: Database["public"]["Enums"]["program_enum"];
+          program_id?: string | null;
           race?: string[] | null;
+          referral?: string | null;
+          residence?: string | null;
           updated_at?: string;
           updated_by?: string | null;
         };
@@ -94,14 +169,20 @@ export type Database = {
           address_street?: string | null;
           address_zip?: string | null;
           age?: number | null;
+          computer_access?: string | null;
           country_of_birth?: string | null;
           course_placement?: Database["public"]["Enums"]["course_placement_enum"];
+          course_placement_id?: string | null;
           created_at?: string;
           created_by?: string | null;
           email?: string | null;
-          enrollment_status?: Database["public"]["Enums"]["enrollment_status_enum"];
+          employment?: string | null;
+          enrollment_status?: Database["public"]["Enums"]["enrollment_status_enum"] | null;
+          enrollment_status_id?: string | null;
           ethnicity_hispanic_latino?: boolean | null;
-          gender?: string | null;
+          gender?: Database["public"]["Enums"]["gender"] | null;
+          highest_education?: string | null;
+          household_income?: string | null;
           id?: string;
           language_spoken_at_home?: string | null;
           legal_first_name?: string;
@@ -110,11 +191,36 @@ export type Database = {
           phone?: string | null;
           preferred_name?: string | null;
           program?: Database["public"]["Enums"]["program_enum"];
+          program_id?: string | null;
           race?: string[] | null;
+          referral?: string | null;
+          residence?: string | null;
           updated_at?: string;
           updated_by?: string | null;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "students_course_placement_id_fkey1";
+            columns: ["course_placement_id"];
+            isOneToOne: false;
+            referencedRelation: "course_placement";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "students_enrollment_status_id_fkey";
+            columns: ["enrollment_status_id"];
+            isOneToOne: false;
+            referencedRelation: "enrollment_status";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "students_program_id_fkey";
+            columns: ["program_id"];
+            isOneToOne: false;
+            referencedRelation: "program";
+            referencedColumns: ["id"];
+          },
+        ];
       };
     };
     Views: {
@@ -140,8 +246,60 @@ export type Database = {
         | "HCP Math TEAS"
         | "Other";
       enrollment_status_enum: "active" | "inactive";
+      gender: "Male" | "Female" | "Non-binary" | "Other" | "Prefer not to say";
       program_enum: "ESOL" | "HCP";
       role: "admin" | "teacher";
+      states:
+        | "AL"
+        | "AK"
+        | "AZ"
+        | "AR"
+        | "CA"
+        | "CO"
+        | "CT"
+        | "DE"
+        | "FL"
+        | "GA"
+        | "HI"
+        | "ID"
+        | "IL"
+        | "IN"
+        | "IA"
+        | "KS"
+        | "KY"
+        | "LA"
+        | "ME"
+        | "MD"
+        | "MA"
+        | "MI"
+        | "MN"
+        | "MS"
+        | "MO"
+        | "MT"
+        | "NE"
+        | "NV"
+        | "NH"
+        | "NJ"
+        | "NM"
+        | "NY"
+        | "NC"
+        | "ND"
+        | "OH"
+        | "OK"
+        | "OR"
+        | "PA"
+        | "RI"
+        | "SC"
+        | "SD"
+        | "TN"
+        | "TX"
+        | "UT"
+        | "VT"
+        | "VA"
+        | "WA"
+        | "WV"
+        | "WI"
+        | "WY";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -278,8 +436,61 @@ export const Constants = {
         "Other",
       ],
       enrollment_status_enum: ["active", "inactive"],
+      gender: ["Male", "Female", "Non-binary", "Other", "Prefer not to say"],
       program_enum: ["ESOL", "HCP"],
       role: ["admin", "teacher"],
+      states: [
+        "AL",
+        "AK",
+        "AZ",
+        "AR",
+        "CA",
+        "CO",
+        "CT",
+        "DE",
+        "FL",
+        "GA",
+        "HI",
+        "ID",
+        "IL",
+        "IN",
+        "IA",
+        "KS",
+        "KY",
+        "LA",
+        "ME",
+        "MD",
+        "MA",
+        "MI",
+        "MN",
+        "MS",
+        "MO",
+        "MT",
+        "NE",
+        "NV",
+        "NH",
+        "NJ",
+        "NM",
+        "NY",
+        "NC",
+        "ND",
+        "OH",
+        "OK",
+        "OR",
+        "PA",
+        "RI",
+        "SC",
+        "SD",
+        "TN",
+        "TX",
+        "UT",
+        "VT",
+        "VA",
+        "WA",
+        "WV",
+        "WI",
+        "WY",
+      ],
     },
   },
 } as const;
