@@ -110,9 +110,7 @@ export default function AdminDashboard() {
   const [assessmentSearch, setAssessmentSearch] = useState("");
 
   const groupedCourses = mockCourses.reduce((groups: Record<string, Course[]>, course) => {
-    if (!groups[course.program]) {
-      groups[course.program] = [];
-    }
+    groups[course.program] ??= [];
     groups[course.program]!.push(course);
     return groups;
   }, {});
