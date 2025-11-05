@@ -1,8 +1,10 @@
 "use client";
 
 import { Table } from "@radix-ui/themes";
+import Link from "next/link";
 import { useState } from "react";
 import StudentModal from "../student-modal/student-modal";
+import StudentImportButton from "./components/StudentImportButton";
 
 interface Student {
   id: string;
@@ -182,19 +184,21 @@ export default function StudentsTable({
         </button>
 
         {/* Add Student Button */}
-        <button
-          style={{
-            padding: "10px 24px",
-            backgroundColor: "#C5C5C5",
-            border: "none",
-            borderRadius: "20px",
-            cursor: "pointer",
-            fontSize: "16px",
-            fontWeight: "400",
-          }}
-        >
-          Add Student
-        </button>
+        <Link href="/dashboard/newstudent">
+          <button
+            style={{
+              padding: "10px 24px",
+              backgroundColor: "#C5C5C5",
+              border: "none",
+              borderRadius: "20px",
+              cursor: "pointer",
+              fontSize: "16px",
+              fontWeight: "400",
+            }}
+          >
+            Add Student
+          </button>
+        </Link>
       </div>
 
       {/* Radix Table */}
@@ -303,19 +307,7 @@ export default function StudentsTable({
 
       {/* Import from Google Sheets button at bottom */}
       <div style={{ marginTop: "40px" }}>
-        <button
-          style={{
-            padding: "12px 24px",
-            backgroundColor: "#d9d9d9",
-            border: "none",
-            borderRadius: "20px",
-            cursor: "pointer",
-            fontSize: "16px",
-            fontWeight: "500",
-          }}
-        >
-          Import from Google Sheets
-        </button>
+        <StudentImportButton />
       </div>
     </div>
   );
