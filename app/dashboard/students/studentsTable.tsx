@@ -73,48 +73,23 @@ export default function StudentsTable({
   const paginatedStudents = sortedStudents.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
 
   return (
-    <div style={{ padding: "10px 40px", backgroundColor: "#ffffff" }}>
+    <div className="px-2.5 py-10">
       {/* Header Controls */}
-      <div
-        style={{
-          display: "flex",
-          gap: "16px",
-          marginBottom: "32px",
-          alignItems: "center",
-        }}
-      >
+      <div className="mb-8 flex items-center gap-4">
         {/* Search Bar */}
         <input
           type="text"
           placeholder="Search"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          style={{
-            width: "364px",
-            height: "38px",
-            padding: "10px",
-            border: "1px solid #000",
-            backgroundColor: "#F6F6F6",
-            fontSize: "15px",
-            fontWeight: "400",
-          }}
+          className="border-accent bg-accent h-10 w-1/4 border p-2.5"
         />
 
         {/* All Programs Dropdown */}
         <select
           value={programFilter}
           onChange={(e) => setProgramFilter(e.target.value)}
-          style={{
-            width: "134px",
-            height: "38px",
-            paddingLeft: "10px",
-            paddingRight: "10px",
-            border: "none",
-            backgroundColor: "#E9E9E9",
-            cursor: "pointer",
-            fontSize: "15px",
-            textAlign: "center",
-          }}
+          className="bg-accent h-10 cursor-pointer px-4 text-center"
         >
           <option value="all">All Programs</option>
           {programs.map((program) => (
@@ -125,19 +100,7 @@ export default function StudentsTable({
         </select>
 
         {/* All Sessions Dropdown */}
-        <select
-          style={{
-            width: "134px",
-            height: "38px",
-            paddingLeft: "10px",
-            paddingRight: "10px",
-            border: "none",
-            backgroundColor: "#E9E9E9",
-            cursor: "pointer",
-            fontSize: "15px",
-            textAlign: "center",
-          }}
-        >
+        <select className="bg-accent h-10 cursor-pointer px-4 text-center">
           <option>All Sessions</option>
         </select>
 
@@ -145,17 +108,7 @@ export default function StudentsTable({
         <select
           value={courseFilter}
           onChange={(e) => setCourseFilter(e.target.value)}
-          style={{
-            width: "134px",
-            height: "38px",
-            paddingLeft: "10px",
-            paddingRight: "10px",
-            border: "none",
-            backgroundColor: "#E9E9E9",
-            cursor: "pointer",
-            fontSize: "15px",
-            textAlign: "center",
-          }}
+          className="bg-accent h-10 cursor-pointer px-4 text-center"
         >
           <option value="all">All Courses</option>
           {courses.map((course) => (
@@ -166,48 +119,22 @@ export default function StudentsTable({
         </select>
 
         {/* Spacer */}
-        <div style={{ flex: "1" }}></div>
+        <div className="flex-1"></div>
 
         {/* Export CSV Button */}
-        <button
-          style={{
-            padding: "10px 24px",
-            backgroundColor: "#C5C5C5",
-            border: "none",
-            borderRadius: "16px",
-            cursor: "pointer",
-            fontSize: "16px",
-            fontWeight: "400",
-          }}
-        >
-          Export CSV
-        </button>
+        <button className="bg-accent cursor-pointer rounded-2xl px-4 py-2.5">Export CSV</button>
 
         {/* Add Student Button */}
         <Link href="/dashboard/newstudent">
-          <button
-            style={{
-              padding: "10px 24px",
-              backgroundColor: "#C5C5C5",
-              border: "none",
-              borderRadius: "20px",
-              cursor: "pointer",
-              fontSize: "16px",
-              fontWeight: "400",
-            }}
-          >
-            Add Student
-          </button>
+          <button className="bg-accent cursor-pointer rounded-2xl px-4 py-2.5">Add Student</button>
         </Link>
       </div>
 
       {/* Radix Table */}
-      <Table.Root variant="surface" style={{ border: "1px solid #ccc" }}>
+      <Table.Root variant="surface" className="border border-gray-50">
         <Table.Header>
           <Table.Row>
-            <Table.ColumnHeaderCell
-              style={{ width: "60px", textAlign: "center", padding: "8px 8px", borderRight: "1px solid #e5e5e5" }}
-            ></Table.ColumnHeaderCell>
+            <Table.ColumnHeaderCell className="w-[60px] border-r border-r-gray-200"></Table.ColumnHeaderCell>
             <Table.ColumnHeaderCell
               onClick={toggleSort}
               style={{
@@ -284,17 +211,17 @@ export default function StudentsTable({
         <button
           onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
           disabled={currentPage === 1}
-          style={{ padding: "6px 12px", borderRadius: "8px", backgroundColor: "#E9E9E9", border: "none" }}
+          className="bg-accent cursor-pointer rounded-2xl px-4 py-2"
         >
           Prev
         </button>
-        <span>
+        <span className="my-auto">
           Page {currentPage} of {totalPages}
         </span>
         <button
           onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
           disabled={currentPage === totalPages}
-          style={{ padding: "6px 12px", borderRadius: "8px", backgroundColor: "#E9E9E9", border: "none" }}
+          className="bg-accent cursor-pointer rounded-2xl px-4 py-2"
         >
           Next
         </button>
@@ -306,7 +233,7 @@ export default function StudentsTable({
       </div>
 
       {/* Import from Google Sheets button at bottom */}
-      <div style={{ marginTop: "40px" }}>
+      <div className="mt-10">
         <StudentImportButton />
       </div>
     </div>
