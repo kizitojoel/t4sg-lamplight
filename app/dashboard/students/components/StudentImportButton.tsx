@@ -123,14 +123,9 @@ export default function StudentImportButton() {
       <button
         onClick={handleButtonClick}
         disabled={isImporting}
+        className="bg-accent cursor-pointer rounded-2xl px-5 py-3"
         style={{
-          padding: "12px 24px",
-          backgroundColor: "#d9d9d9",
-          border: "none",
-          borderRadius: "20px",
           cursor: isImporting ? "not-allowed" : "pointer",
-          fontSize: "16px",
-          fontWeight: "500",
           opacity: isImporting ? 0.6 : 1,
         }}
       >

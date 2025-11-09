@@ -5,19 +5,19 @@ import clsx from "clsx";
 import { useState } from "react";
 
 // Mock types
-type Course = {
+interface Course {
   id: number;
   name: string;
   program: string;
   status: string;
   assessments: string[];
-};
+}
 
-type Assessment = {
+interface Assessment {
   id: number;
   name: string;
   usedIn: string[];
-};
+}
 
 // const courses
 
