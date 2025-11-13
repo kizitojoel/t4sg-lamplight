@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
 import { useEffect, useState } from "react";
 import AdvisingForm from "./advising-form";
 import InfoForm from "./info-form";
+import LearningForm from "./learning-form";
 
 type Student = Database["public"]["Tables"]["students"]["Row"];
 
@@ -41,7 +42,7 @@ export default function StudentModal({ studentId }: { studentId: string }) {
     <div>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button variant="outline" className="h-auto px-2 py-1">
+          <Button variant="outline" className="size-8 p-0">
             +
           </Button>
         </DialogTrigger>
@@ -70,7 +71,9 @@ export default function StudentModal({ studentId }: { studentId: string }) {
             <TabsContent value="info" className="outline-accent/50 p-2 outline-2">
               <InfoForm student={student}></InfoForm>
             </TabsContent>
-            <TabsContent value="learning-profile"></TabsContent>
+            <TabsContent value="learning-profile">
+              <LearningForm student={student}></LearningForm>
+            </TabsContent>
             <TabsContent value="advising" className="outline-accent/50 p-2 outline-2">
               <AdvisingForm student={student}></AdvisingForm>
             </TabsContent>
