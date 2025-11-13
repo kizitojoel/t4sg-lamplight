@@ -61,7 +61,7 @@ export default function AdvisingForm({ student }: { student: Student }) {
     };
 
     void fetchData();
-  });
+  }, [supabase]);
 
   const defaultValues = {
     enrollment_status: student.enrollment_status ?? "inactive",

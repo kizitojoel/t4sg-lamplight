@@ -33,7 +33,7 @@ export default function StudentModal({ studentId }: { studentId: string }) {
     };
 
     void fetchData();
-  });
+  }, [studentId, supabase]);
 
   if (!student) return;
 
