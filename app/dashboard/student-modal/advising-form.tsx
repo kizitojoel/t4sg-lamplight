@@ -12,7 +12,7 @@ import { TypographyH3 } from "@/components/ui/typography";
 import { toast } from "@/components/ui/use-toast";
 import { createBrowserSupabaseClient } from "@/lib/client-utils";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, type BaseSyntheticEvent } from "react";
+import { useEffect, useRef, useState, type BaseSyntheticEvent } from "react";
 
 const enrollment_statuses = z.enum(["active", "inactive"]);
 
@@ -35,6 +35,7 @@ export default function AdvisingForm({ student }: { student: Student }) {
   const [course_placements, setCoursePlacements] = useState<CoursePlacement[]>();
   const [programs, setPrograms] = useState<Program[]>();
 
+  const dataFetched = useRef<boolean>(false);
   useEffect(() => {
     const fetchData = async () => {
       const { data: coursePlacementsList, error: coursePlacementError } = await supabase
@@ -60,7 +61,10 @@ export default function AdvisingForm({ student }: { student: Student }) {
       }
     };
 
-    void fetchData();
+    if (!dataFetched.current) {
+      dataFetched.current = true;
+      void fetchData();
+    }
   }, [supabase]);
 
   const defaultValues = {

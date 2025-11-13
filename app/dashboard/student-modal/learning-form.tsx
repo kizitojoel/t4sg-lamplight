@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { toast } from "@/components/ui/use-toast";
 import { createBrowserSupabaseClient } from "@/lib/client-utils";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type Student = Database["public"]["Tables"]["students"]["Row"];
 type CoursePlacement = Database["public"]["Tables"]["course_placement"]["Row"];
@@ -23,6 +23,7 @@ export default function LearningForm({ student }: { student: Student }) {
   const [assessmentResults, setAssessmentResults] = useState<AssessmentResults[]>();
   const [assessmentsDict, setAssessmentsDict] = useState<Record<string, string>>();
 
+  let dataFetched = useRef<boolean>(false);
   useEffect(() => {
     const fetchData = async () => {
       const { data: coursePlacementsList, error: coursePlacementError } = await supabase
@@ -71,7 +72,10 @@ export default function LearningForm({ student }: { student: Student }) {
       else setAssessmentResults(assessmentResults);
     };
 
-    void fetchData();
+    if (!dataFetched.current) {
+      dataFetched.current = true;
+      void fetchData();
+    }
   }, [supabase]);
 
   return (
@@ -87,7 +91,7 @@ export default function LearningForm({ student }: { student: Student }) {
           {assessmentResults == undefined
             ? ""
             : assessmentResults.map((assessment) => (
-                <TableRow>
+                <TableRow key={assessment.id}>
                   <TableCell className="font-medium">
                     {assessmentsDict == undefined ? "" : assessmentsDict[assessment.assessment_id]}
                   </TableCell>

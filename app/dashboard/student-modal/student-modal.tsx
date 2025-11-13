@@ -12,7 +12,7 @@ import {
 import { createBrowserSupabaseClient } from "@/lib/client-utils";
 import { type Database } from "@/lib/schema";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import AdvisingForm from "./advising-form";
 import InfoForm from "./info-form";
 import LearningForm from "./learning-form";
@@ -25,6 +25,7 @@ export default function StudentModal({ studentId }: { studentId: string }) {
 
   const [student, setStudent] = useState<Student>();
 
+  const dataFetched = useRef<boolean>(false);
   useEffect(() => {
     const fetchData = async () => {
       const { data: studentList, error } = await supabase.from("students").select("*").eq("id", studentId);
@@ -33,7 +34,10 @@ export default function StudentModal({ studentId }: { studentId: string }) {
       else setStudent(studentList[0]);
     };
 
-    void fetchData();
+    if (!dataFetched.current) {
+      dataFetched.current = true;
+      void fetchData();
+    }
   }, [studentId, supabase]);
 
   if (!student) return;
