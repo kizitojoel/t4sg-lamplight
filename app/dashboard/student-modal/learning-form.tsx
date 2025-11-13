@@ -5,52 +5,50 @@ import type { Database } from "@/lib/schema";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "@/components/ui/use-toast";
 import { createBrowserSupabaseClient } from "@/lib/client-utils";
-import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 type Student = Database["public"]["Tables"]["students"]["Row"];
-type CoursePlacement = Database["public"]["Tables"]["course_placement"]["Row"];
-type Assessment = Database["public"]["Tables"]["assessments"]["Row"];
+// type CoursePlacement = Database["public"]["Tables"]["course_placement"]["Row"];
+// type Assessment = Database["public"]["Tables"]["assessments"]["Row"];
 type AssessmentResults = Database["public"]["Tables"]["assessment_results"]["Row"];
-type Program = Database["public"]["Tables"]["program"]["Row"];
+// type Program = Database["public"]["Tables"]["program"]["Row"];
 
 export default function LearningForm({ student }: { student: Student }) {
-  const router = useRouter();
   const supabase = createBrowserSupabaseClient();
-  const [course_placements, setCoursePlacements] = useState<CoursePlacement[]>();
-  const [programs, setPrograms] = useState<Program[]>();
-  const [assessments, setAssessments] = useState<Assessment[]>();
+  // const [course_placements, setCoursePlacements] = useState<CoursePlacement[]>();
+  // const [programs, setPrograms] = useState<Program[]>();
+  // const [assessments, setAssessments] = useState<Assessment[]>();
   const [assessmentResults, setAssessmentResults] = useState<AssessmentResults[]>();
   const [assessmentsDict, setAssessmentsDict] = useState<Record<string, string>>();
 
-  let dataFetched = useRef<boolean>(false);
+  const dataFetched = useRef<boolean>(false);
   useEffect(() => {
     const fetchData = async () => {
-      const { data: coursePlacementsList, error: coursePlacementError } = await supabase
-        .from("course_placement")
-        .select();
-      const { data: programList, error: programError } = await supabase.from("program").select();
+      // const { data: coursePlacementsList, error: coursePlacementError } = await supabase
+      //   .from("course_placement")
+      //   .select();
+      // const { data: programList, error: programError } = await supabase.from("program").select();
       const { data: assessmentList, error: assessmentError } = await supabase.from("assessments").select();
       const { data: assessmentResults, error: assessmentResultError } = await supabase
         .from("assessment_results")
         .select()
         .eq("student_id", student.id);
 
-      if (coursePlacementError)
-        return toast({
-          title: "Something went wrong.",
-          description: coursePlacementError.message,
-          variant: "destructive",
-        });
-      else setCoursePlacements(coursePlacementsList);
+      // if (coursePlacementError)
+      //   return toast({
+      //     title: "Something went wrong.",
+      //     description: coursePlacementError.message,
+      //     variant: "destructive",
+      //   });
+      // else setCoursePlacements(coursePlacementsList);
 
-      if (programError)
-        return toast({
-          title: "Something went wrong.",
-          description: programError.message,
-          variant: "destructive",
-        });
-      else setPrograms(programList);
+      // if (programError)
+      //   return toast({
+      //     title: "Something went wrong.",
+      //     description: programError.message,
+      //     variant: "destructive",
+      //   });
+      // else setPrograms(programList);
 
       if (assessmentError)
         return toast({
@@ -59,7 +57,7 @@ export default function LearningForm({ student }: { student: Student }) {
           variant: "destructive",
         });
       else {
-        setAssessments(assessmentList);
+        // setAssessments(assessmentList);
         setAssessmentsDict(Object.fromEntries(assessmentList.map((assessment) => [assessment.id, assessment.name])));
       }
 
@@ -76,7 +74,7 @@ export default function LearningForm({ student }: { student: Student }) {
       dataFetched.current = true;
       void fetchData();
     }
-  }, [supabase]);
+  }, [supabase, student.id]);
 
   return (
     <div>
