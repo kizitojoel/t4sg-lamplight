@@ -31,6 +31,20 @@ export default function StudentsTable({
   const [programFilter, setProgramFilter] = useState("all");
   const [courseFilter, setCourseFilter] = useState("all");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
+
+  // Checkbox
+  const handleCheckboxChange = (studentId: string) => {
+    setSelectedRows((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(studentId)) {
+        newSet.delete(studentId);
+      } else {
+        newSet.add(studentId);
+      }
+      return newSet;
+    });
+  };
 
   // Filter students based on search and filters
   const filteredStudents = students.filter((student) => {
@@ -183,9 +197,14 @@ export default function StudentsTable({
 
         <Table.Body>
           {paginatedStudents.map((student) => (
-            <Table.Row key={student.id}>
+            <Table.Row key={student.id} className={selectedRows.has(student.id) ? "bg-blue-100 dark:bg-blue-900" : ""}>
               <Table.Cell className="border-r text-center" style={{ padding: "8px 8px" }}>
-                <input type="checkbox" style={{ width: "18px", height: "18px", alignContent: "center" }} />
+                <input
+                  type="checkbox"
+                  checked={selectedRows.has(student.id)}
+                  onChange={() => handleCheckboxChange(student.id)}
+                  style={{ width: "18px", height: "18px", alignContent: "center" }}
+                />
               </Table.Cell>
               <Table.Cell className="border-r" style={{ padding: "8px 8px" }}>
                 {student.preferred_name ?? student.legal_first_name} {student.legal_last_name.charAt(0)}
