@@ -8,6 +8,76 @@ export type Database = {
   };
   public: {
     Tables: {
+      assessment_results: {
+        Row: {
+          assessment_id: string;
+          course_offering_id: string;
+          created_at: string;
+          id: string;
+          score: number | null;
+          student_id: string;
+        };
+        Insert: {
+          assessment_id: string;
+          course_offering_id: string;
+          created_at?: string;
+          id?: string;
+          score?: number | null;
+          student_id: string;
+        };
+        Update: {
+          assessment_id?: string;
+          course_offering_id?: string;
+          created_at?: string;
+          id?: string;
+          score?: number | null;
+          student_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "assessment_results_assessment_id_fkey";
+            columns: ["assessment_id"];
+            isOneToOne: false;
+            referencedRelation: "assessments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "assessment_results_course_offering_id_fkey";
+            columns: ["course_offering_id"];
+            isOneToOne: false;
+            referencedRelation: "course_placement";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "assessment_results_student_id_fkey";
+            columns: ["student_id"];
+            isOneToOne: false;
+            referencedRelation: "students";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      assessments: {
+        Row: {
+          active: boolean;
+          created_at: string;
+          id: string;
+          name: string;
+        };
+        Insert: {
+          active?: boolean;
+          created_at?: string;
+          id?: string;
+          name: string;
+        };
+        Update: {
+          active?: boolean;
+          created_at?: string;
+          id?: string;
+          name?: string;
+        };
+        Relationships: [];
+      };
       course_placement: {
         Row: {
           created_at: string;
@@ -125,6 +195,7 @@ export type Database = {
           race: string[] | null;
           referral: string | null;
           residence: string | null;
+          student_code: string | null;
           updated_at: string;
           updated_by: string | null;
         };
@@ -160,6 +231,7 @@ export type Database = {
           race?: string[] | null;
           referral?: string | null;
           residence?: string | null;
+          student_code?: string | null;
           updated_at?: string;
           updated_by?: string | null;
         };
@@ -195,6 +267,7 @@ export type Database = {
           race?: string[] | null;
           referral?: string | null;
           residence?: string | null;
+          student_code?: string | null;
           updated_at?: string;
           updated_by?: string | null;
         };
@@ -227,7 +300,7 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      isadmin: { Args: never; Returns: boolean };
     };
     Enums: {
       course_placement_enum:

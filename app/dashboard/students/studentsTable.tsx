@@ -51,7 +51,7 @@ export default function StudentsTable({
     const allFilteredIds = new Set(sortedStudents.map((student) => student.id));
     const allFilteredSelected = sortedStudents.every((student) => selectedRows.has(student.id));
 
-    setSelectedRows((prev) => {
+    setSelectedRows((_prev) => {
       if (allFilteredSelected) {
         // Deselect all filtered students
         return new Set();
@@ -104,7 +104,7 @@ export default function StudentsTable({
   const paginatedStudents = sortedStudents.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
 
   const [mounted, setMounted] = useState(false);
-  const { theme } = useTheme();
+  useTheme();
 
   // useEffect only runs on the client, so now we can safely show the UI
   useEffect(() => {
