@@ -5,7 +5,6 @@ import { useTheme } from "next-themes";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import StudentModal from "../student-modal/student-modal";
-import StudentImportButton from "./components/StudentImportButton";
 
 interface Student {
   id: string;
@@ -237,11 +236,6 @@ export default function StudentsTable({
       {/* Results count */}
       <div style={{ marginTop: "16px", color: "#666", fontSize: "14px" }}>
         Showing {sortedStudents.length} of {students.length} students
-      </div>
-
-      {/* Import from Google Sheets button at bottom */}
-      <div className="mt-10">
-        <StudentImportButton />
       </div>
     </div>
   );

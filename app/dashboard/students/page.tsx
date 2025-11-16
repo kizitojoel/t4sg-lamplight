@@ -1,5 +1,6 @@
 import { createServerSupabaseClient } from "@/lib/server-utils";
 import { redirect } from "next/navigation";
+import StudentImportButton from "./components/StudentImportButton";
 import StudentsTable from "./studentsTable";
 
 export default async function StudentsPage() {
@@ -48,5 +49,13 @@ export default async function StudentsPage() {
     return <div>Error loading courses: {coursesError.message}</div>;
   }
 
-  return <StudentsTable students={students ?? []} programs={programs ?? []} courses={courses ?? []} />;
+  return (
+    <div>
+      <StudentsTable students={students ?? []} programs={programs ?? []} courses={courses ?? []} />
+      {/* Import from Google Sheets button at bottom */}
+      <div className="mt-10">
+        <StudentImportButton />
+      </div>
+    </div>
+  );
 }
