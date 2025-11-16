@@ -46,6 +46,26 @@ export default function StudentsTable({
     });
   };
 
+  // Select all checkbox
+  const handleSelectAll = () => {
+    const currentPageIds = new Set(paginatedStudents.map((student) => student.id));
+    const allCurrentPageSelected = paginatedStudents.every((student) => selectedRows.has(student.id));
+
+    setSelectedRows((prev) => {
+      const newSet = new Set(prev);
+
+      if (allCurrentPageSelected) {
+        // Deselect all on current page
+        currentPageIds.forEach((id) => newSet.delete(id));
+      } else {
+        // Select all on current page (add to existing selections)
+        currentPageIds.forEach((id) => newSet.add(id));
+      }
+
+      return newSet;
+    });
+  };
+
   // Filter students based on search and filters
   const filteredStudents = students.filter((student) => {
     // Search filter (name, email, phone)
@@ -158,10 +178,19 @@ export default function StudentsTable({
       </div>
 
       {/* Radix Table */}
-      <Table.Root variant="surface" className={`border border-gray-50 ${theme}`}>
+      <Table.Root variant="surface" className="{`border ${theme}`} border-gray-50">
         <Table.Header>
           <Table.Row>
-            <Table.ColumnHeaderCell className="w-[60px] border-r"></Table.ColumnHeaderCell>
+            <Table.ColumnHeaderCell className="w-[60px] border-r text-center" style={{ padding: "8px 8px" }}>
+              <input
+                type="checkbox"
+                checked={
+                  paginatedStudents.length > 0 && paginatedStudents.every((student) => selectedRows.has(student.id))
+                }
+                onChange={handleSelectAll}
+                style={{ width: "18px", height: "18px" }}
+              />
+            </Table.ColumnHeaderCell>
             <Table.ColumnHeaderCell
               onClick={toggleSort}
               className="border-r"
