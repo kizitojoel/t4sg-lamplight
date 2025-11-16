@@ -61,6 +61,97 @@ export default function StudentsTable({
     });
   };
 
+  // Export CSV
+  const handleExportCSV = async () => {
+    // Check if any students are selected
+    if (selectedRows.size === 0) {
+      alert("Please select students to export");
+      return;
+    }
+
+    try {
+      // Fetch full student data from Supabase for selected students
+      const { createBrowserSupabaseClient } = await import("@/lib/client-utils");
+      const supabase = createBrowserSupabaseClient();
+
+      const { data: fullStudentData, error } = await supabase
+        .from("students")
+        .select("*")
+        .in("id", Array.from(selectedRows));
+
+      if (error) {
+        console.error("Error fetching student data:", error);
+        alert("Failed to export students. Please try again.");
+        return;
+      }
+
+      if (!fullStudentData || fullStudentData.length === 0) {
+        alert("No student data found to export");
+        return;
+      }
+
+      // Get all column names from the first student record
+      const firstStudent = fullStudentData[0];
+      if (!firstStudent) {
+        alert("No student data found to export");
+        return;
+      }
+
+      // Get all column names from the first student record
+      const headers = Object.keys(firstStudent).filter((key) => key !== "id");
+
+      // Create CSV rows
+      const rows = fullStudentData.map((student) =>
+        headers.map((header) => {
+          const value = student[header as keyof typeof student];
+          // Handle arrays
+          if (Array.isArray(value)) {
+            return value.join("; ");
+          }
+          // Handle booleans
+          if (typeof value === "boolean") {
+            return value ? "Yes" : "No";
+          }
+          // Handle null/undefined
+          return value ?? "";
+        }),
+      );
+
+      // Combine headers and rows
+      const csvContent = [headers.join(","), ...rows.map((row) => row.map((cell) => `"${cell}"`).join(","))].join("\n");
+
+      // Determine filename based on filters
+      let filename = "students_export.csv";
+
+      const hasFilters = programFilter !== "all" || courseFilter !== "all" || searchTerm !== "";
+      const isManualSelection = selectedRows.size !== sortedStudents.length;
+
+      if (hasFilters && !isManualSelection) {
+        const parts = [];
+        if (programFilter !== "all") parts.push(programFilter);
+        if (courseFilter !== "all") parts.push(courseFilter);
+        if (searchTerm) parts.push(searchTerm);
+        filename = `students_${parts.join("_").replace(/\s+/g, "_")}.csv`;
+      } else if (isManualSelection) {
+        filename = "students_custom.csv";
+      }
+
+      // Create blob and download
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", filename);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Error exporting students:", error);
+      alert("Failed to export students. Please try again.");
+    }
+  };
+
   // Filter students based on search and filters
   const filteredStudents = students.filter((student) => {
     // Search filter (name, email, phone)
@@ -164,7 +255,9 @@ export default function StudentsTable({
         <div className="flex-1"></div>
 
         {/* Export CSV Button */}
-        <button className="bg-accent cursor-pointer rounded-2xl px-4 py-2.5">Export CSV</button>
+        <button onClick={handleExportCSV} className="bg-accent cursor-pointer rounded-2xl px-4 py-2.5">
+          Export CSV
+        </button>
 
         {/* Add Student Button */}
         <Link href="/dashboard/newstudent">
