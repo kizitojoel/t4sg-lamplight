@@ -48,21 +48,17 @@ export default function StudentsTable({
 
   // Select all checkbox
   const handleSelectAll = () => {
-    const currentPageIds = new Set(paginatedStudents.map((student) => student.id));
-    const allCurrentPageSelected = paginatedStudents.every((student) => selectedRows.has(student.id));
+    const allFilteredIds = new Set(sortedStudents.map((student) => student.id));
+    const allFilteredSelected = sortedStudents.every((student) => selectedRows.has(student.id));
 
     setSelectedRows((prev) => {
-      const newSet = new Set(prev);
-
-      if (allCurrentPageSelected) {
-        // Deselect all on current page
-        currentPageIds.forEach((id) => newSet.delete(id));
+      if (allFilteredSelected) {
+        // Deselect all filtered students
+        return new Set();
       } else {
-        // Select all on current page (add to existing selections)
-        currentPageIds.forEach((id) => newSet.add(id));
+        // Select all filtered students
+        return allFilteredIds;
       }
-
-      return newSet;
     });
   };
 
@@ -184,9 +180,7 @@ export default function StudentsTable({
             <Table.ColumnHeaderCell className="w-[60px] border-r text-center" style={{ padding: "8px 8px" }}>
               <input
                 type="checkbox"
-                checked={
-                  paginatedStudents.length > 0 && paginatedStudents.every((student) => selectedRows.has(student.id))
-                }
+                checked={sortedStudents.length > 0 && sortedStudents.every((student) => selectedRows.has(student.id))}
                 onChange={handleSelectAll}
                 style={{ width: "18px", height: "18px" }}
               />
