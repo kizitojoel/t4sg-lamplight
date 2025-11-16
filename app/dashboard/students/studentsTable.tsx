@@ -219,7 +219,7 @@ export default function StudentsTable({
 
         <Table.Body>
           {paginatedStudents.map((student) => (
-            <Table.Row key={student.id} className={selectedRows.has(student.id) ? "bg-blue-100 dark:bg-blue-900" : ""}>
+            <Table.Row key={student.id} className={selectedRows.has(student.id) ? "bg-accent/75" : ""}>
               <Table.Cell className="border-r text-center" style={{ padding: "8px 8px" }}>
                 <input
                   type="checkbox"
