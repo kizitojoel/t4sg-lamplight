@@ -36,11 +36,17 @@ const COLUMN_MAPPING: Record<string, string> = {
   // Financial Info
   "Is your household income below the limit for the number of people in your family? (Instructions: Add together the total income of all people living in your home. Next, find the column for the number of people in your family. Is your household income lower than that number?)":
     "household_income",
+
+  // Student Code (stored in DB)
+  "Student Code": "student_code",
+
+  // Returning Student Info, read-only, not stored in DB
+  is_returning: "is_returning",
 };
 
 export type CSVRow = Record<string, string | undefined>;
 
-type StudentData = Record<string, unknown>;
+export type StudentData = Record<string, unknown>;
 
 export function mapCSVRowToStudent(csvRow: CSVRow): StudentData {
   const mappedData: StudentData = {};
@@ -50,7 +56,12 @@ export function mapCSVRowToStudent(csvRow: CSVRow): StudentData {
     const dbColumn = COLUMN_MAPPING[csvHeader];
 
     if (dbColumn && value !== null && value !== undefined && value !== "") {
-      mappedData[dbColumn] = transformValue(dbColumn, value);
+      // Special handling: is_returning is read-only, so we don't store it in DB
+      if (dbColumn === "is_returning") {
+        mappedData[dbColumn] = transformValue(dbColumn, value);
+      } else {
+        mappedData[dbColumn] = transformValue(dbColumn, value);
+      }
     }
   }
 
@@ -89,7 +100,7 @@ function transformValue(columnName: string, value: string): unknown {
     }
 
     case "race": {
-      // Handle multiple races (comma-separated)
+      // Handle multiple races
       if (typeof trimmedValue === "string" && trimmedValue.includes(",")) {
         return trimmedValue.split(",").map((r: string) => r.trim());
       }
@@ -103,6 +114,38 @@ function transformValue(columnName: string, value: string): unknown {
         if (lower.includes("yes")) return "yes";
         if (lower.includes("no")) return "no";
         if (lower.includes("maybe")) return "maybe";
+      }
+      return trimmedValue;
+    }
+
+    case "is_returning": {
+      // Normalize is_returning to lowercase "yes" or "no"
+      if (typeof trimmedValue === "string") {
+        const lower = trimmedValue.toLowerCase();
+        if (lower === "yes" || lower === "y" || lower === "true" || lower === "1") {
+          return "yes";
+        }
+        if (lower === "no" || lower === "n" || lower === "false" || lower === "0") {
+          return "no";
+        }
+        // Invalid value - return as is for validation to catch
+        return trimmedValue;
+      }
+      return trimmedValue;
+    }
+
+    case "student_code": {
+      // Validate and normalize student_code format (STU-XXXXX, 1-5 digits)
+      // Values > 99,999 will be caught as "not found" during database lookup
+      if (typeof trimmedValue === "string") {
+        const normalized = trimmedValue.trim().toUpperCase();
+        // Validate format: STU- followed by 1-5 digits
+        const studentCodePattern = /^STU-\d{1,5}$/;
+        if (studentCodePattern.test(normalized)) {
+          return normalized;
+        }
+        // Invalid format - return as is for validation to catch
+        return trimmedValue;
       }
       return trimmedValue;
     }
@@ -135,4 +178,221 @@ export function getValidationErrors(student: StudentData): string[] {
   }
 
   return errors;
+}
+
+// Validate is_returning field
+export function validateIsReturning(isReturning: unknown): { valid: boolean; normalized?: string; error?: string } {
+  if (isReturning === undefined || isReturning === null || isReturning === "") {
+    return { valid: false, error: "Missing is_returning field" };
+  }
+
+  if (typeof isReturning === "string") {
+    const lower = isReturning.toLowerCase();
+    if (lower === "yes" || lower === "no") {
+      return { valid: true, normalized: lower };
+    }
+  }
+
+  const isReturningStr =
+    typeof isReturning === "string"
+      ? isReturning
+      : typeof isReturning === "number"
+        ? String(isReturning)
+        : JSON.stringify(isReturning);
+  return { valid: false, error: `Invalid is_returning value: ${isReturningStr}. Must be "yes" or "no"` };
+}
+
+// Validate student_code format
+export function validateStudentCode(studentCode: unknown): { valid: boolean; normalized?: string; error?: string } {
+  if (studentCode === undefined || studentCode === null || studentCode === "") {
+    return { valid: false, error: "Missing student_code" };
+  }
+
+  if (typeof studentCode === "string") {
+    const normalized = studentCode.trim().toUpperCase();
+    const studentCodePattern = /^STU-\d{1,5}$/;
+    if (studentCodePattern.test(normalized)) {
+      return { valid: true, normalized };
+    }
+    return { valid: false, error: `Invalid student_code format: ${studentCode}. Must be STU-XXXXX (1-5 digits)` };
+  }
+
+  return { valid: false, error: `Invalid student_code type: ${typeof studentCode}` };
+}
+
+// Split students into new, returning, and invalid
+export interface StudentSplitResult {
+  newStudents: StudentData[];
+  returningStudents: StudentData[];
+  invalidStudents: { student: StudentData; error: string }[];
+}
+
+export function splitStudentsByReturningStatus(students: StudentData[]): StudentSplitResult {
+  const result: StudentSplitResult = {
+    newStudents: [],
+    returningStudents: [],
+    invalidStudents: [],
+  };
+
+  for (const student of students) {
+    const isReturning = student.is_returning;
+    const studentCode = student.student_code;
+
+    // Validate is_returning
+    const isReturningValidation = validateIsReturning(isReturning);
+    if (!isReturningValidation.valid) {
+      result.invalidStudents.push({
+        student,
+        error: isReturningValidation.error ?? "Invalid is_returning",
+      });
+      continue;
+    }
+
+    const normalizedIsReturning = isReturningValidation.normalized;
+
+    // If is_returning is "yes", student_code is required
+    if (normalizedIsReturning === "yes") {
+      const codeValidation = validateStudentCode(studentCode);
+      if (!codeValidation.valid) {
+        result.invalidStudents.push({
+          student,
+          error: codeValidation.error ?? "Missing or invalid student_code for returning student",
+        });
+        continue;
+      }
+
+      // Valid returning student
+      result.returningStudents.push(student);
+    } else {
+      // is_returning is "no" or empty - treat as new student
+      // Remove student_code if present (will be auto-generated)
+      const newStudent = { ...student };
+      delete newStudent.student_code;
+      result.newStudents.push(newStudent);
+    }
+  }
+
+  return result;
+}
+
+// Detect name mismatches between CSV and database
+export function detectNameMismatches(
+  returningStudents: StudentData[],
+  dbStudents: Map<string, Record<string, unknown>>,
+  rowOffset = 0,
+): {
+  studentCode: string;
+  dbFirstName: string;
+  dbLastName: string;
+  csvFirstName: string;
+  csvLastName: string;
+  csvRow: StudentData;
+  rowNumber: number;
+}[] {
+  const mismatches: {
+    studentCode: string;
+    dbFirstName: string;
+    dbLastName: string;
+    csvFirstName: string;
+    csvLastName: string;
+    csvRow: StudentData;
+    rowNumber: number;
+  }[] = [];
+
+  for (let i = 0; i < returningStudents.length; i++) {
+    const csvStudent = returningStudents[i];
+    if (!csvStudent) continue;
+
+    const studentCode = csvStudent.student_code as string | undefined;
+
+    if (!studentCode) {
+      continue;
+    }
+
+    const dbStudent = dbStudents.get(studentCode);
+    if (!dbStudent) {
+      continue; // Will be caught as "not found" error later
+    }
+
+    const csvFirstName = (csvStudent.legal_first_name as string)?.trim() ?? "";
+    const csvLastName = (csvStudent.legal_last_name as string)?.trim() ?? "";
+    const dbFirstName = (dbStudent.legal_first_name as string)?.trim() ?? "";
+    const dbLastName = (dbStudent.legal_last_name as string)?.trim() ?? "";
+
+    // Check if names match (case-insensitive)
+    if (
+      csvFirstName.toLowerCase() !== dbFirstName.toLowerCase() ||
+      csvLastName.toLowerCase() !== dbLastName.toLowerCase()
+    ) {
+      mismatches.push({
+        studentCode,
+        dbFirstName,
+        dbLastName,
+        csvFirstName,
+        csvLastName,
+        csvRow: csvStudent,
+        rowNumber: rowOffset + i + 1,
+      });
+    }
+  }
+
+  return mismatches;
+}
+
+// Get only changed fields between existing and new student data
+export function getChangedFields(
+  existingStudent: Record<string, unknown>,
+  csvStudent: StudentData,
+): Record<string, unknown> {
+  const changes: Record<string, unknown> = {};
+
+  // Fields to never update
+  const excludeFields = new Set(["id", "created_at", "created_by", "student_code"]);
+
+  // Compare each field
+  for (const [key, csvValue] of Object.entries(csvStudent)) {
+    // Skip is_returning field
+    if (key === "is_returning") {
+      continue;
+    }
+
+    // Skip excluded fields
+    if (excludeFields.has(key)) {
+      continue;
+    }
+
+    const dbValue = existingStudent[key];
+
+    // Deep comparison for arrays for instance race)
+    if (Array.isArray(csvValue) && Array.isArray(dbValue)) {
+      const csvSorted = [...csvValue].sort().join(",");
+      const dbSorted = [...dbValue].sort().join(",");
+      if (csvSorted !== dbSorted) {
+        changes[key] = csvValue;
+      }
+    } else if (csvValue !== dbValue) {
+      // Handle null/undefined comparison
+      const csvNormalized = csvValue ?? null;
+      const dbNormalized = dbValue ?? null;
+
+      if (csvNormalized !== dbNormalized) {
+        changes[key] = csvValue;
+      }
+    }
+  }
+
+  return changes;
+}
+
+// Helper function to convert detectNameMismatches result to NameMismatch format
+export function convertToNameMismatches(mismatches: ReturnType<typeof detectNameMismatches>): {
+  studentCode: string;
+  dbFirstName: string;
+  dbLastName: string;
+  csvFirstName: string;
+  csvLastName: string;
+  csvRow: StudentData;
+  rowNumber: number;
+}[] {
+  return mismatches;
 }
