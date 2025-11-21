@@ -80,7 +80,6 @@ export default function StudentsTable({
         .in("id", Array.from(selectedRows));
 
       if (error) {
-        console.error("Error fetching student data:", error);
         alert("Failed to export students. Please try again.");
         return;
       }
@@ -147,7 +146,6 @@ export default function StudentsTable({
       link.click();
       document.body.removeChild(link);
     } catch (error) {
-      console.error("Error exporting students:", error);
       alert("Failed to export students. Please try again.");
     }
   };
@@ -255,7 +253,7 @@ export default function StudentsTable({
         <div className="flex-1"></div>
 
         {/* Export CSV Button */}
-        <button onClick={handleExportCSV} className="bg-accent cursor-pointer rounded-2xl px-4 py-2.5">
+        <button onClick={() => void handleExportCSV()} className="bg-accent cursor-pointer rounded-2xl px-4 py-2.5">
           Export CSV
         </button>
 
