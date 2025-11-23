@@ -1,7 +1,5 @@
-import { Button } from "@/components/ui/button";
 import { TypographyH2, TypographyP } from "@/components/ui/typography";
 import { createServerSupabaseClient } from "@/lib/server-utils";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
 export default async function Dashboard() {
@@ -30,30 +28,13 @@ export default async function Dashboard() {
     <>
       <div className="flex items-center justify-between">
         <TypographyH2 className="border-b-0">Dashboard</TypographyH2>
-        <Link href="/dashboard/newstudent">
+        {/* <Link href="/dashboard/newstudent">
           <Button className="cursor-pointer">Add Student</Button>
-        </Link>
+        </Link> */}
       </div>
       <div className="border-b"></div>
       <TypographyP>This is a protected route accessible only to signed-in users.</TypographyP>
       {userEmail && <TypographyP>{`Your email is ${userEmail}`}</TypographyP>}
-
-      {/* temp button to students page */}
-      <div style={{ marginTop: "20px" }}>
-        <Link
-          href="/dashboard/students"
-          style={{
-            display: "inline-block",
-            padding: "10px 20px",
-            backgroundColor: "#0070f3",
-            color: "white",
-            textDecoration: "none",
-            borderRadius: "5px",
-          }}
-        >
-          View Students
-        </Link>
-      </div>
     </>
   );
 }

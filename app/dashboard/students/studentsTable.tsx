@@ -30,6 +30,36 @@ export default function StudentsTable({
   const [programFilter, setProgramFilter] = useState("all");
   const [courseFilter, setCourseFilter] = useState("all");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
+
+  // Checkbox
+  const handleCheckboxChange = (studentId: string) => {
+    setSelectedRows((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(studentId)) {
+        newSet.delete(studentId);
+      } else {
+        newSet.add(studentId);
+      }
+      return newSet;
+    });
+  };
+
+  // Select all checkbox
+  const handleSelectAll = () => {
+    const allFilteredIds = new Set(sortedStudents.map((student) => student.id));
+    const allFilteredSelected = sortedStudents.every((student) => selectedRows.has(student.id));
+
+    setSelectedRows((_prev) => {
+      if (allFilteredSelected) {
+        // Deselect all filtered students
+        return new Set();
+      } else {
+        // Select all filtered students
+        return allFilteredIds;
+      }
+    });
+  };
 
   // Filter students based on search and filters
   const filteredStudents = students.filter((student) => {
@@ -73,7 +103,7 @@ export default function StudentsTable({
   const paginatedStudents = sortedStudents.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
 
   const [mounted, setMounted] = useState(false);
-  const { theme } = useTheme();
+  useTheme();
 
   // useEffect only runs on the client, so now we can safely show the UI
   useEffect(() => {
@@ -143,10 +173,17 @@ export default function StudentsTable({
       </div>
 
       {/* Radix Table */}
-      <Table.Root variant="surface" className={`border border-gray-50 ${theme}`}>
+      <Table.Root variant="surface" className="{`border ${theme}`} border-gray-50">
         <Table.Header>
           <Table.Row>
-            <Table.ColumnHeaderCell className="w-[60px] border-r"></Table.ColumnHeaderCell>
+            <Table.ColumnHeaderCell className="w-[60px] border-r text-center" style={{ padding: "8px 8px" }}>
+              <input
+                type="checkbox"
+                checked={sortedStudents.length > 0 && sortedStudents.every((student) => selectedRows.has(student.id))}
+                onChange={handleSelectAll}
+                style={{ width: "18px", height: "18px" }}
+              />
+            </Table.ColumnHeaderCell>
             <Table.ColumnHeaderCell
               onClick={toggleSort}
               className="border-r"
@@ -182,9 +219,14 @@ export default function StudentsTable({
 
         <Table.Body>
           {paginatedStudents.map((student) => (
-            <Table.Row key={student.id}>
+            <Table.Row key={student.id} className={selectedRows.has(student.id) ? "bg-blue-100 dark:bg-blue-900" : ""}>
               <Table.Cell className="border-r text-center" style={{ padding: "8px 8px" }}>
-                <input type="checkbox" style={{ width: "18px", height: "18px", alignContent: "center" }} />
+                <input
+                  type="checkbox"
+                  checked={selectedRows.has(student.id)}
+                  onChange={() => handleCheckboxChange(student.id)}
+                  style={{ width: "18px", height: "18px", alignContent: "center" }}
+                />
               </Table.Cell>
               <Table.Cell className="border-r" style={{ padding: "8px 8px" }}>
                 {student.preferred_name ?? student.legal_first_name} {student.legal_last_name.charAt(0)}
