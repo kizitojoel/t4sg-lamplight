@@ -4,8 +4,6 @@ import type { Constants } from "@/lib/schema";
 import Papa from "papaparse";
 import { useState } from "react";
 import {
-  convertToNameMismatches,
-  detectNameMismatches,
   isValidStudent,
   mapCSVRowToStudent,
   splitStudentsByReturningStatus,
@@ -16,12 +14,11 @@ import {
   importNewStudents,
   lookupReturningStudents,
   updateReturningStudents,
-  type NameMismatch,
-  type NameMismatchDecision,
+  validateNewStudents,
+  validateReturningStudents,
 } from "../utils/studentImporter";
 import { ErrorReportModal, type ErrorInfo } from "./ErrorReportModal";
 import { LoadingOverlay } from "./LoadingOverlay";
-import { NameMismatchConfirmationModal } from "./NameMismatchConfirmationModal";
 import { StudentImportModal } from "./StudentImportModal";
 import { Toast } from "./Toast";
 
@@ -39,11 +36,6 @@ export default function StudentImportButton() {
   const [isImporting, setIsImporting] = useState(false);
   const [importMessage, setImportMessage] = useState("");
   const [toast, setToast] = useState<ToastState>(null);
-  const [showNameMismatchModal, setShowNameMismatchModal] = useState(false);
-  const [nameMismatches, setNameMismatches] = useState<NameMismatch[]>([]);
-  const [pendingReturningStudents, setPendingReturningStudents] = useState<StudentData[]>([]);
-  const [pendingDbStudents, setPendingDbStudents] = useState<Map<string, Record<string, unknown>>>(new Map());
-  const [pendingRowOffset, setPendingRowOffset] = useState(0);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [importErrors, setImportErrors] = useState<ErrorInfo[]>([]);
 
@@ -75,8 +67,8 @@ export default function StudentImportButton() {
       complete: (results) => {
         void (async () => {
           try {
-            // Step 1: Validate CSV
-            setImportMessage("Validating data...");
+            // Step 1: Parse CSV
+            setImportMessage("Parsing CSV file...");
             await sleep(300);
 
             if ((results.data ?? []).length === 0) {
@@ -99,7 +91,7 @@ export default function StudentImportButton() {
               }),
             );
 
-            // Step 3: Validate students
+            // Step 3: Basic validation - required fields
             setImportMessage("Validating student records...");
             await sleep(300);
 
@@ -118,13 +110,7 @@ export default function StudentImportButton() {
             const splitResult = splitStudentsByReturningStatus(validStudents);
 
             // Collect errors from invalid students
-            const allErrors: {
-              rowNumber: number;
-              studentName: string;
-              error: string;
-              errorType?: string;
-              studentCode?: string;
-            }[] = [];
+            const allErrors: ErrorInfo[] = [];
             for (let i = 0; i < splitResult.invalidStudents.length; i++) {
               const invalid = splitResult.invalidStudents[i];
               if (!invalid) continue;
@@ -141,31 +127,21 @@ export default function StudentImportButton() {
               });
             }
 
-            // Step 5: Import new students
-            let newStudentResult = { newCount: 0, skippedCount: 0 };
+            // PHASE 1: VALIDATION Before any database writes
+
+            // Step 5: Validate ALL new students
+            const newStudentRowOffset = splitResult.invalidStudents.length;
             if (splitResult.newStudents.length > 0) {
               setImportMessage(
-                `Importing ${splitResult.newStudents.length} new student${splitResult.newStudents.length !== 1 ? "s" : ""}...`,
+                `Validating ${splitResult.newStudents.length} new student${splitResult.newStudents.length !== 1 ? "s" : ""}...`,
               );
               await sleep(300);
 
-              // Calculate row offset: invalid students come first, then new students
-              const rowOffset = splitResult.invalidStudents.length;
+              const validationResult = await validateNewStudents(splitResult.newStudents, newStudentRowOffset);
 
-              const newResult = await importNewStudents(
-                splitResult.newStudents as Parameters<typeof importNewStudents>[0],
-                rowOffset,
-              );
-
-              newStudentResult = {
-                newCount: newResult.newCount,
-                skippedCount: newResult.skippedCount,
-              };
-
-              // Add all errors from import including duplicates
-              if (newResult.errors.length > 0) {
+              if (validationResult.errors.length > 0) {
                 allErrors.push(
-                  ...newResult.errors.map((e) => ({
+                  ...validationResult.errors.map((e) => ({
                     rowNumber: e.rowNumber,
                     studentName: e.studentName,
                     studentCode: e.studentCode,
@@ -176,121 +152,122 @@ export default function StudentImportButton() {
               }
             }
 
-            // Step 6: Process returning students
-            let returningUpdateResult = { updatedCount: 0, skippedCount: 0 };
+            // Step 6: Validate ALL returning students
+            const returningStudentRowOffset = newStudentRowOffset + splitResult.newStudents.length;
+            let dbStudentsForUpdates = new Map<string, Record<string, unknown>>();
             if (splitResult.returningStudents.length > 0) {
               setImportMessage(
-                `Processing ${splitResult.returningStudents.length} returning student${splitResult.returningStudents.length !== 1 ? "s" : ""}...`,
+                `Validating ${splitResult.returningStudents.length} returning student${splitResult.returningStudents.length !== 1 ? "s" : ""}...`,
               );
               await sleep(300);
 
-              // Lookup all returning students
-              const studentCodes = splitResult.returningStudents
-                .map((s) => s.student_code as string)
-                .filter((code): code is string => Boolean(code));
+              const validationResult = await validateReturningStudents(
+                splitResult.returningStudents,
+                returningStudentRowOffset,
+              );
 
-              let dbStudents: Map<string, Record<string, unknown>>;
-              try {
-                dbStudents = await lookupReturningStudents(studentCodes);
-              } catch (error) {
-                // If lookup fails, add error for all returning students
-                const errorMessage = error instanceof Error ? error.message : "Failed to lookup returning students";
-                for (let i = 0; i < splitResult.returningStudents.length; i++) {
-                  const student = splitResult.returningStudents[i];
-                  if (!student) continue;
-                  const firstName = typeof student.legal_first_name === "string" ? student.legal_first_name : "";
-                  const lastName = typeof student.legal_last_name === "string" ? student.legal_last_name : "";
-                  const studentName = `${firstName} ${lastName}`.trim() || "Unknown";
+              if (validationResult.errors.length > 0) {
+                allErrors.push(
+                  ...validationResult.errors.map((e) => ({
+                    rowNumber: e.rowNumber,
+                    studentName: e.studentName,
+                    studentCode: e.studentCode,
+                    error: e.message,
+                    errorType: e.errorType,
+                  })),
+                );
+              } else {
+                // If validation passed, lookup DB students for Phase 2 updates
+                const studentCodes = splitResult.returningStudents
+                  .map((s) => s.student_code as string)
+                  .filter((code): code is string => Boolean(code));
+                try {
+                  dbStudentsForUpdates = await lookupReturningStudents(studentCodes);
+                } catch (error) {
+                  // Should not happen if validation passed, but handle errors effectively
                   allErrors.push({
-                    rowNumber: validStudents.length - splitResult.returningStudents.length + i + 1,
-                    studentName,
-                    error: errorMessage,
+                    rowNumber: 0,
+                    studentName: "Validation",
+                    error: `Failed to lookup returning students: ${error instanceof Error ? error.message : "Unknown error"}`,
                     errorType: "LOOKUP_FAILED",
-                    studentCode: student.student_code as string | undefined,
                   });
                 }
-                // Continue with import - new students can still be processed
-                dbStudents = new Map();
-              }
-
-              // Detect name mismatches
-              const mismatchesRaw = detectNameMismatches(
-                splitResult.returningStudents,
-                dbStudents,
-                validStudents.length - splitResult.returningStudents.length,
-              );
-              const mismatches = convertToNameMismatches(mismatchesRaw);
-
-              // Split returning students into good and pending
-              const goodReturningStudents: StudentData[] = [];
-              const pendingReturningStudents: StudentData[] = [];
-              const mismatchCodes = new Set(mismatches.map((m) => m.studentCode));
-
-              for (const student of splitResult.returningStudents) {
-                const studentCode = student.student_code as string;
-                if (mismatchCodes.has(studentCode)) {
-                  pendingReturningStudents.push(student);
-                } else {
-                  goodReturningStudents.push(student);
-                }
-              }
-
-              // Step 7: Process good returning students - with no name mismatches
-              if (goodReturningStudents.length > 0) {
-                setImportMessage(
-                  `Updating ${goodReturningStudents.length} returning student${goodReturningStudents.length !== 1 ? "s" : ""}...`,
-                );
-                await sleep(300);
-
-                const updateResult = await updateReturningStudents(
-                  goodReturningStudents,
-                  dbStudents,
-                  undefined,
-                  validStudents.length - splitResult.returningStudents.length,
-                );
-
-                returningUpdateResult = {
-                  updatedCount: updateResult.updatedCount,
-                  skippedCount: updateResult.skippedCount,
-                };
-
-                if (updateResult.errors.length > 0) {
-                  allErrors.push(
-                    ...updateResult.errors.map((e) => ({
-                      rowNumber: e.rowNumber,
-                      studentName: e.studentName,
-                      studentCode: e.studentCode,
-                      error: e.message,
-                      errorType: e.errorType,
-                    })),
-                  );
-                }
-              }
-
-              // Step 8: Handle name mismatches
-              if (mismatches.length > 0) {
-                // Store pending data for after modal confirmation
-                setPendingReturningStudents(pendingReturningStudents);
-                setPendingDbStudents(dbStudents);
-                setPendingRowOffset(
-                  validStudents.length - splitResult.returningStudents.length + goodReturningStudents.length,
-                );
-                setNameMismatches(mismatches);
-                setShowNameMismatchModal(true);
-                setIsImporting(false); // Pause import while waiting for admin decision
-                return; // Exit early, will continue after modal confirmation
               }
             }
 
-            // Step 9: Show final results if we have no name mismatches
+            // Step 7: If any validation errors, abort completely
+            if (allErrors.length > 0) {
+              setIsImporting(false);
+              setImportErrors(allErrors);
+              setShowErrorModal(true);
+              showToast("Validation failed. Please fix errors and try again.", "error");
+              return;
+            }
+
+            // PHASE 2: DATABASE WRITES - Only if validation passes
+
+            // Step 8: Insert all new students
+            let newCount = 0;
+            if (splitResult.newStudents.length > 0) {
+              setImportMessage(
+                `Importing ${splitResult.newStudents.length} new student${splitResult.newStudents.length !== 1 ? "s" : ""}...`,
+              );
+              await sleep(300);
+
+              const importResult = await importNewStudents(
+                splitResult.newStudents as Parameters<typeof importNewStudents>[0],
+                newStudentRowOffset,
+              );
+
+              newCount = importResult.newCount;
+
+              // Collect infrastructure errors but with allowance of partial success
+              if (importResult.errors.length > 0) {
+                allErrors.push(
+                  ...importResult.errors.map((e) => ({
+                    rowNumber: e.rowNumber,
+                    studentName: e.studentName,
+                    studentCode: e.studentCode,
+                    error: e.message,
+                    errorType: e.errorType,
+                  })),
+                );
+              }
+            }
+
+            // Step 9: Update all returning students
+            let updatedCount = 0;
+            if (splitResult.returningStudents.length > 0) {
+              setImportMessage(
+                `Updating ${splitResult.returningStudents.length} returning student${splitResult.returningStudents.length !== 1 ? "s" : ""}...`,
+              );
+              await sleep(300);
+
+              const updateResult = await updateReturningStudents(
+                splitResult.returningStudents,
+                dbStudentsForUpdates,
+                returningStudentRowOffset,
+              );
+
+              updatedCount = updateResult.updatedCount;
+
+              // Collect infrastructure errors
+              if (updateResult.errors.length > 0) {
+                allErrors.push(
+                  ...updateResult.errors.map((e) => ({
+                    rowNumber: e.rowNumber,
+                    studentName: e.studentName,
+                    studentCode: e.studentCode,
+                    error: e.message,
+                    errorType: e.errorType,
+                  })),
+                );
+              }
+            }
+
+            // Step 10: Show final results
             setIsImporting(false);
-            showFinalResults(
-              allErrors,
-              newStudentResult.newCount,
-              splitResult.returningStudents.length,
-              returningUpdateResult.updatedCount,
-              newStudentResult.skippedCount + returningUpdateResult.skippedCount,
-            );
+            showFinalResults(allErrors, newCount, updatedCount);
           } catch (error) {
             showToast(
               `Failed to import students: ${error instanceof Error ? error.message : "Unknown error"}`,
@@ -307,78 +284,15 @@ export default function StudentImportButton() {
     });
   };
 
-  const handleNameMismatchConfirm = async (decisions: Map<string, NameMismatchDecision>) => {
-    setShowNameMismatchModal(false);
-    setIsImporting(true);
-    setImportMessage("Processing name mismatch decisions...");
-
-    await sleep(300);
-
-    // Process pending returning students with admin decisions
-    const updateResult = await updateReturningStudents(
-      pendingReturningStudents,
-      pendingDbStudents,
-      decisions,
-      pendingRowOffset,
-    );
-
-    setIsImporting(false);
-
-    // Collect all results
-    const allErrors: {
-      rowNumber: number;
-      studentName: string;
-      error: string;
-      studentCode?: string;
-      errorType?: string;
-    }[] = [];
-    if (updateResult.errors.length > 0) {
-      allErrors.push(
-        ...updateResult.errors.map((e) => ({
-          rowNumber: e.rowNumber,
-          studentName: e.studentName,
-          studentCode: e.studentCode,
-          error: e.message,
-          errorType: e.errorType,
-        })),
-      );
-    }
-
-    // Show final results
-    const newCount = pendingReturningStudents.length === 0 ? 0 : 0; // New students already processed
-    const returningCount = pendingReturningStudents.length;
-    showFinalResults(allErrors, newCount, returningCount, updateResult.updatedCount, updateResult.skippedCount);
-  };
-
-  const handleNameMismatchCancel = () => {
-    setShowNameMismatchModal(false);
-    setIsImporting(false);
-    showToast("Import cancelled by user", "error");
-  };
-
-  const showFinalResults = (
-    errors: { rowNumber: number; studentName: string; error: string; studentCode?: string; errorType?: string }[],
-    newCount: number,
-    returningCount: number,
-    updatedCount = 0,
-    skippedCount = 0,
-  ) => {
+  const showFinalResults = (errors: ErrorInfo[], newCount: number, updatedCount: number) => {
     const failedCount = errors.length;
 
     // Store errors for modal
     if (failedCount > 0) {
-      setImportErrors(
-        errors.map((e) => ({
-          rowNumber: e.rowNumber,
-          studentName: e.studentName,
-          studentCode: e.studentCode,
-          error: e.error,
-          errorType: e.errorType,
-        })),
-      );
+      setImportErrors(errors);
     }
 
-    if (failedCount === 0 && skippedCount === 0) {
+    if (failedCount === 0) {
       showToast(
         `Successfully imported ${newCount} new student${newCount !== 1 ? "s" : ""} and updated ${updatedCount} returning student${updatedCount !== 1 ? "s" : ""}!`,
         "success",
@@ -388,26 +302,16 @@ export default function StudentImportButton() {
         window.location.reload();
       }, 2000);
     } else {
+      // Infrastructure errors - show what succeeded and what failed
       const parts: string[] = [];
       if (newCount > 0) parts.push(`${newCount} new`);
       if (updatedCount > 0) parts.push(`${updatedCount} updated`);
-      if (skippedCount > 0) parts.push(`${skippedCount} skipped`);
       if (failedCount > 0) parts.push(`${failedCount} failed`);
 
-      showToast(
-        `Import completed: ${parts.join(", ")}. ${failedCount > 0 ? "Click to view errors." : ""}`,
-        failedCount > 0 ? "error" : "success",
-      );
+      showToast(`Import completed with errors: ${parts.join(", ")}. Click to view errors.`, "error");
 
-      // Show error modal if there are errors
-      if (failedCount > 0) {
-        setShowErrorModal(true);
-      } else {
-        // Refresh page after a short delay if no errors
-        setTimeout(() => {
-          window.location.reload();
-        }, 2000);
-      }
+      // Show error modal
+      setShowErrorModal(true);
     }
   };
 
@@ -433,16 +337,6 @@ export default function StudentImportButton() {
         onFileSelect={(file, program, coursePlacement) => {
           void handleFileSelect(file, program, coursePlacement);
         }}
-      />
-
-      {/* Name Mismatch Confirmation Modal */}
-      <NameMismatchConfirmationModal
-        open={showNameMismatchModal}
-        mismatches={nameMismatches}
-        onConfirm={(decisions) => {
-          void handleNameMismatchConfirm(decisions);
-        }}
-        onCancel={handleNameMismatchCancel}
       />
 
       {/* Error Report Modal */}

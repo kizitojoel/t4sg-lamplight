@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Papa from "papaparse";
 import { useState } from "react";
 
@@ -91,25 +92,21 @@ export function ErrorReportModal({ open, errors, onClose }: ErrorReportModalProp
         <div className="space-y-4">
           {/* Error Type Filter */}
           {errorTypes.length > 1 && (
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-2">
               <span className="text-sm font-medium">Filter by type:</span>
-              <Button
-                variant={selectedErrorType === "all" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedErrorType("all")}
-              >
-                All ({errors.length})
-              </Button>
-              {errorTypes.map((type) => (
-                <Button
-                  key={type}
-                  variant={selectedErrorType === type ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSelectedErrorType(type)}
-                >
-                  {type.replace(/_/g, " ")} ({errorsByType[type]?.length ?? 0})
-                </Button>
-              ))}
+              <Select value={selectedErrorType} onValueChange={setSelectedErrorType}>
+                <SelectTrigger className="w-[250px]">
+                  <SelectValue placeholder="Select error type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All ({errors.length})</SelectItem>
+                  {errorTypes.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type.replace(/_/g, " ")} ({errorsByType[type]?.length ?? 0})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           )}
 
