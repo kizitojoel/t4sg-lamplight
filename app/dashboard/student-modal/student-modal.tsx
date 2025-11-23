@@ -9,9 +9,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createBrowserSupabaseClient } from "@/lib/client-utils";
 import { type Database } from "@/lib/schema";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
 import { useEffect, useRef, useState } from "react";
 import AdvisingForm from "./advising-form";
 import InfoForm from "./info-form";
@@ -58,27 +58,18 @@ export default function StudentModal({ studentId }: { studentId: string }) {
             <DialogDescription>{student.preferred_name}</DialogDescription>
           </DialogHeader>
           <Tabs defaultValue="info">
-            <TabsList className="mb-0.5">
-              <TabsTrigger value="info" className="outline-accent hover:bg-accent cursor-pointer p-2 outline-2">
-                Basic Info
-              </TabsTrigger>
-              <TabsTrigger
-                value="learning-profile"
-                className="outline-accent hover:bg-accent cursor-pointer p-2 outline-2"
-              >
-                Learning Profile
-              </TabsTrigger>
-              <TabsTrigger value="advising" className="outline-accent hover:bg-accent cursor-pointer p-2 outline-2">
-                Advising
-              </TabsTrigger>
+            <TabsList>
+              <TabsTrigger value="info">Basic Info</TabsTrigger>
+              <TabsTrigger value="learning-profile">Learning Profile</TabsTrigger>
+              <TabsTrigger value="advising">Advising</TabsTrigger>
             </TabsList>
-            <TabsContent value="info" className="outline-accent/50 p-2 outline-2">
+            <TabsContent value="info" className="p-2">
               <InfoForm student={student}></InfoForm>
             </TabsContent>
-            <TabsContent value="learning-profile">
+            <TabsContent value="learning-profile" className="p-2">
               <LearningForm student={student}></LearningForm>
             </TabsContent>
-            <TabsContent value="advising" className="outline-accent/50 p-2 outline-2">
+            <TabsContent value="advising" className="p-2">
               <AdvisingForm student={student}></AdvisingForm>
             </TabsContent>
           </Tabs>

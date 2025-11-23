@@ -11,7 +11,7 @@ export type Database = {
       assessment_results: {
         Row: {
           assessment_id: string;
-          course_offering_id: string;
+          course_offering_id: string | null;
           created_at: string;
           id: string;
           score: number | null;
@@ -19,7 +19,7 @@ export type Database = {
         };
         Insert: {
           assessment_id: string;
-          course_offering_id: string;
+          course_offering_id?: string | null;
           created_at?: string;
           id?: string;
           score?: number | null;
@@ -27,7 +27,7 @@ export type Database = {
         };
         Update: {
           assessment_id?: string;
-          course_offering_id?: string;
+          course_offering_id?: string | null;
           created_at?: string;
           id?: string;
           score?: number | null;
@@ -195,6 +195,7 @@ export type Database = {
           race: string[] | null;
           referral: string | null;
           residence: string | null;
+          student_code: string | null;
           updated_at: string;
           updated_by: string | null;
         };
@@ -230,6 +231,7 @@ export type Database = {
           race?: string[] | null;
           referral?: string | null;
           residence?: string | null;
+          student_code?: string | null;
           updated_at?: string;
           updated_by?: string | null;
         };
@@ -265,6 +267,7 @@ export type Database = {
           race?: string[] | null;
           referral?: string | null;
           residence?: string | null;
+          student_code?: string | null;
           updated_at?: string;
           updated_by?: string | null;
         };
