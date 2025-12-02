@@ -11,7 +11,7 @@ export type Database = {
       assessment_results: {
         Row: {
           assessment_id: string;
-          course_offering_id: string;
+          course_offering_id: string | null;
           created_at: string;
           id: string;
           score: number | null;
@@ -19,7 +19,7 @@ export type Database = {
         };
         Insert: {
           assessment_id: string;
-          course_offering_id: string;
+          course_offering_id?: string | null;
           created_at?: string;
           id?: string;
           score?: number | null;
@@ -27,7 +27,7 @@ export type Database = {
         };
         Update: {
           assessment_id?: string;
-          course_offering_id?: string;
+          course_offering_id?: string | null;
           created_at?: string;
           id?: string;
           score?: number | null;
@@ -162,12 +162,28 @@ export type Database = {
         };
         Relationships: [];
       };
+      sessions: {
+        Row: {
+          created_at: string;
+          id: number;
+        };
+        Insert: {
+          created_at?: string;
+          id?: number;
+        };
+        Update: {
+          created_at?: string;
+          id?: number;
+        };
+        Relationships: [];
+      };
       students: {
         Row: {
           address_city: string | null;
           address_state: string | null;
           address_street: string | null;
           address_zip: string | null;
+          advising_comments: Json;
           age: number | null;
           computer_access: string | null;
           country_of_birth: string | null;
@@ -204,6 +220,7 @@ export type Database = {
           address_state?: string | null;
           address_street?: string | null;
           address_zip?: string | null;
+          advising_comments?: Json;
           age?: number | null;
           computer_access?: string | null;
           country_of_birth?: string | null;
@@ -240,6 +257,7 @@ export type Database = {
           address_state?: string | null;
           address_street?: string | null;
           address_zip?: string | null;
+          advising_comments?: Json;
           age?: number | null;
           computer_access?: string | null;
           country_of_birth?: string | null;
