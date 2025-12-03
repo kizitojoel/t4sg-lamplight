@@ -31,6 +31,7 @@ export default function StudentsTable({
   const [courseFilter, setCourseFilter] = useState("all");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
+  const [showFilters, setShowFilters] = useState(false);
 
   // Checkbox
   const handleCheckboxChange = (studentId: string) => {
@@ -59,6 +60,95 @@ export default function StudentsTable({
         return allFilteredIds;
       }
     });
+  };
+
+  // Export CSV
+  const handleExportCSV = async () => {
+    // Check if any students are selected
+    if (selectedRows.size === 0) {
+      alert("Please select students to export");
+      return;
+    }
+
+    try {
+      // Fetch full student data from Supabase for selected students
+      const { createBrowserSupabaseClient } = await import("@/lib/client-utils");
+      const supabase = createBrowserSupabaseClient();
+
+      const { data: fullStudentData, error } = await supabase
+        .from("students")
+        .select("*")
+        .in("id", Array.from(selectedRows));
+
+      if (error) {
+        alert("Failed to export students. Please try again.");
+        return;
+      }
+
+      if (!fullStudentData || fullStudentData.length === 0) {
+        alert("No student data found to export");
+        return;
+      }
+
+      // Get all column names from the first student record
+      const firstStudent = fullStudentData[0];
+      if (!firstStudent) {
+        alert("No student data found to export");
+        return;
+      }
+
+      // Get all column names from the first student record
+      const headers = Object.keys(firstStudent).filter((key) => key !== "id");
+
+      // Create CSV rows
+      const rows = fullStudentData.map((student) =>
+        headers.map((header) => {
+          const value = student[header as keyof typeof student];
+          // Handle arrays
+          if (Array.isArray(value)) {
+            return value.join("; ");
+          }
+          // Handle booleans
+          if (typeof value === "boolean") {
+            return value ? "Yes" : "No";
+          }
+          // Handle null/undefined
+          return value ?? "";
+        }),
+      );
+
+      // Combine headers and rows
+      const csvContent = [headers.join(","), ...rows.map((row) => row.map((cell) => `"${cell}"`).join(","))].join("\n");
+
+      // Determine filename based on filters
+      let filename = "students_export.csv";
+
+      const hasFilters = programFilter !== "all" || courseFilter !== "all" || searchTerm !== "";
+      const isManualSelection = selectedRows.size !== sortedStudents.length;
+
+      if (hasFilters && !isManualSelection) {
+        const parts = [];
+        if (programFilter !== "all") parts.push(programFilter);
+        if (courseFilter !== "all") parts.push(courseFilter);
+        if (searchTerm) parts.push(searchTerm);
+        filename = `students_${parts.join("_").replace(/\s+/g, "_")}.csv`;
+      } else if (isManualSelection) {
+        filename = "students_custom.csv";
+      }
+
+      // Create blob and download
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", filename);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      alert("Failed to export students. Please try again.");
+    }
   };
 
   // Filter students based on search and filters
@@ -117,167 +207,298 @@ export default function StudentsTable({
   return (
     <div className="px-2.5 py-10">
       {/* Header Controls */}
-      <div className="mb-8 flex items-center gap-4">
-        {/* Search Bar */}
-        <input
-          type="text"
-          placeholder="Search"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="border-accent bg-accent h-10 w-1/4 border p-2.5"
-        />
+      <div className="mb-6 space-y-4">
+        <div className="flex items-center gap-4">
+          {/* Search Bar with icon */}
+          <div className="relative max-w-md flex-1">
+            <svg
+              className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2"
+              width="16"
+              height="16"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+            <input
+              type="text"
+              placeholder="Search students..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="bg-card border-border focus:border-muted-foreground w-full rounded-md border py-2 pr-3 pl-10 text-sm focus:outline-none"
+            />
+          </div>
 
-        {/* All Programs Dropdown */}
-        <select
-          value={programFilter}
-          onChange={(e) => setProgramFilter(e.target.value)}
-          className="bg-accent h-10 cursor-pointer px-4 text-center"
-        >
-          <option value="all">All Programs</option>
-          {programs.map((program) => (
-            <option key={program.id} value={program.name}>
-              {program.name}
-            </option>
-          ))}
-        </select>
+          {/* Filters Button to toggle filter panel */}
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="bg-card border-border hover:bg-accent relative flex items-center gap-2 rounded-md border px-4 py-2 text-sm transition-colors"
+          >
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+              />
+            </svg>
+            Filters
+            {/* Show count of active filters */}
+            {(programFilter !== "all" || courseFilter !== "all") && (
+              <span className="ml-1 text-xs font-medium text-[#a51d31]">
+                ({[programFilter !== "all", courseFilter !== "all"].filter(Boolean).length})
+              </span>
+            )}
+          </button>
 
-        {/* All Sessions Dropdown */}
-        <select className="bg-accent h-10 cursor-pointer px-4 text-center">
-          <option>All Sessions</option>
-        </select>
+          {/* Spacer to push export and add buttons to the right */}
+          <div className="flex-1"></div>
 
-        {/* Course Dropdown */}
-        <select
-          value={courseFilter}
-          onChange={(e) => setCourseFilter(e.target.value)}
-          className="bg-accent h-10 cursor-pointer px-4 text-center"
-        >
-          <option value="all">All Courses</option>
-          {courses.map((course) => (
-            <option key={course.id} value={course.name}>
-              {course.name}
-            </option>
-          ))}
-        </select>
+          {/* Export CSV Button */}
+          <button
+            onClick={() => void handleExportCSV()}
+            className="bg-card border-border hover:bg-accent rounded-md border px-4 py-2 text-sm transition-colors"
+          >
+            Export CSV
+          </button>
 
-        {/* Spacer */}
-        <div className="flex-1"></div>
+          {/* Add Student Button */}
+          <Link href="/dashboard/newstudent">
+            <button className="rounded-md bg-[#a51d31] px-4 py-2 text-sm text-white transition-colors hover:bg-[#8b1929]">
+              Add Student
+            </button>
+          </Link>
+        </div>
 
-        {/* Export CSV Button */}
-        <button className="bg-accent cursor-pointer rounded-2xl px-4 py-2.5">Export CSV</button>
+        {/* Collapsible Filter Panel */}
+        {showFilters && (
+          <div className="bg-card border-border rounded-lg border p-4">
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <label className="text-foreground mb-1.5 block text-xs font-medium">Program</label>
+                <select
+                  value={programFilter}
+                  onChange={(e) => setProgramFilter(e.target.value)}
+                  className="bg-card border-border hover:bg-accent rounded-md border px-4 py-2 text-sm transition-colors"
+                >
+                  <option value="all">All Programs</option>
+                  {programs.map((program) => (
+                    <option key={program.id} value={program.name}>
+                      {program.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-foreground mb-1.5 block text-xs font-medium">Session</label>
+                <select className="bg-card border-border hover:bg-accent rounded-md border px-4 py-2 text-sm transition-colors">
+                  <option>All Sessions</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-foreground mb-1.5 block text-xs font-medium">Course</label>
+                <select
+                  value={courseFilter}
+                  onChange={(e) => setCourseFilter(e.target.value)}
+                  className="bg-card border-border hover:bg-accent rounded-md border px-4 py-2 text-sm transition-colors"
+                >
+                  <option value="all">All Courses</option>
+                  {courses.map((course) => (
+                    <option key={course.id} value={course.name}>
+                      {course.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
 
-        {/* Add Student Button */}
-        <Link href="/dashboard/newstudent">
-          <button className="bg-accent cursor-pointer rounded-2xl px-4 py-2.5">Add Student</button>
-        </Link>
+        {/* Selection indicator to show number of students selected */}
+        {selectedRows.size > 0 && (
+          <div className="bg-card border-border flex items-center justify-between rounded-lg border px-4 py-2 text-sm">
+            <span className="text-foreground font-medium">{selectedRows.size} student(s) selected</span>
+          </div>
+        )}
       </div>
 
       {/* Radix Table */}
-      <Table.Root variant="surface" className="{`border ${theme}`} border-gray-50">
-        <Table.Header>
-          <Table.Row>
-            <Table.ColumnHeaderCell className="w-[60px] border-r text-center" style={{ padding: "8px 8px" }}>
-              <input
-                type="checkbox"
-                checked={sortedStudents.length > 0 && sortedStudents.every((student) => selectedRows.has(student.id))}
-                onChange={handleSelectAll}
-                style={{ width: "18px", height: "18px" }}
-              />
-            </Table.ColumnHeaderCell>
-            <Table.ColumnHeaderCell
-              onClick={toggleSort}
-              className="border-r"
-              style={{
-                textAlign: "center",
-                padding: "8px 8px",
-                cursor: "pointer",
-                userSelect: "none",
-              }}
-            >
-              Name {sortOrder === "asc" ? "▲" : "▼"}
-            </Table.ColumnHeaderCell>
-            <Table.ColumnHeaderCell className="border-r" style={{ textAlign: "center", padding: "8px 8px" }}>
-              Email
-            </Table.ColumnHeaderCell>
-            <Table.ColumnHeaderCell className="border-r" style={{ textAlign: "center", padding: "8px 8px" }}>
-              Phone
-            </Table.ColumnHeaderCell>
-            <Table.ColumnHeaderCell className="border-r" style={{ textAlign: "center", padding: "8px 8px" }}>
-              Program
-            </Table.ColumnHeaderCell>
-            <Table.ColumnHeaderCell className="border-r" style={{ textAlign: "center", padding: "8px 8px" }}>
-              Session
-            </Table.ColumnHeaderCell>
-            <Table.ColumnHeaderCell className="border-r" style={{ textAlign: "center", padding: "8px 8px" }}>
-              Current Course
-            </Table.ColumnHeaderCell>
-            <Table.ColumnHeaderCell style={{ textAlign: "center", padding: "8px 8px" }}>
-              View More
-            </Table.ColumnHeaderCell>
-          </Table.Row>
-        </Table.Header>
-
-        <Table.Body>
-          {paginatedStudents.map((student) => (
-            <Table.Row key={student.id} className={selectedRows.has(student.id) ? "bg-blue-100 dark:bg-blue-900" : ""}>
-              <Table.Cell className="border-r text-center" style={{ padding: "8px 8px" }}>
+      <div className="border-border overflow-hidden rounded-lg border">
+        <Table.Root variant="surface" className="w-full">
+          <Table.Header>
+            <Table.Row className="bg-muted/50">
+              <Table.ColumnHeaderCell className="w-[60px] border-r text-center" style={{ padding: "12px 16px" }}>
                 <input
                   type="checkbox"
-                  checked={selectedRows.has(student.id)}
-                  onChange={() => handleCheckboxChange(student.id)}
-                  style={{ width: "18px", height: "18px", alignContent: "center" }}
+                  checked={sortedStudents.length > 0 && sortedStudents.every((student) => selectedRows.has(student.id))}
+                  onChange={handleSelectAll}
+                  style={{ width: "18px", height: "18px" }}
                 />
-              </Table.Cell>
-              <Table.Cell className="border-r" style={{ padding: "8px 8px" }}>
-                {student.preferred_name ?? student.legal_first_name} {student.legal_last_name.charAt(0)}
-              </Table.Cell>
-              <Table.Cell className="border-r" style={{ padding: "8px 8px" }}>
-                {student.email}
-              </Table.Cell>
-              <Table.Cell className="border-r" style={{ padding: "8px 8px" }}>
-                {student.phone}
-              </Table.Cell>
-              <Table.Cell className="border-r" style={{ padding: "8px 8px" }}>
-                {student.program}
-              </Table.Cell>
-              <Table.Cell className="border-r" style={{ padding: "8px 8px" }}>
-                {/* Session - to be added later*/}
-              </Table.Cell>
-              <Table.Cell className="border-r" style={{ padding: "8px 8px" }}>
-                {student.course_placement}
-              </Table.Cell>
-              <Table.Cell className="border-r" style={{ textAlign: "center", fontSize: "20px", fontWeight: "bold" }}>
-                <StudentModal studentId={student.id}></StudentModal>
-              </Table.Cell>
+              </Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell
+                onClick={toggleSort}
+                className="hover:bg-muted cursor-pointer select-none"
+                style={{
+                  textAlign: "left",
+                  padding: "12px 16px",
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                Name {sortOrder === "asc" ? "▲" : "▼"}
+              </Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell
+                style={{
+                  textAlign: "left",
+                  padding: "12px 16px",
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                Email
+              </Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell
+                style={{
+                  textAlign: "left",
+                  padding: "12px 16px",
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                Phone
+              </Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell
+                style={{
+                  textAlign: "left",
+                  padding: "12px 16px",
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                Program
+              </Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell
+                style={{
+                  textAlign: "left",
+                  padding: "12px 16px",
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                Session
+              </Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell
+                style={{
+                  textAlign: "left",
+                  padding: "12px 16px",
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                Current Course
+              </Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell
+                style={{
+                  textAlign: "center",
+                  padding: "12px 16px",
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                View More
+              </Table.ColumnHeaderCell>
             </Table.Row>
-          ))}
-        </Table.Body>
-      </Table.Root>
+          </Table.Header>
 
-      {/* Pagination Controls */}
-      <div style={{ display: "flex", justifyContent: "center", marginTop: "20px", gap: "10px" }}>
-        <button
-          onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-          disabled={currentPage === 1}
-          className="bg-accent cursor-pointer rounded-2xl px-4 py-2"
-        >
-          Prev
-        </button>
-        <span className="my-auto">
-          Page {currentPage} of {totalPages}
-        </span>
-        <button
-          onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-          disabled={currentPage === totalPages}
-          className="bg-accent cursor-pointer rounded-2xl px-4 py-2"
-        >
-          Next
-        </button>
+          <Table.Body>
+            {paginatedStudents.map((student) => (
+              <Table.Row
+                key={student.id}
+                className={`border-border border-b transition-colors ${selectedRows.has(student.id) ? "bg-accent" : "hover:bg-muted/50"} `}
+              >
+                <Table.Cell className="text-center" style={{ padding: "12px 16px" }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedRows.has(student.id)}
+                    onChange={() => handleCheckboxChange(student.id)}
+                    className="h-4 w-4 rounded border-gray-300 text-[#a51d31] focus:ring-[#a51d31]"
+                  />
+                </Table.Cell>
+                <Table.Cell className="font-medium" style={{ padding: "12px 16px", fontSize: "0.875rem" }}>
+                  {student.preferred_name ?? student.legal_first_name} {student.legal_last_name.charAt(0)}
+                </Table.Cell>
+                <Table.Cell className="text-muted-foreground" style={{ padding: "12px 16px", fontSize: "0.875rem" }}>
+                  {student.email}
+                </Table.Cell>
+                <Table.Cell className="text-muted-foreground" style={{ padding: "12px 16px", fontSize: "0.875rem" }}>
+                  {student.phone}
+                </Table.Cell>
+                <Table.Cell className="text-muted-foreground" style={{ padding: "12px 16px", fontSize: "0.875rem" }}>
+                  {student.program}
+                </Table.Cell>
+                <Table.Cell className="text-muted-foreground" style={{ padding: "12px 16px", fontSize: "0.875rem" }}>
+                  {/* Session - to be added later*/}
+                </Table.Cell>
+                <Table.Cell className="text-muted-foreground" style={{ padding: "12px 16px", fontSize: "0.875rem" }}>
+                  {student.course_placement}
+                </Table.Cell>
+                <Table.Cell className="text-center" style={{ padding: "12px 16px" }}>
+                  <StudentModal studentId={student.id}></StudentModal>
+                </Table.Cell>
+              </Table.Row>
+            ))}
+          </Table.Body>
+        </Table.Root>
       </div>
 
-      {/* Results count */}
-      <div style={{ marginTop: "16px", color: "#666", fontSize: "14px" }}>
-        Showing {sortedStudents.length} of {students.length} students
+      {/* Pagination Controls */}
+      <div className="relative mt-4">
+        <div className="flex items-center justify-between text-sm">
+          <div className="text-muted-foreground">
+            Showing <span className="text-foreground font-medium">{sortedStudents.length}</span> of{" "}
+            <span className="text-foreground font-medium">{students.length}</span> students
+          </div>
+          <div className="absolute left-1/2 flex -translate-x-1/2 items-center gap-2">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="bg-card border-border hover:bg-accent rounded-md border px-4 py-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Prev
+            </button>
+            <span className="text-foreground px-3">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="bg-card border-border hover:bg-accent rounded-md border px-4 py-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+          <div></div>
+        </div>
       </div>
     </div>
   );
