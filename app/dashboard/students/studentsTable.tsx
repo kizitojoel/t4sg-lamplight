@@ -1,7 +1,6 @@
 "use client";
 
 import { Table } from "@radix-ui/themes";
-import { useTheme } from "next-themes";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import StudentModal from "../student-modal/student-modal";
@@ -71,6 +70,15 @@ export default function StudentsTable({
     }
 
     try {
+      // Helper function to safely convert any value to string
+      const safeStringify = (value: unknown): string => {
+        if (value === null || value === undefined) return "";
+        if (typeof value === "string") return value;
+        if (typeof value === "number" || typeof value === "boolean") return String(value);
+        if (Array.isArray(value)) return value.map(safeStringify).join("; ");
+        if (typeof value === "object") return JSON.stringify(value);
+        return String(value);
+      };
       // Fetch full student data from Supabase for selected students
       const { createBrowserSupabaseClient } = await import("@/lib/client-utils");
       const supabase = createBrowserSupabaseClient();
@@ -104,21 +112,15 @@ export default function StudentsTable({
       const rows = fullStudentData.map((student) =>
         headers.map((header) => {
           const value = student[header as keyof typeof student];
-          // Handle arrays
-          if (Array.isArray(value)) {
-            return value.join("; ");
-          }
-          // Handle booleans
-          if (typeof value === "boolean") {
-            return value ? "Yes" : "No";
-          }
-          // Handle null/undefined
-          return value ?? "";
+          return safeStringify(value);
         }),
       );
 
       // Combine headers and rows
-      const csvContent = [headers.join(","), ...rows.map((row) => row.map((cell) => `"${cell}"`).join(","))].join("\n");
+      const csvContent = [
+        headers.join(","),
+        ...rows.map((row) => row.map((cell) => `"${safeStringify(cell)}"`).join(",")),
+      ].join("\n");
 
       // Determine filename based on filters
       let filename = "students_export.csv";
@@ -146,7 +148,7 @@ export default function StudentsTable({
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-    } catch (error) {
+    } catch {
       alert("Failed to export students. Please try again.");
     }
   };
@@ -193,7 +195,6 @@ export default function StudentsTable({
   const paginatedStudents = sortedStudents.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
 
   const [mounted, setMounted] = useState(false);
-  useTheme();
 
   // useEffect only runs on the client, so now we can safely show the UI
   useEffect(() => {
