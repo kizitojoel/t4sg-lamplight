@@ -31,6 +31,7 @@ export default function StudentsTable({
   const [courseFilter, setCourseFilter] = useState("all");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
+  const [showFilters, setShowFilters] = useState(false);
 
   // Checkbox
   const handleCheckboxChange = (studentId: string) => {
@@ -206,61 +207,125 @@ export default function StudentsTable({
   return (
     <div className="px-2.5 py-10">
       {/* Header Controls */}
-      <div className="mb-8 flex items-center gap-4">
-        {/* Search Bar */}
-        <input
-          type="text"
-          placeholder="Search"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="border-accent bg-accent h-10 w-1/4 border p-2.5"
-        />
+      <div className="mb-6 space-y-4">
+        <div className="flex items-center gap-4">
+          {/* Search Bar with icon */}
+          <div className="relative max-w-md flex-1">
+            <svg
+              className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2"
+              width="16"
+              height="16"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+            <input
+              type="text"
+              placeholder="Search students..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="bg-card border-border focus:border-muted-foreground w-full rounded-md border py-2 pr-3 pl-10 text-sm focus:outline-none"
+            />
+          </div>
 
-        {/* All Programs Dropdown */}
-        <select
-          value={programFilter}
-          onChange={(e) => setProgramFilter(e.target.value)}
-          className="bg-accent h-10 cursor-pointer px-4 text-center"
-        >
-          <option value="all">All Programs</option>
-          {programs.map((program) => (
-            <option key={program.id} value={program.name}>
-              {program.name}
-            </option>
-          ))}
-        </select>
+          {/* Filters Button to toggle filter panel */}
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="bg-card border-border hover:bg-accent relative flex items-center gap-2 rounded-md border px-4 py-2 text-sm transition-colors"
+          >
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+              />
+            </svg>
+            Filters
+            {/* Show count of active filters */}
+            {(programFilter !== "all" || courseFilter !== "all") && (
+              <span className="ml-1 text-xs font-medium text-[#a51d31]">
+                ({[programFilter !== "all", courseFilter !== "all"].filter(Boolean).length})
+              </span>
+            )}
+          </button>
 
-        {/* All Sessions Dropdown */}
-        <select className="bg-accent h-10 cursor-pointer px-4 text-center">
-          <option>All Sessions</option>
-        </select>
+          {/* Spacer to push export and add buttons to the right */}
+          <div className="flex-1"></div>
 
-        {/* Course Dropdown */}
-        <select
-          value={courseFilter}
-          onChange={(e) => setCourseFilter(e.target.value)}
-          className="bg-accent h-10 cursor-pointer px-4 text-center"
-        >
-          <option value="all">All Courses</option>
-          {courses.map((course) => (
-            <option key={course.id} value={course.name}>
-              {course.name}
-            </option>
-          ))}
-        </select>
+          {/* Export CSV Button */}
+          <button
+            onClick={() => void handleExportCSV()}
+            className="bg-card border-border hover:bg-accent rounded-md border px-4 py-2 text-sm transition-colors"
+          >
+            Export CSV
+          </button>
 
-        {/* Spacer */}
-        <div className="flex-1"></div>
+          {/* Add Student Button */}
+          <Link href="/dashboard/newstudent">
+            <button className="rounded-md bg-[#a51d31] px-4 py-2 text-sm text-white transition-colors hover:bg-[#8b1929]">
+              Add Student
+            </button>
+          </Link>
+        </div>
 
-        {/* Export CSV Button */}
-        <button onClick={() => void handleExportCSV()} className="bg-accent cursor-pointer rounded-2xl px-4 py-2.5">
-          Export CSV
-        </button>
+        {/* Collapsible Filter Panel */}
+        {showFilters && (
+          <div className="bg-card border-border rounded-lg border p-4">
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <label className="text-foreground mb-1.5 block text-xs font-medium">Program</label>
+                <select
+                  value={programFilter}
+                  onChange={(e) => setProgramFilter(e.target.value)}
+                  className="bg-card border-border hover:bg-accent rounded-md border px-4 py-2 text-sm transition-colors"
+                >
+                  <option value="all">All Programs</option>
+                  {programs.map((program) => (
+                    <option key={program.id} value={program.name}>
+                      {program.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-foreground mb-1.5 block text-xs font-medium">Session</label>
+                <select className="bg-card border-border hover:bg-accent rounded-md border px-4 py-2 text-sm transition-colors">
+                  <option>All Sessions</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-foreground mb-1.5 block text-xs font-medium">Course</label>
+                <select
+                  value={courseFilter}
+                  onChange={(e) => setCourseFilter(e.target.value)}
+                  className="bg-card border-border hover:bg-accent rounded-md border px-4 py-2 text-sm transition-colors"
+                >
+                  <option value="all">All Courses</option>
+                  {courses.map((course) => (
+                    <option key={course.id} value={course.name}>
+                      {course.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
 
-        {/* Add Student Button */}
-        <Link href="/dashboard/newstudent">
-          <button className="bg-accent cursor-pointer rounded-2xl px-4 py-2.5">Add Student</button>
-        </Link>
+        {/* Selection indicator to show number of students selected */}
+        {selectedRows.size > 0 && (
+          <div className="bg-card border-border flex items-center justify-between rounded-lg border px-4 py-2 text-sm">
+            <span className="text-foreground font-medium">{selectedRows.size} student(s) selected</span>
+          </div>
+        )}
       </div>
 
       {/* Radix Table */}
