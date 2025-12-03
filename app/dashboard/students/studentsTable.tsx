@@ -472,13 +472,13 @@ export default function StudentsTable({
       </div>
 
       {/* Pagination Controls */}
-      <div className="mt-4 relative">
+      <div className="relative mt-4">
         <div className="flex items-center justify-between text-sm">
           <div className="text-muted-foreground">
             Showing <span className="text-foreground font-medium">{sortedStudents.length}</span> of{" "}
             <span className="text-foreground font-medium">{students.length}</span> students
           </div>
-          <div className="flex items-center gap-2 absolute left-1/2 -translate-x-1/2">
+          <div className="absolute left-1/2 flex -translate-x-1/2 items-center gap-2">
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
