@@ -329,111 +329,176 @@ export default function StudentsTable({
       </div>
 
       {/* Radix Table */}
-      <Table.Root variant="surface" className="{`border ${theme}`} border-gray-50">
-        <Table.Header>
-          <Table.Row>
-            <Table.ColumnHeaderCell className="w-[60px] border-r text-center" style={{ padding: "8px 8px" }}>
-              <input
-                type="checkbox"
-                checked={sortedStudents.length > 0 && sortedStudents.every((student) => selectedRows.has(student.id))}
-                onChange={handleSelectAll}
-                style={{ width: "18px", height: "18px" }}
-              />
-            </Table.ColumnHeaderCell>
-            <Table.ColumnHeaderCell
-              onClick={toggleSort}
-              className="border-r"
-              style={{
-                textAlign: "center",
-                padding: "8px 8px",
-                cursor: "pointer",
-                userSelect: "none",
-              }}
-            >
-              Name {sortOrder === "asc" ? "▲" : "▼"}
-            </Table.ColumnHeaderCell>
-            <Table.ColumnHeaderCell className="border-r" style={{ textAlign: "center", padding: "8px 8px" }}>
-              Email
-            </Table.ColumnHeaderCell>
-            <Table.ColumnHeaderCell className="border-r" style={{ textAlign: "center", padding: "8px 8px" }}>
-              Phone
-            </Table.ColumnHeaderCell>
-            <Table.ColumnHeaderCell className="border-r" style={{ textAlign: "center", padding: "8px 8px" }}>
-              Program
-            </Table.ColumnHeaderCell>
-            <Table.ColumnHeaderCell className="border-r" style={{ textAlign: "center", padding: "8px 8px" }}>
-              Session
-            </Table.ColumnHeaderCell>
-            <Table.ColumnHeaderCell className="border-r" style={{ textAlign: "center", padding: "8px 8px" }}>
-              Current Course
-            </Table.ColumnHeaderCell>
-            <Table.ColumnHeaderCell style={{ textAlign: "center", padding: "8px 8px" }}>
-              View More
-            </Table.ColumnHeaderCell>
-          </Table.Row>
-        </Table.Header>
-
-        <Table.Body>
-          {paginatedStudents.map((student) => (
-            <Table.Row key={student.id} className={selectedRows.has(student.id) ? "bg-accent/75" : ""}>
-              <Table.Cell className="border-r text-center" style={{ padding: "8px 8px" }}>
+      <div className="border-border overflow-hidden rounded-lg border">
+        <Table.Root variant="surface" className="w-full">
+          <Table.Header>
+            <Table.Row className="bg-muted/50">
+              <Table.ColumnHeaderCell className="w-[60px] border-r text-center" style={{ padding: "12px 16px" }}>
                 <input
                   type="checkbox"
-                  checked={selectedRows.has(student.id)}
-                  onChange={() => handleCheckboxChange(student.id)}
-                  style={{ width: "18px", height: "18px", alignContent: "center" }}
+                  checked={sortedStudents.length > 0 && sortedStudents.every((student) => selectedRows.has(student.id))}
+                  onChange={handleSelectAll}
+                  style={{ width: "18px", height: "18px" }}
                 />
-              </Table.Cell>
-              <Table.Cell className="border-r" style={{ padding: "8px 8px" }}>
-                {student.preferred_name ?? student.legal_first_name} {student.legal_last_name.charAt(0)}
-              </Table.Cell>
-              <Table.Cell className="border-r" style={{ padding: "8px 8px" }}>
-                {student.email}
-              </Table.Cell>
-              <Table.Cell className="border-r" style={{ padding: "8px 8px" }}>
-                {student.phone}
-              </Table.Cell>
-              <Table.Cell className="border-r" style={{ padding: "8px 8px" }}>
-                {student.program}
-              </Table.Cell>
-              <Table.Cell className="border-r" style={{ padding: "8px 8px" }}>
-                {/* Session - to be added later*/}
-              </Table.Cell>
-              <Table.Cell className="border-r" style={{ padding: "8px 8px" }}>
-                {student.course_placement}
-              </Table.Cell>
-              <Table.Cell className="border-r" style={{ textAlign: "center", fontSize: "20px", fontWeight: "bold" }}>
-                <StudentModal studentId={student.id}></StudentModal>
-              </Table.Cell>
+              </Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell
+                onClick={toggleSort}
+                className="hover:bg-muted cursor-pointer select-none"
+                style={{
+                  textAlign: "left",
+                  padding: "12px 16px",
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                Name {sortOrder === "asc" ? "▲" : "▼"}
+              </Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell
+                style={{
+                  textAlign: "left",
+                  padding: "12px 16px",
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                Email
+              </Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell
+                style={{
+                  textAlign: "left",
+                  padding: "12px 16px",
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                Phone
+              </Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell
+                style={{
+                  textAlign: "left",
+                  padding: "12px 16px",
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                Program
+              </Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell
+                style={{
+                  textAlign: "left",
+                  padding: "12px 16px",
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                Session
+              </Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell
+                style={{
+                  textAlign: "left",
+                  padding: "12px 16px",
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                Current Course
+              </Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell
+                style={{
+                  textAlign: "center",
+                  padding: "12px 16px",
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                View More
+              </Table.ColumnHeaderCell>
             </Table.Row>
-          ))}
-        </Table.Body>
-      </Table.Root>
+          </Table.Header>
 
-      {/* Pagination Controls */}
-      <div style={{ display: "flex", justifyContent: "center", marginTop: "20px", gap: "10px" }}>
-        <button
-          onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-          disabled={currentPage === 1}
-          className="bg-accent cursor-pointer rounded-2xl px-4 py-2"
-        >
-          Prev
-        </button>
-        <span className="my-auto">
-          Page {currentPage} of {totalPages}
-        </span>
-        <button
-          onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-          disabled={currentPage === totalPages}
-          className="bg-accent cursor-pointer rounded-2xl px-4 py-2"
-        >
-          Next
-        </button>
+          <Table.Body>
+            {paginatedStudents.map((student) => (
+              <Table.Row
+                key={student.id}
+                className={`border-border border-b transition-colors ${selectedRows.has(student.id) ? "bg-accent" : "hover:bg-muted/50"} `}
+              >
+                <Table.Cell className="text-center" style={{ padding: "12px 16px" }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedRows.has(student.id)}
+                    onChange={() => handleCheckboxChange(student.id)}
+                    className="h-4 w-4 rounded border-gray-300 text-[#a51d31] focus:ring-[#a51d31]"
+                  />
+                </Table.Cell>
+                <Table.Cell className="font-medium" style={{ padding: "12px 16px", fontSize: "0.875rem" }}>
+                  {student.preferred_name ?? student.legal_first_name} {student.legal_last_name.charAt(0)}
+                </Table.Cell>
+                <Table.Cell className="text-muted-foreground" style={{ padding: "12px 16px", fontSize: "0.875rem" }}>
+                  {student.email}
+                </Table.Cell>
+                <Table.Cell className="text-muted-foreground" style={{ padding: "12px 16px", fontSize: "0.875rem" }}>
+                  {student.phone}
+                </Table.Cell>
+                <Table.Cell className="text-muted-foreground" style={{ padding: "12px 16px", fontSize: "0.875rem" }}>
+                  {student.program}
+                </Table.Cell>
+                <Table.Cell className="text-muted-foreground" style={{ padding: "12px 16px", fontSize: "0.875rem" }}>
+                  {/* Session - to be added later*/}
+                </Table.Cell>
+                <Table.Cell className="text-muted-foreground" style={{ padding: "12px 16px", fontSize: "0.875rem" }}>
+                  {student.course_placement}
+                </Table.Cell>
+                <Table.Cell className="text-center" style={{ padding: "12px 16px" }}>
+                  <StudentModal studentId={student.id}></StudentModal>
+                </Table.Cell>
+              </Table.Row>
+            ))}
+          </Table.Body>
+        </Table.Root>
       </div>
 
-      {/* Results count */}
-      <div style={{ marginTop: "16px", color: "#666", fontSize: "14px" }}>
-        Showing {sortedStudents.length} of {students.length} students
+      {/* Pagination Controls */}
+      <div className="mt-4 relative">
+        <div className="flex items-center justify-between text-sm">
+          <div className="text-muted-foreground">
+            Showing <span className="text-foreground font-medium">{sortedStudents.length}</span> of{" "}
+            <span className="text-foreground font-medium">{students.length}</span> students
+          </div>
+          <div className="flex items-center gap-2 absolute left-1/2 -translate-x-1/2">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="bg-card border-border hover:bg-accent rounded-md border px-4 py-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Prev
+            </button>
+            <span className="text-foreground px-3">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="bg-card border-border hover:bg-accent rounded-md border px-4 py-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+          <div></div>
+        </div>
       </div>
     </div>
   );
