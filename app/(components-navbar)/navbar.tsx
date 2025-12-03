@@ -30,7 +30,7 @@ export default function Navbar({ className, ...props }: React.HTMLAttributes<HTM
         <span
           className={cn(
             "inline-block border-b-2 pb-1",
-            pathname === "/" ? "border-[#a51d31] text-gray-900" : "border-transparent",
+            pathname === "/" ? "text-foreground border-[#a51d31]" : "text-muted-foreground border-transparent",
           )}
         >
           Home
@@ -44,7 +44,9 @@ export default function Navbar({ className, ...props }: React.HTMLAttributes<HTM
           <span
             className={cn(
               "inline-block border-b-2 pb-1",
-              pathname?.includes("/dashboard/students") ? "border-[#a51d31] text-gray-900" : "border-transparent",
+              pathname?.includes("/dashboard/students")
+                ? "text-foreground border-[#a51d31]"
+                : "text-muted-foreground border-transparent",
             )}
           >
             Students
