@@ -3,8 +3,21 @@
 import type { Constants } from "@/lib/schema";
 import Papa from "papaparse";
 import { useState } from "react";
-import { isValidStudent, mapCSVRowToStudent, type CSVRow } from "../utils/csvMapper";
-import { importStudentsToSupabase } from "../utils/studentImporter";
+import {
+  isValidStudent,
+  mapCSVRowToStudent,
+  splitStudentsByReturningStatus,
+  type CSVRow,
+  type StudentData,
+} from "../utils/csvMapper";
+import {
+  importNewStudents,
+  lookupReturningStudents,
+  updateReturningStudents,
+  validateNewStudents,
+  validateReturningStudents,
+} from "../utils/studentImporter";
+import { ErrorReportModal, type ErrorInfo } from "./ErrorReportModal";
 import { LoadingOverlay } from "./LoadingOverlay";
 import { StudentImportModal } from "./StudentImportModal";
 import { Toast } from "./Toast";
@@ -23,6 +36,8 @@ export default function StudentImportButton() {
   const [isImporting, setIsImporting] = useState(false);
   const [importMessage, setImportMessage] = useState("");
   const [toast, setToast] = useState<ToastState>(null);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [importErrors, setImportErrors] = useState<ErrorInfo[]>([]);
 
   const handleButtonClick = () => {
     setIsModalOpen(true);
@@ -52,8 +67,8 @@ export default function StudentImportButton() {
       complete: (results) => {
         void (async () => {
           try {
-            // Step 1: Validate CSV
-            setImportMessage("Validating data...");
+            // Step 1: Parse CSV
+            setImportMessage("Parsing CSV file...");
             await sleep(300);
 
             if ((results.data ?? []).length === 0) {
@@ -69,12 +84,17 @@ export default function StudentImportButton() {
             const mappedStudents = (results.data as CSVRow[]).map(mapCSVRowToStudent);
             // Apply program and course_placement to all students
             const studentsWithProgramAndPlacement = mappedStudents.map(
-              (student): Record<string, unknown> => ({
+              (student): StudentData => ({
                 ...student,
                 program,
                 course_placement: coursePlacement,
               }),
             );
+
+            // Step 3: Basic validation - required fields
+            setImportMessage("Validating student records...");
+            await sleep(300);
+
             const validStudents = studentsWithProgramAndPlacement.filter(isValidStudent);
 
             if (validStudents.length === 0) {
@@ -83,29 +103,176 @@ export default function StudentImportButton() {
               return;
             }
 
-            // Step 3: Import to database
-            setImportMessage(`Uploading ${validStudents.length} students to database...`);
+            // Step 4: Split into new/returning/invalid
+            setImportMessage("Categorizing students...");
             await sleep(300);
 
-            const result = await importStudentsToSupabase(
-              validStudents as Parameters<typeof importStudentsToSupabase>[0],
-            );
+            const splitResult = splitStudentsByReturningStatus(validStudents);
 
-            // Step 4: Show result
-            setIsImporting(false);
-
-            if (result.success) {
-              showToast(`Successfully imported ${result.count} students!`, "success");
-
-              // Refresh page after a short delay
-              setTimeout(() => {
-                window.location.reload();
-              }, 1500);
-            } else {
-              showToast(`Import failed: ${result.error}`, "error");
+            // Collect errors from invalid students
+            const allErrors: ErrorInfo[] = [];
+            for (let i = 0; i < splitResult.invalidStudents.length; i++) {
+              const invalid = splitResult.invalidStudents[i];
+              if (!invalid) continue;
+              const firstName =
+                typeof invalid.student.legal_first_name === "string" ? invalid.student.legal_first_name : "";
+              const lastName =
+                typeof invalid.student.legal_last_name === "string" ? invalid.student.legal_last_name : "";
+              const studentName = `${firstName} ${lastName}`.trim() || "Unknown";
+              allErrors.push({
+                rowNumber: i + 1,
+                studentName,
+                error: invalid.error,
+                errorType: "VALIDATION_ERROR",
+              });
             }
-          } catch {
-            showToast("Failed to import students.", "error");
+
+            // PHASE 1: VALIDATION Before any database writes
+
+            // Step 5: Validate ALL new students
+            const newStudentRowOffset = splitResult.invalidStudents.length;
+            if (splitResult.newStudents.length > 0) {
+              setImportMessage(
+                `Validating ${splitResult.newStudents.length} new student${splitResult.newStudents.length !== 1 ? "s" : ""}...`,
+              );
+              await sleep(300);
+
+              const validationResult = await validateNewStudents(splitResult.newStudents, newStudentRowOffset);
+
+              if (validationResult.errors.length > 0) {
+                allErrors.push(
+                  ...validationResult.errors.map((e) => ({
+                    rowNumber: e.rowNumber,
+                    studentName: e.studentName,
+                    studentCode: e.studentCode,
+                    error: e.message,
+                    errorType: e.errorType,
+                  })),
+                );
+              }
+            }
+
+            // Step 6: Validate ALL returning students
+            const returningStudentRowOffset = newStudentRowOffset + splitResult.newStudents.length;
+            let dbStudentsForUpdates = new Map<string, Record<string, unknown>>();
+            if (splitResult.returningStudents.length > 0) {
+              setImportMessage(
+                `Validating ${splitResult.returningStudents.length} returning student${splitResult.returningStudents.length !== 1 ? "s" : ""}...`,
+              );
+              await sleep(300);
+
+              const validationResult = await validateReturningStudents(
+                splitResult.returningStudents,
+                returningStudentRowOffset,
+              );
+
+              if (validationResult.errors.length > 0) {
+                allErrors.push(
+                  ...validationResult.errors.map((e) => ({
+                    rowNumber: e.rowNumber,
+                    studentName: e.studentName,
+                    studentCode: e.studentCode,
+                    error: e.message,
+                    errorType: e.errorType,
+                  })),
+                );
+              } else {
+                // If validation passed, lookup DB students for Phase 2 updates
+                const studentCodes = splitResult.returningStudents
+                  .map((s) => s.student_code as string)
+                  .filter((code): code is string => Boolean(code));
+                try {
+                  dbStudentsForUpdates = await lookupReturningStudents(studentCodes);
+                } catch (error) {
+                  // Should not happen if validation passed, but handle errors effectively
+                  allErrors.push({
+                    rowNumber: 0,
+                    studentName: "Validation",
+                    error: `Failed to lookup returning students: ${error instanceof Error ? error.message : "Unknown error"}`,
+                    errorType: "LOOKUP_FAILED",
+                  });
+                }
+              }
+            }
+
+            // Step 7: If any validation errors, abort completely
+            if (allErrors.length > 0) {
+              setIsImporting(false);
+              setImportErrors(allErrors);
+              setShowErrorModal(true);
+              showToast("Validation failed. Please fix errors and try again.", "error");
+              return;
+            }
+
+            // PHASE 2: DATABASE WRITES - Only if validation passes
+
+            // Step 8: Insert all new students
+            let newCount = 0;
+            if (splitResult.newStudents.length > 0) {
+              setImportMessage(
+                `Importing ${splitResult.newStudents.length} new student${splitResult.newStudents.length !== 1 ? "s" : ""}...`,
+              );
+              await sleep(300);
+
+              const importResult = await importNewStudents(
+                splitResult.newStudents as Parameters<typeof importNewStudents>[0],
+                newStudentRowOffset,
+              );
+
+              newCount = importResult.newCount;
+
+              // Collect infrastructure errors but with allowance of partial success
+              if (importResult.errors.length > 0) {
+                allErrors.push(
+                  ...importResult.errors.map((e) => ({
+                    rowNumber: e.rowNumber,
+                    studentName: e.studentName,
+                    studentCode: e.studentCode,
+                    error: e.message,
+                    errorType: e.errorType,
+                  })),
+                );
+              }
+            }
+
+            // Step 9: Update all returning students
+            let updatedCount = 0;
+            if (splitResult.returningStudents.length > 0) {
+              setImportMessage(
+                `Updating ${splitResult.returningStudents.length} returning student${splitResult.returningStudents.length !== 1 ? "s" : ""}...`,
+              );
+              await sleep(300);
+
+              const updateResult = await updateReturningStudents(
+                splitResult.returningStudents,
+                dbStudentsForUpdates,
+                returningStudentRowOffset,
+              );
+
+              updatedCount = updateResult.updatedCount;
+
+              // Collect infrastructure errors
+              if (updateResult.errors.length > 0) {
+                allErrors.push(
+                  ...updateResult.errors.map((e) => ({
+                    rowNumber: e.rowNumber,
+                    studentName: e.studentName,
+                    studentCode: e.studentCode,
+                    error: e.message,
+                    errorType: e.errorType,
+                  })),
+                );
+              }
+            }
+
+            // Step 10: Show final results
+            setIsImporting(false);
+            showFinalResults(allErrors, newCount, updatedCount);
+          } catch (error) {
+            showToast(
+              `Failed to import students: ${error instanceof Error ? error.message : "Unknown error"}`,
+              "error",
+            );
             setIsImporting(false);
           }
         })();
@@ -115,6 +282,37 @@ export default function StudentImportButton() {
         setIsImporting(false);
       },
     });
+  };
+
+  const showFinalResults = (errors: ErrorInfo[], newCount: number, updatedCount: number) => {
+    const failedCount = errors.length;
+
+    // Store errors for modal
+    if (failedCount > 0) {
+      setImportErrors(errors);
+    }
+
+    if (failedCount === 0) {
+      showToast(
+        `Successfully imported ${newCount} new student${newCount !== 1 ? "s" : ""} and updated ${updatedCount} returning student${updatedCount !== 1 ? "s" : ""}!`,
+        "success",
+      );
+      // Refresh page after a short delay
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    } else {
+      // Infrastructure errors - show what succeeded and what failed
+      const parts: string[] = [];
+      if (newCount > 0) parts.push(`${newCount} new`);
+      if (updatedCount > 0) parts.push(`${updatedCount} updated`);
+      if (failedCount > 0) parts.push(`${failedCount} failed`);
+
+      showToast(`Import completed with errors: ${parts.join(", ")}. Click to view errors.`, "error");
+
+      // Show error modal
+      setShowErrorModal(true);
+    }
   };
 
   return (
@@ -138,6 +336,19 @@ export default function StudentImportButton() {
         onOpenChange={setIsModalOpen}
         onFileSelect={(file, program, coursePlacement) => {
           void handleFileSelect(file, program, coursePlacement);
+        }}
+      />
+
+      {/* Error Report Modal */}
+      <ErrorReportModal
+        open={showErrorModal}
+        errors={importErrors}
+        onClose={() => {
+          setShowErrorModal(false);
+          // Refresh page after closing error modal
+          setTimeout(() => {
+            window.location.reload();
+          }, 500);
         }}
       />
 
