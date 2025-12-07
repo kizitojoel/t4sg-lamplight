@@ -56,7 +56,7 @@ const studentInfoSchema = z.object({
   address_state: z.string(),
   address_zip: z.string().regex(RegExp(/\d{5}(-\d{4})?$/), "Please enter a correct ZIP Code."),
   gender: genders,
-  age: z.number().min(0).max(130),
+  age: z.coerce.number<number>().min(0).max(130),
   ethnicity: z.boolean(),
   race: z.array(z.string()),
   country_of_birth: z.string(),

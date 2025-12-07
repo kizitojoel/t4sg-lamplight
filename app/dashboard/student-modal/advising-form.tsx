@@ -8,11 +8,12 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TypographyH3 } from "@/components/ui/typography";
+import { TypographyH3, TypographyH4 } from "@/components/ui/typography";
 import { toast } from "@/components/ui/use-toast";
 import { createBrowserSupabaseClient } from "@/lib/client-utils";
-import { useRouter } from "next/navigation";
-import { useEffect, useState, type BaseSyntheticEvent } from "react";
+import { redirect, useRouter } from "next/navigation";
+import { useEffect, useRef, useState, type BaseSyntheticEvent } from "react";
+import Comment from "./comments";
 
 const enrollment_statuses = z.enum(["active", "inactive"]);
 
@@ -35,6 +36,7 @@ export default function AdvisingForm({ student }: { student: Student }) {
   const [course_placements, setCoursePlacements] = useState<CoursePlacement[]>();
   const [programs, setPrograms] = useState<Program[]>();
 
+  const dataFetched = useRef<boolean>(false);
   useEffect(() => {
     const fetchData = async () => {
       const { data: coursePlacementsList, error: coursePlacementError } = await supabase
@@ -60,7 +62,10 @@ export default function AdvisingForm({ student }: { student: Student }) {
       }
     };
 
-    void fetchData();
+    if (!dataFetched.current) {
+      dataFetched.current = true;
+      void fetchData();
+    }
   }, [supabase]);
 
   const defaultValues = {
@@ -108,6 +113,87 @@ export default function AdvisingForm({ student }: { student: Student }) {
     });
   };
 
+  const comments = student.advising_comments;
+  const addComment = async () => {
+    const commentElement = document.getElementById("comment_body") as HTMLInputElement;
+    const comment = commentElement.value;
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session) {
+      // this is a protected route - only users who are signed in can view this route
+      redirect("/");
+    }
+    const userID = session.user.id;
+
+    const now = new Date();
+
+    if (Array.isArray(comments)) {
+      comments.unshift({
+        author: userID,
+        timestamp: now.toLocaleDateString(),
+        comment_body: comment,
+      });
+    } else {
+      return "Expected comments to be an array!";
+    }
+    // The `input` prop contains data that has already been processed by zod. We can now use it in a supabase query
+    const { error } = await supabase
+      .from("students")
+      .update({
+        advising_comments: comments,
+      })
+      .eq("id", student.id);
+
+    // Catch and report errors from Supabase and exit the onSubmit function with an early 'return' if an error occurred.
+    if (error) {
+      return toast({
+        title: "Something went wrong.",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+    commentElement.value = "";
+
+    router.refresh();
+
+    return toast({
+      title: "New comment added!",
+      description: "Successfully added your comment.",
+    });
+  };
+
+  async function deleteComment(index: number) {
+    if (Array.isArray(comments)) {
+      comments.splice(index, 1);
+    } else {
+      return "Expected comments to be an array!";
+    }
+
+    const { error } = await supabase
+      .from("students")
+      .update({
+        advising_comments: comments,
+      })
+      .eq("id", student.id);
+
+    // Catch and report errors from Supabase and exit the onSubmit function with an early 'return' if an error occurred.
+    if (error) {
+      return toast({
+        title: "Something went wrong.",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+
+    router.refresh();
+    return toast({
+      title: "Comment deleted!",
+      description: "Successfully deleted your comment.",
+    });
+  }
+
   if (course_placements == undefined) {
     return <div>Loading list of courses...</div>;
   }
@@ -117,30 +203,31 @@ export default function AdvisingForm({ student }: { student: Student }) {
   }
 
   return (
-    <Form {...form}>
-      <form onSubmit={(e: BaseSyntheticEvent) => void form.handleSubmit(onSubmit)(e)} className="space-y-8">
-        <div className="flex gap-2">
-          <TypographyH3 className="mt-1">Advising</TypographyH3>
-          <Button
-            type="button"
-            className="ml-auto block"
-            onClick={() => {
-              if (editing) {
-                form.reset(defaultValues);
-                setEditing(false);
-              } else {
-                setEditing(true);
-              }
-            }}
-          >
-            {editing ? "Cancel" : "Edit"}
-          </Button>
-          <Button type="submit" className={editing ? "bg-green-700 hover:bg-green-900" : "hidden"}>
-            Save
-          </Button>
-        </div>
+    <>
+      <Form {...form}>
+        <form onSubmit={(e: BaseSyntheticEvent) => void form.handleSubmit(onSubmit)(e)} className="space-y-8">
+          <div className="flex gap-2">
+            <TypographyH3 className="mt-1">Advising</TypographyH3>
+            <Button
+              type="button"
+              className="ml-auto block"
+              onClick={() => {
+                if (editing) {
+                  form.reset(defaultValues);
+                  setEditing(false);
+                } else {
+                  setEditing(true);
+                }
+              }}
+            >
+              {editing ? "Cancel" : "Edit"}
+            </Button>
+            <Button type="submit" className={editing ? "bg-green-700 hover:bg-green-900" : "hidden"}>
+              Save
+            </Button>
+          </div>
 
-        {/* <FormField
+          {/* <FormField
           control={form.control}
           name="email"
           render={({ field }) => {
@@ -155,95 +242,122 @@ export default function AdvisingForm({ student }: { student: Student }) {
             );
           }}
         /> */}
-        <FormField
-          control={form.control}
-          name="enrollment_status"
-          render={({ field }) => {
-            return (
-              <FormItem>
-                <FormLabel>Enrollment Status</FormLabel>
-                <Select
-                  onValueChange={(value) => field.onChange(enrollment_statuses.parse(value))}
-                  value={field.value}
-                  disabled={!editing}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select enrollment status" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectGroup>
-                      {enrollment_statuses.options.map((status, index) => (
-                        <SelectItem key={index} value={status}>
-                          {status}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            );
-          }}
-        />
-        <FormField
-          control={form.control}
-          name="program"
-          render={({ field }) => {
-            return (
-              <FormItem>
-                <FormLabel>Program</FormLabel>
-                <Select onValueChange={(value) => field.onChange(value)} value={field.value ?? ""} disabled={!editing}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select program" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectGroup>
-                      {programs.map((program) => (
-                        <SelectItem key={program.id} value={program.id}>
-                          {program.name}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            );
-          }}
-        />
-        <FormField
-          control={form.control}
-          name="course_placement"
-          render={({ field }) => {
-            return (
-              <FormItem>
-                <FormLabel>Course Placement</FormLabel>
-                <Select onValueChange={(value) => field.onChange(value)} value={field.value ?? ""} disabled={!editing}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select enrollment status" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectGroup>
-                      {course_placements.map((course) => (
-                        <SelectItem key={course.id} value={course.id}>
-                          {course.name}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            );
-          }}
-        />
-      </form>
-    </Form>
+          <FormField
+            control={form.control}
+            name="enrollment_status"
+            render={({ field }) => {
+              return (
+                <FormItem>
+                  <FormLabel>Enrollment Status</FormLabel>
+                  <Select
+                    onValueChange={(value) => field.onChange(enrollment_statuses.parse(value))}
+                    value={field.value}
+                    disabled={!editing}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select enrollment status" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectGroup>
+                        {enrollment_statuses.options.map((status, index) => (
+                          <SelectItem key={index} value={status}>
+                            {status}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
+          />
+          <FormField
+            control={form.control}
+            name="program"
+            render={({ field }) => {
+              return (
+                <FormItem>
+                  <FormLabel>Program</FormLabel>
+                  <Select
+                    onValueChange={(value) => field.onChange(value)}
+                    value={field.value ?? ""}
+                    disabled={!editing}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select program" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectGroup>
+                        {programs.map((program) => (
+                          <SelectItem key={program.id} value={program.id}>
+                            {program.name}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
+          />
+          <FormField
+            control={form.control}
+            name="course_placement"
+            render={({ field }) => {
+              return (
+                <FormItem>
+                  <FormLabel>Course Placement</FormLabel>
+                  <Select
+                    onValueChange={(value) => field.onChange(value)}
+                    value={field.value ?? ""}
+                    disabled={!editing}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select enrollment status" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectGroup>
+                        {course_placements.map((course) => (
+                          <SelectItem key={course.id} value={course.id}>
+                            {course.name}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
+          />
+        </form>
+      </Form>
+      <TypographyH4 className="my-1">Comments</TypographyH4>
+      <div className="flex gap-3">
+        <textarea name="comment_body" id="comment_body" className="flex-1 border-1"></textarea>
+        <Button onClick={() => void addComment()}>Add Comment</Button>
+      </div>
+
+      <div>
+        {Array.isArray(student.advising_comments) && student.advising_comments
+          ? student.advising_comments.map((comment, index) => (
+              <div key={index} className="mt-2 flex">
+                <Comment comment={comment}></Comment>
+                <Button className="mr-1 ml-1" onClick={() => void deleteComment(index)}>
+                  Delete
+                </Button>
+              </div>
+            ))
+          : "Comments are not in the right format!"}
+      </div>
+    </>
   );
 }
