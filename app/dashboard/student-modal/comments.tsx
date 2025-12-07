@@ -31,7 +31,7 @@ export default function Comment({ comment }: { comment: Comment }) {
       dataFetched.current = true;
       void fetchData();
     }
-  }, [supabase]);
+  }, [supabase, comment.author]);
 
   if (!commentAuthor) {
     return "Fetching comments";

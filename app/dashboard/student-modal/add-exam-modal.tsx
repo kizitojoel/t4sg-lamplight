@@ -35,11 +35,11 @@ type AddExamValues = z.infer<typeof addExamScheme>;
 export default function AddExamModal({
   student,
   assessments,
-  updateLearning,
+  updateLearningAction,
 }: {
   student: Student;
   assessments: Assessment[];
-  updateLearning: Function;
+  updateLearningAction: () => void;
 }) {
   const [open, setOpen] = useState<boolean>(false);
   const supabase = createBrowserSupabaseClient();
@@ -87,7 +87,7 @@ export default function AddExamModal({
 
     setOpen(false);
 
-    updateLearning();
+    updateLearningAction();
 
     return toast({
       title: "Test logged successfully!",

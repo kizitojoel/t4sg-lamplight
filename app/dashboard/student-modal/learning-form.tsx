@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "@/components/ui/use-toast";
 import { createBrowserSupabaseClient } from "@/lib/client-utils";
-import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import AddExamModal from "./add-exam-modal";
 
@@ -23,7 +22,6 @@ export default function LearningForm({ student }: { student: Student }) {
   const [assessments, setAssessments] = useState<Assessment[]>();
   const [assessmentResults, setAssessmentResults] = useState<AssessmentResults[]>();
   const [assessmentsDict, setAssessmentsDict] = useState<Record<string, string>>();
-  const router = useRouter();
 
   const dataFetched = useRef<boolean>(false);
   useEffect(() => {
@@ -129,7 +127,6 @@ export default function LearningForm({ student }: { student: Student }) {
   }
 
   async function deleteExam(id: string) {
-    console.log(id);
     const { error: error } = await supabase.from("assessment_results").delete().eq("id", id);
     if (error)
       return toast({
@@ -138,7 +135,7 @@ export default function LearningForm({ student }: { student: Student }) {
         variant: "destructive",
       });
 
-    updateData();
+    void updateData();
 
     return toast({
       title: "Test deleted successfully!",
@@ -151,7 +148,7 @@ export default function LearningForm({ student }: { student: Student }) {
 
   return (
     <div>
-      <AddExamModal student={student} assessments={assessments} updateLearning={updateData}></AddExamModal>
+      <AddExamModal student={student} assessments={assessments} updateLearningAction={updateData}></AddExamModal>
       <Table>
         <TableHeader>
           <TableRow>
@@ -173,7 +170,7 @@ export default function LearningForm({ student }: { student: Student }) {
                   <TableCell className="w-0">
                     <Button
                       onClick={() => {
-                        deleteExam(assessment.id);
+                        void deleteExam(assessment.id);
                       }}
                       key={assessment.id}
                       size="sm"

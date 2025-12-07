@@ -116,7 +116,7 @@ export default function AdvisingForm({ student }: { student: Student }) {
   const comments = student.advising_comments;
   const addComment = async () => {
     const commentElement = document.getElementById("comment_body") as HTMLInputElement;
-    const comment = commentElement!.value;
+    const comment = commentElement.value;
 
     const {
       data: { session },
@@ -136,7 +136,7 @@ export default function AdvisingForm({ student }: { student: Student }) {
         comment_body: comment,
       });
     } else {
-      throw "Expected comments to be an array!";
+      return "Expected comments to be an array!";
     }
     // The `input` prop contains data that has already been processed by zod. We can now use it in a supabase query
     const { error } = await supabase
@@ -168,7 +168,7 @@ export default function AdvisingForm({ student }: { student: Student }) {
     if (Array.isArray(comments)) {
       comments.splice(index, 1);
     } else {
-      throw "Expected comments to be an array!";
+      return "Expected comments to be an array!";
     }
 
     const { error } = await supabase
