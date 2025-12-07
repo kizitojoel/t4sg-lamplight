@@ -17,7 +17,7 @@ import { createBrowserSupabaseClient } from "@/lib/client-utils";
 import { type Database } from "@/lib/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { type BaseSyntheticEvent, useState } from "react";
 import { useForm } from "react-hook-form";
 import z from "zod";
 
@@ -108,7 +108,7 @@ export default function AddExamModal({
             <DialogDescription></DialogDescription>
           </DialogHeader>
           <Form {...form}>
-            <form onSubmit={() => void form.handleSubmit(onSubmit)} className="space-y-8">
+            <form onSubmit={(e: BaseSyntheticEvent) => void form.handleSubmit(onSubmit)(e)} className="space-y-8">
               <FormField
                 control={form.control}
                 name="date"
