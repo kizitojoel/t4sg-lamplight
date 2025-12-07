@@ -148,7 +148,11 @@ export default function LearningForm({ student }: { student: Student }) {
 
   return (
     <div>
-      <AddExamModal student={student} assessments={assessments} updateLearningAction={updateData}></AddExamModal>
+      <AddExamModal
+        student={student}
+        assessments={assessments}
+        updateLearningAction={() => void updateData()}
+      ></AddExamModal>
       <Table>
         <TableHeader>
           <TableRow>

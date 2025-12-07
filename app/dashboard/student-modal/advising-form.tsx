@@ -343,7 +343,7 @@ export default function AdvisingForm({ student }: { student: Student }) {
       <TypographyH4 className="my-1">Comments</TypographyH4>
       <div className="flex gap-3">
         <textarea name="comment_body" id="comment_body" className="flex-1 border-1"></textarea>
-        <Button onClick={() => addComment()}>Add Comment</Button>
+        <Button onClick={() => void addComment()}>Add Comment</Button>
       </div>
 
       <div>
@@ -351,7 +351,7 @@ export default function AdvisingForm({ student }: { student: Student }) {
           ? student.advising_comments.map((comment, index) => (
               <div key={index} className="mt-2 flex">
                 <Comment comment={comment}></Comment>
-                <Button className="mr-1 ml-1" onClick={() => deleteComment(index)}>
+                <Button className="mr-1 ml-1" onClick={() => void deleteComment(index)}>
                   Delete
                 </Button>
               </div>
