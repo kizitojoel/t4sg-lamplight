@@ -146,8 +146,8 @@ export default function StudentsTable({
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-    } catch (error) {
-      alert("Failed to export students due to " + error + ". Please try again.");
+    } catch {
+      alert("Failed to export students. Please try again.");
     }
   };
 
