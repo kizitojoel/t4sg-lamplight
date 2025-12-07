@@ -350,8 +350,8 @@ export default function AdvisingForm({ student }: { student: Student }) {
         {Array.isArray(student.advising_comments) && student.advising_comments
           ? student.advising_comments.map((comment, index) => (
               <div key={index} className="mt-2 flex">
-                <Comment key={index} comment={comment}></Comment>
-                <Button key={index} className="mr-1 ml-1" onClick={() => deleteComment(index)}>
+                <Comment comment={comment}></Comment>
+                <Button className="mr-1 ml-1" onClick={() => deleteComment(index)}>
                   Delete
                 </Button>
               </div>
