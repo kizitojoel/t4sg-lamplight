@@ -106,7 +106,7 @@ export default function StudentsTable({
           const value = student[header as keyof typeof student];
           // Handle arrays
           if (Array.isArray(value)) {
-            return value.join("; ");
+            return value.map(String).join("; ");
           }
           // Handle booleans
           if (typeof value === "boolean") {
@@ -146,7 +146,7 @@ export default function StudentsTable({
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-    } catch (error) {
+    } catch {
       alert("Failed to export students. Please try again.");
     }
   };
