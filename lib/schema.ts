@@ -1,11 +1,5 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
-export type Comment = {
-  author: string;
-  timestamp: string;
-  comment_body: string;
-};
-
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
@@ -14,6 +8,35 @@ export type Database = {
   };
   public: {
     Tables: {
+      allowed_emails: {
+        Row: {
+          created_at: string;
+          created_by: string | null;
+          email: string;
+          id: number;
+        };
+        Insert: {
+          created_at?: string;
+          created_by?: string | null;
+          email: string;
+          id?: number;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string | null;
+          email?: string;
+          id?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "allowed_emails_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       assessment_results: {
         Row: {
           assessment_id: string;
@@ -170,18 +193,35 @@ export type Database = {
       };
       sessions: {
         Row: {
+          course_placement_id: string | null;
           created_at: string;
           id: number;
+          quarter: Database["public"]["Enums"]["quarter_enum"];
+          year: number;
         };
         Insert: {
+          course_placement_id?: string | null;
           created_at?: string;
           id?: number;
+          quarter: Database["public"]["Enums"]["quarter_enum"];
+          year: number;
         };
         Update: {
+          course_placement_id?: string | null;
           created_at?: string;
           id?: number;
+          quarter?: Database["public"]["Enums"]["quarter_enum"];
+          year?: number;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "sessions_course_placement_id_fkey";
+            columns: ["course_placement_id"];
+            isOneToOne: false;
+            referencedRelation: "course_placement";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       students: {
         Row: {
@@ -189,23 +229,34 @@ export type Database = {
           address_state: string | null;
           address_street: string | null;
           address_zip: string | null;
-          advising_comments: Comment[];
+          advising_comments: Json;
           age: number | null;
+          class_time_availability: string | null;
           computer_access: string | null;
           country_of_birth: string | null;
           course_placement: Database["public"]["Enums"]["course_placement_enum"];
           course_placement_id: string | null;
           created_at: string;
           created_by: string | null;
+          current_employer: string | null;
+          current_job_title: string | null;
+          education_location: string | null;
           email: string | null;
           employment: string | null;
           enrollment_status: Database["public"]["Enums"]["enrollment_status_enum"] | null;
           enrollment_status_id: string | null;
           ethnicity_hispanic_latino: boolean | null;
           gender: Database["public"]["Enums"]["gender"] | null;
+          has_healthcare_certification: string | null;
+          has_high_school_diploma: boolean | null;
+          has_taken_teas: boolean | null;
+          healthcare_certification_details: string | null;
           highest_education: string | null;
           household_income: string | null;
           id: string;
+          initial_placement_hcp: string | null;
+          is_cna: boolean | null;
+          is_home_health_aide: boolean | null;
           language_spoken_at_home: string | null;
           legal_first_name: string;
           legal_last_name: string;
@@ -220,29 +271,41 @@ export type Database = {
           student_code: string | null;
           updated_at: string;
           updated_by: string | null;
+          work_towns: string | null;
         };
         Insert: {
           address_city?: string | null;
           address_state?: string | null;
           address_street?: string | null;
           address_zip?: string | null;
-          advising_comments?: Comment[];
+          advising_comments?: Json;
           age?: number | null;
+          class_time_availability?: string | null;
           computer_access?: string | null;
           country_of_birth?: string | null;
           course_placement: Database["public"]["Enums"]["course_placement_enum"];
           course_placement_id?: string | null;
           created_at?: string;
           created_by?: string | null;
+          current_employer?: string | null;
+          current_job_title?: string | null;
+          education_location?: string | null;
           email?: string | null;
           employment?: string | null;
           enrollment_status?: Database["public"]["Enums"]["enrollment_status_enum"] | null;
           enrollment_status_id?: string | null;
           ethnicity_hispanic_latino?: boolean | null;
           gender?: Database["public"]["Enums"]["gender"] | null;
+          has_healthcare_certification?: string | null;
+          has_high_school_diploma?: boolean | null;
+          has_taken_teas?: boolean | null;
+          healthcare_certification_details?: string | null;
           highest_education?: string | null;
           household_income?: string | null;
           id?: string;
+          initial_placement_hcp?: string | null;
+          is_cna?: boolean | null;
+          is_home_health_aide?: boolean | null;
           language_spoken_at_home?: string | null;
           legal_first_name: string;
           legal_last_name: string;
@@ -257,29 +320,41 @@ export type Database = {
           student_code?: string | null;
           updated_at?: string;
           updated_by?: string | null;
+          work_towns?: string | null;
         };
         Update: {
           address_city?: string | null;
           address_state?: string | null;
           address_street?: string | null;
           address_zip?: string | null;
-          advising_comments?: Comment[];
+          advising_comments?: Json;
           age?: number | null;
+          class_time_availability?: string | null;
           computer_access?: string | null;
           country_of_birth?: string | null;
           course_placement?: Database["public"]["Enums"]["course_placement_enum"];
           course_placement_id?: string | null;
           created_at?: string;
           created_by?: string | null;
+          current_employer?: string | null;
+          current_job_title?: string | null;
+          education_location?: string | null;
           email?: string | null;
           employment?: string | null;
           enrollment_status?: Database["public"]["Enums"]["enrollment_status_enum"] | null;
           enrollment_status_id?: string | null;
           ethnicity_hispanic_latino?: boolean | null;
           gender?: Database["public"]["Enums"]["gender"] | null;
+          has_healthcare_certification?: string | null;
+          has_high_school_diploma?: boolean | null;
+          has_taken_teas?: boolean | null;
+          healthcare_certification_details?: string | null;
           highest_education?: string | null;
           household_income?: string | null;
           id?: string;
+          initial_placement_hcp?: string | null;
+          is_cna?: boolean | null;
+          is_home_health_aide?: boolean | null;
           language_spoken_at_home?: string | null;
           legal_first_name?: string;
           legal_last_name?: string;
@@ -294,6 +369,7 @@ export type Database = {
           student_code?: string | null;
           updated_at?: string;
           updated_by?: string | null;
+          work_towns?: string | null;
         };
         Relationships: [
           {
@@ -345,6 +421,7 @@ export type Database = {
       enrollment_status_enum: "active" | "inactive";
       gender: "Male" | "Female" | "Non-binary" | "Other" | "Prefer not to say";
       program_enum: "ESOL" | "HCP";
+      quarter_enum: "Fall" | "Winter" | "Spring" | "Summer";
       role: "admin" | "teacher";
       states:
         | "AL"
@@ -535,6 +612,7 @@ export const Constants = {
       enrollment_status_enum: ["active", "inactive"],
       gender: ["Male", "Female", "Non-binary", "Other", "Prefer not to say"],
       program_enum: ["ESOL", "HCP"],
+      quarter_enum: ["Fall", "Winter", "Spring", "Summer"],
       role: ["admin", "teacher"],
       states: [
         "AL",

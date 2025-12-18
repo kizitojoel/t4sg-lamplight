@@ -4,21 +4,6 @@ import { PageHeader1, PageSubHeader1 } from "@/components/ui/typography";
 import { createServerSupabaseClient } from "@/lib/server-utils";
 import { redirect } from "next/navigation";
 
-const sidebarNavItems = [
-  {
-    title: "General",
-    href: "/settings/general",
-  },
-  {
-    title: "Profile",
-    href: "/settings/profile",
-  },
-  {
-    title: "Admin",
-    href: "/settings/admin",
-  },
-];
-
 interface SettingsLayoutProps {
   children: React.ReactNode;
 }
@@ -35,6 +20,35 @@ export default async function SettingsLayout({ children }: SettingsLayoutProps) 
     redirect("/");
   }
 
+  // Fetch user's profile from the database to check for admin role
+  const { data: profile, error } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+
+  // If there's an error fetching the profile, treat as unauthorized or not admin
+  const isAdmin = !!profile && profile.role === "admin";
+
+  const sidebarNavItems = [
+    {
+      title: "General",
+      href: "/settings/general",
+    },
+    {
+      title: "Profile",
+      href: "/settings/profile",
+    },
+    {
+      title: "Admin",
+      href: "/settings/admin",
+    },
+    ...(isAdmin
+      ? [
+          {
+            title: "Permissions",
+            href: "/settings/permissions",
+          },
+        ]
+      : []),
+  ];
+
   return (
     <>
       <div className="space-y-0.5">
@@ -43,10 +57,10 @@ export default async function SettingsLayout({ children }: SettingsLayoutProps) 
       </div>
       <Separator className="my-6" />
       <div className="flex flex-col space-y-8 lg:flex-row lg:space-y-0 lg:space-x-12">
-        <aside className="-mx-4 lg:w-1/5">
+        <aside className="relative z-10 -mx-4 mb-8 lg:static lg:mx-0 lg:mr-12 lg:mb-0 lg:w-1/5">
           <SidebarNav items={sidebarNavItems} />
         </aside>
-        <div className="flex-1 lg:max-w-2xl">{children}</div>
+        <div className="z-0 ml-0 flex-1 lg:ml-0 lg:max-w-2xl">{children}</div>
       </div>
     </>
   );

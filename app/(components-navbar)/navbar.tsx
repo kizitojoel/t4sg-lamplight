@@ -24,7 +24,7 @@ export default function Navbar({ className, ...props }: React.HTMLAttributes<HTM
     <nav className={cn("flex items-center space-x-8", className)} {...props}>
       {/* Logo Section */}
       <div className="flex items-center">
-        <Image src="/lamplight_logo.avif" alt="Lamplight" className="h-10 w-auto" />
+        <Image src="/lamplight_logo.avif" alt="Lamplight" className="h-10 w-auto" width={100} height={40} />
       </div>
 
       {/* Navigation Links */}
