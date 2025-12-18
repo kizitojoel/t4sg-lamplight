@@ -70,15 +70,6 @@ export default function StudentsTable({
     }
 
     try {
-      // Helper function to safely convert any value to string
-      const safeStringify = (value: unknown): string => {
-        if (value === null || value === undefined) return "";
-        if (typeof value === "string") return value;
-        if (typeof value === "number" || typeof value === "boolean") return String(value);
-        if (Array.isArray(value)) return value.map(safeStringify).join("; ");
-        if (typeof value === "object") return JSON.stringify(value);
-        return String(value);
-      };
       // Fetch full student data from Supabase for selected students
       const { createBrowserSupabaseClient } = await import("@/lib/client-utils");
       const supabase = createBrowserSupabaseClient();
@@ -112,15 +103,21 @@ export default function StudentsTable({
       const rows = fullStudentData.map((student) =>
         headers.map((header) => {
           const value = student[header as keyof typeof student];
-          return safeStringify(value);
+          // Handle arrays
+          if (Array.isArray(value)) {
+            return value.map(String).join("; ");
+          }
+          // Handle booleans
+          if (typeof value === "boolean") {
+            return value ? "Yes" : "No";
+          }
+          // Handle null/undefined
+          return value ?? "";
         }),
       );
 
       // Combine headers and rows
-      const csvContent = [
-        headers.join(","),
-        ...rows.map((row) => row.map((cell) => `"${safeStringify(cell)}"`).join(",")),
-      ].join("\n");
+      const csvContent = [headers.join(","), ...rows.map((row) => row.map((cell) => `"${cell}"`).join(","))].join("\n");
 
       // Determine filename based on filters
       let filename = "students_export.csv";

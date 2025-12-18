@@ -2,7 +2,7 @@
 
 import { createBrowserSupabaseClient } from "@/lib/client-utils";
 import { cn } from "@/lib/utils";
-import type { User } from "@supabase/supabase-js";
+import { type User } from "@supabase/supabase-js";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -15,8 +15,8 @@ export default function Navbar({ className, ...props }: React.HTMLAttributes<HTM
   // Fetch user auth status
   useEffect(() => {
     const supabase = createBrowserSupabaseClient();
-    void supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user);
+    void supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
     });
   }, []);
 
@@ -24,7 +24,7 @@ export default function Navbar({ className, ...props }: React.HTMLAttributes<HTM
     <nav className={cn("flex items-center space-x-8", className)} {...props}>
       {/* Logo Section */}
       <div className="flex items-center">
-        <Image src="/lamplight_logo.avif" alt="Lamplight" width={40} height={40} className="h-10 w-auto" />
+        <Image src="/lamplight_logo.avif" alt="Lamplight" className="h-10 w-auto" />
       </div>
 
       {/* Navigation Links */}
