@@ -62,4 +62,3 @@ export default function Navbar({ className, ...props }: React.HTMLAttributes<HTM
     </nav>
   );
 }
-1;
