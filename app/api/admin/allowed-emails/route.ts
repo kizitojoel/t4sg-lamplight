@@ -104,7 +104,6 @@ export async function POST(request: Request) {
   if (existingProfile) {
     await supabase.from("profiles").update({ role }).eq("id", existingProfile.id);
   }
-  console.log("Tried to update the profile");
 
   return NextResponse.json({ data: { email, role } } satisfies JsonResponse, { status: 201 });
 }

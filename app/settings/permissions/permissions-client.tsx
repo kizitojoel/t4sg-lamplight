@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useEffect, useMemo, useState } from "react";
 
-type AllowedEmail = {
+interface AllowedEmail {
   id: string;
   email: string;
   created_at: string;
   created_by: string | null;
   role?: "admin" | "teacher";
-};
+}
 
 type ApiResponse = { data: AllowedEmail[] } | { data: { email: string; role?: string } } | { error: string };
 
@@ -28,7 +28,7 @@ export default function PermissionsClient() {
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
+    void (async () => {
       setLoading(true);
       setError(null);
       const res = await fetch("/api/admin/allowed-emails");
@@ -151,7 +151,7 @@ export default function PermissionsClient() {
             disabled={loading}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !loading && input.trim()) {
-                handleAdd();
+                void handleAdd();
               }
             }}
           />
@@ -165,7 +165,9 @@ export default function PermissionsClient() {
             </SelectContent>
           </Select>
           <button
-            onClick={handleAdd}
+            onClick={() => {
+              void handleAdd();
+            }}
             disabled={loading}
             className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
           >
@@ -192,15 +194,17 @@ export default function PermissionsClient() {
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium">{item.email}</span>
                     <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 capitalize">
-                      {item.role || "teacher"}
+                      {item.role ?? "teacher"}
                     </span>
                   </div>
                   <span className="text-xs text-gray-500">Added {new Date(item.created_at).toLocaleString()}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Select
-                    value={item.role || "teacher"}
-                    onValueChange={(value) => handleRoleChange(item.email, value as "admin" | "teacher")}
+                    value={item.role ?? "teacher"}
+                    onValueChange={(value) => {
+                      void handleRoleChange(item.email, value as "admin" | "teacher");
+                    }}
                     disabled={loading}
                   >
                     <SelectTrigger className="w-28">
@@ -212,7 +216,9 @@ export default function PermissionsClient() {
                     </SelectContent>
                   </Select>
                   <button
-                    onClick={() => handleDelete(item.email)}
+                    onClick={() => {
+                      void handleDelete(item.email);
+                    }}
                     disabled={loading}
                     className="text-sm font-semibold text-red-600 hover:text-red-700 disabled:cursor-not-allowed disabled:text-red-300"
                   >

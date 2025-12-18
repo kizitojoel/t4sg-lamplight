@@ -21,7 +21,7 @@ export default async function SettingsLayout({ children }: SettingsLayoutProps) 
   }
 
   // Fetch user's profile from the database to check for admin role
-  const { data: profile, error } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
 
   // If there's an error fetching the profile, treat as unauthorized or not admin
   const isAdmin = !!profile && profile.role === "admin";

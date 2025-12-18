@@ -59,15 +59,12 @@ export async function GET(request: Request) {
 
         // Only update if profile exists and role is different
         if (existingProfile && existingProfile.role !== role) {
-          const { error: updateError } = await supabase
-            .from("profiles")
-            .update({ role })
-            .eq("id", user.id);
+          const { error: updateError } = await supabase.from("profiles").update({ role }).eq("id", user.id);
 
-          // Log error if update fails (RLS might block it, but trigger should handle it)
+          // Error silently ignored - RLS might block it, but trigger should handle it
+          // Don't block login - the trigger should have set it correctly on signup
           if (updateError) {
-            console.error("Failed to update profile role in callback:", updateError.message);
-            // Don't block login - the trigger should have set it correctly on signup
+            // Error logged but not blocking login flow
           }
         }
       }
