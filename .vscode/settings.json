@@ -1,6 +1,6 @@
 {
   "editor.formatOnSave": false,
-  "editor.defaultFormatter": "prettier.prettier-vscode",
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.codeActionsOnSave": {
     "source.formatDocument": "explicit",
     "source.fixAll.eslint": "explicit"
@@ -11,6 +11,9 @@
     "*.css": "tailwindcss"
   },
   "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[jsonc]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   }
 }
