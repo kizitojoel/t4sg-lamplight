@@ -28,9 +28,6 @@ export default async function Dashboard() {
     <>
       <div className="flex items-center justify-between">
         <TypographyH2 className="border-b-0">Dashboard</TypographyH2>
-        {/* <Link href="/dashboard/newstudent">
-          <Button className="cursor-pointer">Add Student</Button>
-        </Link> */}
       </div>
       <div className="border-b"></div>
       <TypographyP>This is a protected route accessible only to signed-in users.</TypographyP>

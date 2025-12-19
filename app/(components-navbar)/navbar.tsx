@@ -24,11 +24,18 @@ export default function Navbar({ className, ...props }: React.HTMLAttributes<HTM
     <nav className={cn("flex items-center space-x-8", className)} {...props}>
       {/* Logo Section */}
       <div className="flex items-center">
-        <Image src="/lamplight_logo.avif" alt="Lamplight" className="h-10 w-auto" />
+        <Image
+          src="/lamplight_logo.png"
+          alt="Lamplight"
+          width={180}
+          height={180}
+          style={{ height: "auto" }}
+          className="w-40"
+        />
       </div>
 
       {/* Navigation Links */}
-      <Link href="/" className="relative py-5 text-sm font-medium text-gray-600 transition-colors hover:text-gray-900">
+      <Link href="/" className="relative py-5 text-sm font-medium transition-colors">
         <span
           className={cn(
             "inline-block border-b-2 pb-1",
@@ -39,10 +46,7 @@ export default function Navbar({ className, ...props }: React.HTMLAttributes<HTM
         </span>
       </Link>
       {user && (
-        <Link
-          href="/dashboard/students"
-          className="relative py-5 text-sm font-medium text-gray-600 transition-colors hover:text-gray-900"
-        >
+        <Link href="/dashboard/students" className="relative py-5 text-sm font-medium transition-colors">
           <span
             className={cn(
               "inline-block border-b-2 pb-1",
