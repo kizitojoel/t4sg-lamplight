@@ -1,5 +1,7 @@
-// Map CSV headers to database column names
-const COLUMN_MAPPING: Record<string, string> = {
+import { Constants } from "@/lib/schema";
+
+// Map CSV headers to database column names for ESOL program
+const ESOL_COLUMN_MAPPING: Record<string, string> = {
   // Basic Info
   "First Name": "legal_first_name",
   "Last Name": "legal_last_name",
@@ -41,19 +43,91 @@ const COLUMN_MAPPING: Record<string, string> = {
   "Student Code": "student_code",
 
   // Returning Student Info, read-only, not stored in DB
-  is_returning: "is_returning",
+  "Is returning": "is_returning",
 };
+
+// Map CSV headers to database column names for HCP program
+const HCP_COLUMN_MAPPING: Record<string, string> = {
+  // Basic Info
+  "First Name": "legal_first_name",
+  "Last Name": "legal_last_name",
+  "Name I prefer to be called": "preferred_name",
+  Email: "email",
+  Phone: "phone",
+
+  // Address
+  "Street Address (include your Apt #)": "address_street",
+  City: "address_city",
+  State: "address_state",
+  "Zip Code": "address_zip",
+
+  // Demographics
+  Age: "age",
+  "Gender:": "gender",
+  "Ethnicity: Are you Hispanic or Latino/Latina?": "ethnicity_hispanic_latino",
+  "Race: (check all that apply)": "race",
+  "Country of Birth": "country_of_birth",
+  "Native Language": "native_language",
+  "Language spoken at home": "language_spoken_at_home",
+
+  // Education & Employment
+  "Education: What is the highest level of schooling that you have completed?": "highest_education",
+  "Where did you receive your highest level of education?": "education_location",
+  "Do you have a high school diploma or equivalent (GED/HiSET)?": "has_high_school_diploma",
+  "Are you currently:": "employment",
+
+  "Do you have access to a computer? This course is online and requires students to participate with a computer. (Phones will not work for class activities and may not be used for class participation.)":
+    "computer_access",
+
+  "Where did you hear about this course?  (At your job, from a friend, flyer, etc.)": "referral",
+
+  // HCP-Specific Fields
+  "Are you a Certified Nursing Assistant (CNA)?": "is_cna",
+  "Are you a Home Health Aide (HHA) or patient caregiver?": "is_home_health_aide",
+  "Do you have another healthcare certification such as phlebotomy or medical assistant?":
+    "has_healthcare_certification",
+  "Which is true about you?": "healthcare_certification_details",
+  "Title of your current job position:": "current_job_title",
+  "Name of your current employer": "current_employer",
+  "Which towns to you work in?": "work_towns",
+  "Have you ever taken the TEAS exam before?": "has_taken_teas",
+  "Class time availability:": "class_time_availability",
+  "Placement Decision": "initial_placement_hcp",
+
+  // Student Code (stored in DB)
+  "Student Code": "student_code",
+
+  // Returning Student Info, read-only, not stored in DB
+  "Is returning": "is_returning",
+};
+
+/**
+ * Get the appropriate column mapping based on program
+ * @param program - Either "ESOL" or "HCP"
+ * @returns The column mapping object for the specified program
+ * @throws Error if program is not recognized
+ */
+export function getColumnMapping(program: string): Record<string, string> {
+  if (program === "ESOL") {
+    return ESOL_COLUMN_MAPPING;
+  }
+  if (program === "HCP") {
+    return HCP_COLUMN_MAPPING;
+  }
+  throw new Error(`Unknown program: ${program}. Must be "ESOL" or "HCP"`);
+}
 
 export type CSVRow = Record<string, string | undefined>;
 
 export type StudentData = Record<string, unknown>;
 
-export function mapCSVRowToStudent(csvRow: CSVRow): StudentData {
+export function mapCSVRowToStudent(csvRow: CSVRow, program: string): StudentData {
   const mappedData: StudentData = {};
+  const columnMapping = getColumnMapping(program);
 
   // Loop through CSV row and map to database columns
   for (const [csvHeader, value] of Object.entries(csvRow)) {
-    const dbColumn = COLUMN_MAPPING[csvHeader];
+    const dbColumn = columnMapping[csvHeader];
 
     if (dbColumn && value !== null && value !== undefined && value !== "") {
       // Special handling: is_returning is read-only, so we don't store it in DB
@@ -87,6 +161,27 @@ function transformValue(columnName: string, value: string): unknown {
     case "ethnicity_hispanic_latino": {
       // Convert "Yes" to true, anything else to false
       return typeof trimmedValue === "string" && trimmedValue.toLowerCase().includes("yes");
+    }
+
+    // HCP-specific boolean fields
+    case "has_high_school_diploma":
+    case "is_cna":
+    case "has_healthcare_certification":
+    case "has_taken_teas": {
+      // Convert "Yes"/"Y"/"True"/"1" to true, "No"/"N"/"False"/"0" to false
+      if (typeof trimmedValue === "string") {
+        const lower = trimmedValue.toLowerCase();
+        if (lower === "yes" || lower === "y" || lower === "true" || lower === "1") {
+          return true;
+        }
+        if (lower === "no" || lower === "n" || lower === "false" || lower === "0") {
+          return false;
+        }
+        // If it contains "yes", return true; if it contains "no", return false
+        if (lower.includes("yes")) return true;
+        if (lower.includes("no")) return false;
+      }
+      return null;
     }
 
     case "age": {
@@ -395,4 +490,70 @@ export function convertToNameMismatches(mismatches: ReturnType<typeof detectName
   rowNumber: number;
 }[] {
   return mismatches;
+}
+
+/**
+ * Map HCP Placement Decision CSV value to course_placement enum value
+ * Converts format like "English TEAS - Spring 2025" to "HCP English TEAS"
+ * @param placementDecision - The value from the "Placement Decision" column
+ * @returns The mapped course_placement enum value, or null if invalid/missing
+ */
+export function mapHCPPlacementDecisionToEnum(placementDecision: string | undefined | null): string | null {
+  if (!placementDecision || typeof placementDecision !== "string") {
+    return null;
+  }
+
+  const trimmed = placementDecision.trim();
+  if (trimmed === "") {
+    return null;
+  }
+
+  // Split on the LAST dash to remove semester/year (e.g., "English Pre-TEAS part 2 - Winter 2025" -> "English Pre-TEAS part 2")
+  // Handle variations: "English TEAS - Spring 2025", "English TEAS- Spring 2025", "English TEAS -Spring 2025", "English TEAS-Spring 2025"
+  // We need to find the last dash that separates the course name from the semester/year
+  // Look for pattern: dash followed by semester (Spring/Winter/Fall/Summer) followed by year
+  const semesterYearPattern = /-\s*(Spring|Winter|Fall|Summer)\s+\d{4}$/i;
+  const match = semesterYearPattern.exec(trimmed);
+
+  let courseName: string | undefined;
+  if (match?.index !== undefined) {
+    // Found semester/year pattern, extract everything before the dash
+    courseName = trimmed.substring(0, match.index).trim();
+  } else {
+    // No semester/year pattern found, try to split on last dash with spaces
+    const lastDashIndex = trimmed.lastIndexOf(" - ");
+    if (lastDashIndex >= 0) {
+      courseName = trimmed.substring(0, lastDashIndex).trim();
+    } else {
+      // Try last dash without space before it
+      const lastDashBeforeSpace = trimmed.lastIndexOf("- ");
+      if (lastDashBeforeSpace >= 0) {
+        courseName = trimmed.substring(0, lastDashBeforeSpace).trim();
+      } else {
+        // Last resort: use everything (no dash found)
+        courseName = trimmed;
+      }
+    }
+  }
+
+  if (!courseName) {
+    return null;
+  }
+
+  // Add "HCP " prefix to match enum format, ensure no extra whitespace
+  const enumValue = `HCP ${courseName.trim()}`.trim();
+
+  // Validate against known HCP enum values from Constants
+  const validHCPPlacements = Constants.public.Enums.course_placement_enum.filter((placement) =>
+    placement.startsWith("HCP "),
+  ) as string[];
+
+  // Check if the enum value matches any valid HCP placement (case-sensitive exact match)
+  const normalizedEnumValue = enumValue.trim();
+  if (validHCPPlacements.some((placement) => placement.trim() === normalizedEnumValue)) {
+    return normalizedEnumValue;
+  }
+
+  // Return null if it doesn't match any valid enum value
+  return null;
 }

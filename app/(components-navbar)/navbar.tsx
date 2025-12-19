@@ -2,21 +2,21 @@
 
 import { createBrowserSupabaseClient } from "@/lib/client-utils";
 import { cn } from "@/lib/utils";
-import { type User } from "@supabase/supabase-js";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function Navbar({ className, ...props }: React.HTMLAttributes<HTMLElement>) {
   const pathname = usePathname();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
 
   // Fetch user auth status
   useEffect(() => {
     const supabase = createBrowserSupabaseClient();
-    void supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user);
+    void supabase.auth.getUser().then(({ data }) => {
+      if (data?.user) {
+        setUser(data.user);
+      }
     });
   }, []);
 
@@ -24,14 +24,8 @@ export default function Navbar({ className, ...props }: React.HTMLAttributes<HTM
     <nav className={cn("flex items-center space-x-8", className)} {...props}>
       {/* Logo Section */}
       <div className="flex items-center">
-        <Image
-          src="/lamplight_logo.png"
-          alt="Lamplight"
-          width={180}
-          height={180}
-          style={{ height: "auto" }}
-          className="w-40"
-        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/lamplight_logo.avif" alt="Lamplight" className="h-10 w-auto" />
       </div>
 
       {/* Navigation Links */}

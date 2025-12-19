@@ -105,19 +105,37 @@ export default function StudentsTable({
           const value = student[header as keyof typeof student];
           // Handle arrays
           if (Array.isArray(value)) {
-            return value.map(String).join("; ");
+            return value
+              .map((item) => {
+                if (typeof item === "string") return item;
+                if (typeof item === "number" || typeof item === "boolean") return String(item);
+                // For objects, use JSON.stringify to avoid [object Object]
+                return JSON.stringify(item);
+              })
+              .join("; ");
           }
           // Handle booleans
           if (typeof value === "boolean") {
             return value ? "Yes" : "No";
           }
           // Handle null/undefined
-          return value ?? "";
+          if (value == null) {
+            return "";
+          }
+          // Handle primitives
+          if (typeof value === "string" || typeof value === "number") {
+            return String(value);
+          }
+          // For objects, use JSON.stringify to avoid [object Object]
+          return JSON.stringify(value);
         }),
       );
 
       // Combine headers and rows
-      const csvContent = [headers.join(","), ...rows.map((row) => row.map((cell) => `"${cell}"`).join(","))].join("\n");
+      const csvContent = [
+        headers.join(","),
+        ...rows.map((row) => row.map((cell) => `"${String(cell)}"`).join(",")),
+      ].join("\n");
 
       // Determine filename based on filters
       let filename = "students_export.csv";
