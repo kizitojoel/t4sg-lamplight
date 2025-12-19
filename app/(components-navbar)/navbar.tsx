@@ -8,13 +8,15 @@ import { useEffect, useState } from "react";
 
 export default function Navbar({ className, ...props }: React.HTMLAttributes<HTMLElement>) {
   const pathname = usePathname();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
 
   // Fetch user auth status
   useEffect(() => {
     const supabase = createBrowserSupabaseClient();
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user);
+    void supabase.auth.getUser().then(({ data }) => {
+      if (data?.user) {
+        setUser(data.user);
+      }
     });
   }, []);
 
@@ -22,6 +24,7 @@ export default function Navbar({ className, ...props }: React.HTMLAttributes<HTM
     <nav className={cn("flex items-center space-x-8", className)} {...props}>
       {/* Logo Section */}
       <div className="flex items-center">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/lamplight_logo.avif" alt="Lamplight" className="h-10 w-auto" />
       </div>
 

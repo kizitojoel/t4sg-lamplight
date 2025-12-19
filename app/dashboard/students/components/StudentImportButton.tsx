@@ -6,6 +6,7 @@ import { useState } from "react";
 import {
   isValidStudent,
   mapCSVRowToStudent,
+  mapHCPPlacementDecisionToEnum,
   splitStudentsByReturningStatus,
   type CSVRow,
   type StudentData,
@@ -51,7 +52,7 @@ export default function StudentImportButton() {
     setToast(null);
   };
 
-  const handleFileSelect = (file: File, program: ProgramEnum, coursePlacement: CoursePlacementEnum): void => {
+  const handleFileSelect = (file: File, program: ProgramEnum, coursePlacement: CoursePlacementEnum | null): void => {
     // Validate file type
     if (!file.name.endsWith(".csv")) {
       showToast("Please upload a CSV file", "error");
@@ -81,15 +82,62 @@ export default function StudentImportButton() {
             setImportMessage("Mapping student data...");
             await sleep(300);
 
-            const mappedStudents = (results.data as CSVRow[]).map(mapCSVRowToStudent);
+            const mappedStudents = (results.data as CSVRow[]).map((row) => mapCSVRowToStudent(row, program));
+
             // Apply program and course_placement to all students
-            const studentsWithProgramAndPlacement = mappedStudents.map(
-              (student): StudentData => ({
-                ...student,
-                program,
-                course_placement: coursePlacement,
-              }),
-            );
+            // For HCP: extract placement from CSV "Placement Decision" column
+            // For ESOL: use the provided coursePlacement for all students
+            const isHCP = program === "HCP";
+
+            // Validate ESOL has course placement
+            if (!isHCP && !coursePlacement) {
+              showToast("Course placement is required for ESOL program", "error");
+              setIsImporting(false);
+              return;
+            }
+
+            // Collect placement validation errors for HCP
+            const placementErrors: ErrorInfo[] = [];
+            const studentsWithProgramAndPlacement = mappedStudents
+              .map((student, index): StudentData | null => {
+                let placement: string | null = null;
+
+                if (isHCP) {
+                  // Extract placement from CSV row
+                  const csvRow = results.data[index] as CSVRow | undefined;
+                  const placementDecision = csvRow?.["Placement Decision"];
+                  placement = mapHCPPlacementDecisionToEnum(placementDecision);
+
+                  // Validate placement for HCP students
+                  if (!placement) {
+                    const firstName = typeof student.legal_first_name === "string" ? student.legal_first_name : "";
+                    const lastName = typeof student.legal_last_name === "string" ? student.legal_last_name : "";
+                    const studentName = `${firstName} ${lastName}`.trim() || "Unknown";
+                    // Get student code from CSV row directly, fallback to mapped student data
+                    const studentCode =
+                      (typeof csvRow?.["Student Code"] === "string" ? csvRow["Student Code"] : undefined) ??
+                      (typeof student.student_code === "string" ? student.student_code : undefined);
+                    placementErrors.push({
+                      rowNumber: index + 1,
+                      studentName,
+                      studentCode,
+                      error: `Missing or invalid "Placement Decision" value\nFound: ${placementDecision ?? "empty"}\nExpected: "English TEAS - Spring 2025" or similar\nRow: ${index + 1}`,
+                      errorType: "VALIDATION_ERROR",
+                    });
+                    return null; // Mark as invalid
+                  }
+                } else {
+                  // ESOL: use the provided coursePlacement
+                  placement = coursePlacement as string;
+                }
+
+                return {
+                  ...student,
+                  program,
+                  course_placement: placement,
+                };
+              })
+              .filter((student): student is StudentData => student !== null);
 
             // Step 3: Basic validation - required fields
             setImportMessage("Validating student records...");
@@ -110,7 +158,8 @@ export default function StudentImportButton() {
             const splitResult = splitStudentsByReturningStatus(validStudents);
 
             // Collect errors from invalid students
-            const allErrors: ErrorInfo[] = [];
+            // Start with placement errors (for HCP students with invalid/missing placements)
+            const allErrors: ErrorInfo[] = [...placementErrors];
             for (let i = 0; i < splitResult.invalidStudents.length; i++) {
               const invalid = splitResult.invalidStudents[i];
               if (!invalid) continue;
@@ -119,9 +168,15 @@ export default function StudentImportButton() {
               const lastName =
                 typeof invalid.student.legal_last_name === "string" ? invalid.student.legal_last_name : "";
               const studentName = `${firstName} ${lastName}`.trim() || "Unknown";
+              // Get student code from mapped student data, or try to get from original CSV row
+              const csvRow = results.data[i] as CSVRow | undefined;
+              const studentCode =
+                (typeof invalid.student.student_code === "string" ? invalid.student.student_code : undefined) ??
+                (typeof csvRow?.["Student Code"] === "string" ? csvRow["Student Code"] : undefined);
               allErrors.push({
                 rowNumber: i + 1,
                 studentName,
+                studentCode,
                 error: invalid.error,
                 errorType: "VALIDATION_ERROR",
               });
