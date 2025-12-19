@@ -2,8 +2,6 @@
 
 import { createBrowserSupabaseClient } from "@/lib/client-utils";
 import { cn } from "@/lib/utils";
-import { type User } from "@supabase/supabase-js";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
