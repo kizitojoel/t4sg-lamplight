@@ -1,7 +1,6 @@
 "use client";
 
 import { Table } from "@radix-ui/themes";
-import { useTheme } from "next-themes";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import StudentModal from "../student-modal/student-modal";
@@ -211,7 +210,6 @@ export default function StudentsTable({
   const paginatedStudents = sortedStudents.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
 
   const [mounted, setMounted] = useState(false);
-  useTheme();
 
   // useEffect only runs on the client, so now we can safely show the UI
   useEffect(() => {
