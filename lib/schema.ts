@@ -1,5 +1,11 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
+export type Comment = {
+  author: string;
+  timestamp: string;
+  comment_body: string;
+};
+
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
@@ -183,7 +189,7 @@ export type Database = {
           address_state: string | null;
           address_street: string | null;
           address_zip: string | null;
-          advising_comments: Json;
+          advising_comments: Comment[];
           age: number | null;
           class_time_availability: string | null;
           computer_access: string | null;
@@ -232,7 +238,7 @@ export type Database = {
           address_state?: string | null;
           address_street?: string | null;
           address_zip?: string | null;
-          advising_comments?: Json;
+          advising_comments?: Comment[];
           age?: number | null;
           class_time_availability?: string | null;
           computer_access?: string | null;
@@ -281,7 +287,7 @@ export type Database = {
           address_state?: string | null;
           address_street?: string | null;
           address_zip?: string | null;
-          advising_comments?: Json;
+          advising_comments?: Comment[];
           age?: number | null;
           class_time_availability?: string | null;
           computer_access?: string | null;
