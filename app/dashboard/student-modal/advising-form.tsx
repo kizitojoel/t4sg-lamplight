@@ -351,7 +351,7 @@ export default function AdvisingForm({ student }: { student: Student }) {
           ? student.advising_comments.map((comment, index) => (
               <div key={index} className="mt-2 flex">
                 <Comment comment={comment}></Comment>
-                <Button className="mr-1 ml-1" onClick={() => void deleteComment(index)}>
+                <Button className="mr-1 ml-1" onClick={() => void deleteComment(index)} variant="destructive">
                   Delete
                 </Button>
               </div>
