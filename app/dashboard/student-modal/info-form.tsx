@@ -22,6 +22,9 @@ type StudentInfoValues = z.infer<typeof studentInfoSchema>;
 const genders = z.enum(["Male", "Female", "Non-binary", "Other", "Prefer not to say"]);
 
 const studentInfoSchema = z.object({
+  first_name: z.string(),
+  last_name: z.string(),
+  preferred_name: z.string(),
   email: z.email(),
   phone: z
     .string()
@@ -70,6 +73,9 @@ export default function InfoForm({ student }: { student: Student }) {
   const router = useRouter();
 
   const defaultValues = {
+    first_name: student.legal_first_name ?? "",
+    last_name: student.legal_last_name ?? "",
+    preferred_name: student.preferred_name ?? "",
     email: student.email ?? "",
     phone: student.phone ?? "",
     address_street: student.address_street ?? "",
@@ -96,6 +102,9 @@ export default function InfoForm({ student }: { student: Student }) {
     const { error } = await supabase
       .from("students")
       .update({
+        legal_first_name: data.first_name,
+        legal_last_name: data.last_name,
+        preferred_name: data.preferred_name,
         email: data.email,
         phone: data.phone,
         address_street: data.address_street,
@@ -158,7 +167,53 @@ export default function InfoForm({ student }: { student: Student }) {
             Save
           </Button>
         </div>
-
+        <div className="grid grid-cols-2 gap-3">
+          <FormField
+            control={form.control}
+            name="first_name"
+            render={({ field }) => {
+              return (
+                <FormItem>
+                  <FormLabel>First Name</FormLabel>
+                  <FormControl>
+                    <Input disabled={!editing} placeholder="First Name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
+          />
+          <FormField
+            control={form.control}
+            name="last_name"
+            render={({ field }) => {
+              return (
+                <FormItem>
+                  <FormLabel>Last Name</FormLabel>
+                  <FormControl>
+                    <Input disabled={!editing} placeholder="Last Name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
+          />
+        </div>
+        <FormField
+          control={form.control}
+          name="preferred_name"
+          render={({ field }) => {
+            return (
+              <FormItem>
+                <FormLabel>Preferred Name</FormLabel>
+                <FormControl>
+                  <Input disabled={!editing} placeholder="Preferred Name" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
+        />
         <FormField
           control={form.control}
           name="email"
