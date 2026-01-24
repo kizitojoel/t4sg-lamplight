@@ -14,18 +14,21 @@ export type Database = {
           created_by: string | null;
           email: string;
           id: number;
+          role: Database["public"]["Enums"]["role"];
         };
         Insert: {
           created_at?: string;
           created_by?: string | null;
           email: string;
           id?: number;
+          role?: Database["public"]["Enums"]["role"];
         };
         Update: {
           created_at?: string;
           created_by?: string | null;
           email?: string;
           id?: number;
+          role?: Database["public"]["Enums"]["role"];
         };
         Relationships: [
           {
@@ -89,23 +92,41 @@ export type Database = {
       assessments: {
         Row: {
           active: boolean;
+          course_id: string | null;
           created_at: string;
           id: string;
           name: string;
         };
         Insert: {
           active?: boolean;
+          course_id?: string | null;
           created_at?: string;
           id?: string;
           name: string;
         };
         Update: {
           active?: boolean;
+          course_id?: string | null;
           created_at?: string;
           id?: string;
           name?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "assessments_course_id_fkey";
+            columns: ["course_id"];
+            isOneToOne: false;
+            referencedRelation: "course_placement";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fk_course_id";
+            columns: ["course_id"];
+            isOneToOne: false;
+            referencedRelation: "course_placement";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       course_placement: {
         Row: {

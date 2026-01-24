@@ -1,7 +1,7 @@
 import { SidebarNav } from "@/components/global/sidebar-nav";
 import { Separator } from "@/components/ui/separator";
 import { PageHeader1, PageSubHeader1 } from "@/components/ui/typography";
-import { createServerSupabaseClient } from "@/lib/server-utils";
+import { getUserRole } from "@/lib/server-utils";
 import { redirect } from "next/navigation";
 
 interface SettingsLayoutProps {
@@ -9,22 +9,15 @@ interface SettingsLayoutProps {
 }
 
 export default async function SettingsLayout({ children }: SettingsLayoutProps) {
-  // Create supabase server component client and obtain user session from Supabase Auth
-  const supabase = createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Get user role efficiently (checks cached header first, then DB)
+  const role = await getUserRole();
 
-  if (!user) {
+  if (!role) {
     // this is a protected route - only users who are signed in can view this route
     redirect("/");
   }
 
-  // Fetch user's profile from the database to check for admin role
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-
-  // If there's an error fetching the profile, treat as unauthorized or not admin
-  const isAdmin = !!profile && profile.role === "admin";
+  const isAdmin = role === "admin";
 
   const sidebarNavItems = [
     {

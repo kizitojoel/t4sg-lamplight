@@ -51,54 +51,57 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // If user is authenticated, check allowlist
+  // If user is authenticated, check allowlist and cache role
   if (user && user.email) {
-    // Check if allowlist has any entries
-    const { data: allowlistEntries, error: allowlistError } = await supabase
+    // Require every authenticated user to be present in allowed_emails
+    const { data: userAllowed, error: checkError } = await supabase
       .from("allowed_emails")
       .select("email")
-      .limit(1);
+      .ilike("email", user.email)
+      .limit(1)
+      .maybeSingle();
 
-    // If allowlist exists and has entries, check if user's email is allowed
-    if (!allowlistError && allowlistEntries && allowlistEntries.length > 0) {
-      const { data: userAllowed, error: checkError } = await supabase
-        .from("allowed_emails")
-        .select("email")
-        .eq("email", user.email.toLowerCase())
-        .limit(1)
-        .single();
-
-      // If user's email is not in the allowlist, sign them out and redirect
-      if (checkError || !userAllowed) {
-        // Create a client that can sign out
-        const signOutClient = createServerClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-          {
-            cookies: {
-              get(name: string) {
-                return request.cookies.get(name)?.value;
-              },
-              set(name: string, value: string, options: CookieOptions) {
-                response.cookies.set({
-                  name,
-                  value,
-                  ...options,
-                });
-              },
-              remove(name: string, options: CookieOptions) {
-                response.cookies.set({
-                  name,
-                  value: "",
-                  ...options,
-                });
-              },
+    // If user's email is not in the allowlist, sign them out and redirect
+    if (checkError || !userAllowed) {
+      // console.log("You are being signed out");
+      // console.log(checkError);
+      // console.log(userAllowed);
+      // Create a client that can sign out
+      const signOutClient = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+        {
+          cookies: {
+            get(name: string) {
+              return request.cookies.get(name)?.value;
+            },
+            set(name: string, value: string, options: CookieOptions) {
+              response.cookies.set({
+                name,
+                value,
+                ...options,
+              });
+            },
+            remove(name: string, options: CookieOptions) {
+              response.cookies.set({
+                name,
+                value: "",
+                ...options,
+              });
             },
           },
-        );
-        await signOutClient.auth.signOut();
-        return NextResponse.redirect(new URL("/auth/not-allowed", request.url));
-      }
+        },
+      );
+      await signOutClient.auth.signOut();
+      return NextResponse.redirect(new URL("/auth/not-allowed", request.url));
+    }
+
+    // Cache user role in response header for efficient access in server components
+    // This minimizes database calls - role is queried once per request in middleware
+    const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+
+    if (profile?.role) {
+      response.headers.set("x-user-role", profile.role);
     }
   }
 

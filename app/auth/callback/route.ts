@@ -32,43 +32,69 @@ export async function GET(request: Request) {
       return NextResponse.redirect(`${origin}/auth/auth-code-error`);
     }
 
-    // After successful session exchange, sync role from allowed_emails
-    // This ensures existing users get their role updated if it changed in allowed_emails
+    // After successful session exchange, ensure profile exists and sync role from allowed_emails
+    // This handles cases where:
+    // 1. User was added to allowlist before signing up (profile doesn't exist yet)
+    // 2. Existing user's role changed in allowed_emails
     const {
       data: { user },
     } = await supabase.auth.getUser();
     if (user?.email) {
-      // Check allowed_emails for this email
-      // Try to get role, but handle case where role column might not exist
-      const { data: allowedEmail, error: allowedError } = await supabase
+      // Check allowed_emails for this email to get initial role
+      const { data: allowedEmail } = await supabase
         .from("allowed_emails")
         .select("role")
-        .eq("email", user.email.toLowerCase())
+        .ilike("email", user.email)
         .maybeSingle();
 
-      // If email is in allowed_emails, update profile role
-      if (allowedEmail && !allowedError) {
-        const role = ((allowedEmail as { role?: string }).role as "admin" | "teacher") || "teacher";
+      // If user is not on the allowlist, sign them out and redirect
 
-        // Check if profile exists first
-        const { data: existingProfile } = await supabase
-          .from("profiles")
-          .select("id, role")
-          .eq("id", user.id)
-          .maybeSingle();
+      if (!allowedEmail) {
+        await supabase.auth.signOut();
 
-        // Only update if profile exists and role is different
-        if (existingProfile && existingProfile.role !== role) {
-          const { error: updateError } = await supabase.from("profiles").update({ role }).eq("id", user.id);
+        console.log("You are being signed out");
+        console.log(allowedEmail);
 
-          // Error silently ignored - RLS might block it, but trigger should handle it
-          // Don't block login - the trigger should have set it correctly on signup
-          if (updateError) {
-            // Error logged but not blocking login flow
-          }
+        // This is where I'm being signed out, so my email is not on the
+        return NextResponse.redirect(`${origin}/auth/not-allowed`);
+      }
+
+      // Determine role from allowed_emails
+      const role = allowedEmail.role as "admin" | "teacher";
+
+      // Check if profile exists
+      const { data: existingProfile } = await supabase
+        .from("profiles")
+        .select("id, role")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (!existingProfile) {
+        // Profile doesn't exist - create it with role from allowed_emails (or default)
+        const username = user.email.substring(0, user.email.indexOf("@")) || user.email;
+        const { error: createError } = await supabase.from("profiles").insert({
+          id: user.id,
+          email: user.email,
+          display_name: username,
+          biography: null,
+          role,
+        });
+
+        // Error silently ignored - RLS might block it, but trigger should handle it
+        // Don't block login - the trigger should have set it correctly on signup
+        if (createError) {
+          // Error logged but not blocking login flow
+        }
+      } else if (existingProfile.role !== role) {
+        // Profile exists but role is different - update it
+        const { error: updateError } = await supabase.from("profiles").update({ role }).eq("id", user.id);
+
+        // Error silently ignored - RLS might block it, but trigger should handle it
+        // Don't block login - the trigger should have set it correctly on signup
+        if (updateError) {
+          // Error logged but not blocking login flow
         }
       }
-      // If not in allowed_emails, middleware will handle blocking them
     }
 
     return NextResponse.redirect(`${origin}${next}`);
