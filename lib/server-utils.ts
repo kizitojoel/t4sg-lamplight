@@ -233,7 +233,7 @@ export const getUserRole = cache(async (): Promise<"admin" | "teacher" | null> =
 export const requireAdmin = cache(async (): Promise<AdminContext> => {
   const userWithRole = await getUserWithRole();
 
-  if (!userWithRole || userWithRole.role !== "admin") {
+  if (userWithRole?.role !== "admin") {
     redirect("/");
   }
 
