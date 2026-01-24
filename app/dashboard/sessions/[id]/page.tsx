@@ -25,9 +25,20 @@ export default async function SessionDetailPage({ params }: { params: Promise<{ 
     .eq("id", sessionId)
     .single();
 
-  if (sessionError || !session) {
+  if (sessionError || session?.id == null) {
     redirect("/dashboard/sessions");
   }
+
+  // Transform session to ensure non-null values (we already checked above)
+  const sessionData = {
+    id: session.id,
+    course_name: session.course_name ?? "",
+    quarter: session.quarter ?? "",
+    year: session.year ?? 0,
+    status: session.status ?? "active",
+    display_name: session.display_name ?? "",
+    enrolled_count: session.enrolled_count ?? 0,
+  };
 
   // Fetch enrolled students
   const { data: enrollments } = await supabase
@@ -53,7 +64,7 @@ export default async function SessionDetailPage({ params }: { params: Promise<{ 
 
   return (
     <div className="px-2.5 py-10">
-      <SessionDetail session={session} enrollments={enrollments ?? []} />
+      <SessionDetail session={sessionData} enrollments={enrollments ?? []} />
     </div>
   );
 }

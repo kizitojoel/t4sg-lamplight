@@ -140,16 +140,19 @@ export type Database = {
       };
       course_placement: {
         Row: {
+          active: boolean;
           created_at: string;
           id: string;
           name: string;
         };
         Insert: {
+          active?: boolean;
           created_at?: string;
           id?: string;
           name: string;
         };
         Update: {
+          active?: boolean;
           created_at?: string;
           id?: string;
           name?: string;
@@ -267,16 +270,19 @@ export type Database = {
       };
       program: {
         Row: {
+          active: boolean;
           created_at: string;
           id: string;
           name: string;
         };
         Insert: {
+          active?: boolean;
           created_at?: string;
           id?: string;
           name?: string;
         };
         Update: {
+          active?: boolean;
           created_at?: string;
           id?: string;
           name?: string;
