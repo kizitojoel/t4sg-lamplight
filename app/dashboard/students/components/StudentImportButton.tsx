@@ -1,12 +1,12 @@
 "use client";
 
-import type { Constants } from "@/lib/schema";
+import type { LookupItem } from "@/lib/lookup-data";
 import Papa from "papaparse";
 import { useState } from "react";
 import {
   isValidStudent,
   mapCSVRowToStudent,
-  mapHCPPlacementDecisionToEnum,
+  mapHCPPlacementDecisionToId,
   splitStudentsByReturningStatus,
   type CSVRow,
   type StudentData,
@@ -29,10 +29,12 @@ type ToastState = {
   type: "success" | "error";
 } | null;
 
-type ProgramEnum = (typeof Constants.public.Enums.program_enum)[number];
-type CoursePlacementEnum = (typeof Constants.public.Enums.course_placement_enum)[number];
+interface StudentImportButtonProps {
+  programs: LookupItem[];
+  coursePlacements: LookupItem[];
+}
 
-export default function StudentImportButton() {
+export default function StudentImportButton({ programs, coursePlacements }: StudentImportButtonProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [importMessage, setImportMessage] = useState("");
@@ -52,7 +54,12 @@ export default function StudentImportButton() {
     setToast(null);
   };
 
-  const handleFileSelect = (file: File, program: ProgramEnum, coursePlacement: CoursePlacementEnum | null): void => {
+  const handleFileSelect = (
+    file: File,
+    programId: string,
+    programName: string,
+    coursePlacementId: string | null,
+  ): void => {
     // Validate file type
     if (!file.name.endsWith(".csv")) {
       showToast("Please upload a CSV file", "error");
@@ -82,15 +89,15 @@ export default function StudentImportButton() {
             setImportMessage("Mapping student data...");
             await sleep(300);
 
-            const mappedStudents = (results.data as CSVRow[]).map((row) => mapCSVRowToStudent(row, program));
+            const mappedStudents = (results.data as CSVRow[]).map((row) => mapCSVRowToStudent(row, programName));
 
-            // Apply program and course_placement to all students
+            // Apply program_id and course_placement_id to all students
             // For HCP: extract placement from CSV "Placement Decision" column
-            // For ESOL: use the provided coursePlacement for all students
-            const isHCP = program === "HCP";
+            // For ESOL: use the provided coursePlacementId for all students
+            const isHCP = programName === "HCP";
 
             // Validate ESOL has course placement
-            if (!isHCP && !coursePlacement) {
+            if (!isHCP && !coursePlacementId) {
               showToast("Course placement is required for ESOL program", "error");
               setIsImporting(false);
               return;
@@ -100,16 +107,16 @@ export default function StudentImportButton() {
             const placementErrors: ErrorInfo[] = [];
             const studentsWithProgramAndPlacement = mappedStudents
               .map((student, index): StudentData | null => {
-                let placement: string | null = null;
+                let placementId: string | null = null;
 
                 if (isHCP) {
-                  // Extract placement from CSV row
+                  // Extract placement from CSV row and map to ID
                   const csvRow = results.data[index] as CSVRow | undefined;
                   const placementDecision = csvRow?.["Placement Decision"];
-                  placement = mapHCPPlacementDecisionToEnum(placementDecision);
+                  placementId = mapHCPPlacementDecisionToId(placementDecision, coursePlacements);
 
                   // Validate placement for HCP students
-                  if (!placement) {
+                  if (!placementId) {
                     const firstName = typeof student.legal_first_name === "string" ? student.legal_first_name : "";
                     const lastName = typeof student.legal_last_name === "string" ? student.legal_last_name : "";
                     const studentName = `${firstName} ${lastName}`.trim() || "Unknown";
@@ -127,14 +134,14 @@ export default function StudentImportButton() {
                     return null; // Mark as invalid
                   }
                 } else {
-                  // ESOL: use the provided coursePlacement
-                  placement = coursePlacement as string;
+                  // ESOL: use the provided coursePlacementId
+                  placementId = coursePlacementId;
                 }
 
                 return {
                   ...student,
-                  program,
-                  course_placement: placement,
+                  program_id: programId,
+                  course_placement_id: placementId,
                 };
               })
               .filter((student): student is StudentData => student !== null);
@@ -389,9 +396,11 @@ export default function StudentImportButton() {
       <StudentImportModal
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
-        onFileSelect={(file, program, coursePlacement) => {
-          void handleFileSelect(file, program, coursePlacement);
+        onFileSelect={(file, programId, programName, coursePlacementId) => {
+          void handleFileSelect(file, programId, programName, coursePlacementId);
         }}
+        programs={programs}
+        coursePlacements={coursePlacements}
       />
 
       {/* Error Report Modal */}

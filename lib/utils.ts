@@ -26,11 +26,16 @@ export function delay(milliseconds: number) {
 // Supabase query to retrieve user profile.
 // This can be used in both client and server components, just pass in the corresponding supabase client as a prop.
 // Also note the structure of the function typing and return, which ensures that errors from supabase MUST be handled whenever this query is used in a component.
+// Optimized to select only needed columns instead of all columns.
 export async function getUserProfile(
   supabase: SupabaseClient<Database>,
   user: User,
 ): Promise<{ profile: Profile; error: null } | { profile: null; error: Error }> {
-  const { data, error } = await supabase.from("profiles").select().eq("id", user.id);
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, email, display_name, biography, phone, role")
+    .eq("id", user.id)
+    .single();
 
   if (error) {
     return {
@@ -39,25 +44,12 @@ export async function getUserProfile(
     };
   }
 
-  if (data.length !== 1) {
-    return {
-      profile: null,
-      error: new Error("There are duplicate UUIDs. Please contact system administrator"),
-    };
-  }
-
-  const profileData = data[0];
-
-  // Note: We normally wouldn't need to check this case, but because ts noUncheckedIndexedAccess is enabled in tsconfig, we have to.
-  // noUncheckedIndexedAccess provides better typesafety at cost of jumping through occasional hoops.
-  // Read more here: https://www.totaltypescript.com/tips/make-accessing-objects-safer-by-enabling-nouncheckedindexedaccess-in-tsconfig
-  // https://github.com/microsoft/TypeScript/pull/39560
-  if (!profileData) {
+  if (!data) {
     return {
       profile: null,
       error: new Error("Profile data not found."),
     };
   }
 
-  return { profile: profileData, error: null };
+  return { profile: data, error: null };
 }

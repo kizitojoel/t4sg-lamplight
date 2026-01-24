@@ -6,6 +6,7 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { headers, cookies as nextCookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { NextResponse, type NextRequest } from "next/server";
+import { cache } from "react";
 import { type Database } from "./schema";
 
 /*
@@ -152,9 +153,11 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  return response;
+  return { response, user, supabase };
 }
 
 // Type definitions for role helpers
@@ -172,9 +175,10 @@ interface AdminContext {
 
 /**
  * Gets user and profile with role in a single optimized query.
+ * Uses React cache to prevent duplicate queries within the same request.
  * Returns null if user is not authenticated or profile doesn't exist.
  */
-export async function getUserWithRole(): Promise<UserWithRole | null> {
+export const getUserWithRole = cache(async (): Promise<UserWithRole | null> => {
   const supabase = createServerSupabaseClient();
 
   const {
@@ -201,13 +205,14 @@ export async function getUserWithRole(): Promise<UserWithRole | null> {
     profile,
     role: profile.role,
   };
-}
+});
 
 /**
  * Gets user role efficiently by checking cached header first, then falling back to DB.
+ * Uses React cache to prevent duplicate queries within the same request.
  * Returns null if user is not authenticated or profile doesn't exist.
  */
-export async function getUserRole(): Promise<"admin" | "teacher" | null> {
+export const getUserRole = cache(async (): Promise<"admin" | "teacher" | null> => {
   // First, try to read from cached header (set by middleware)
   const headersList = await headers();
   const cachedRole = headersList.get("x-user-role");
@@ -218,13 +223,14 @@ export async function getUserRole(): Promise<"admin" | "teacher" | null> {
   // Fallback to database query if header not available
   const userWithRole = await getUserWithRole();
   return userWithRole?.role ?? null;
-}
+});
 
 /**
  * Requires admin access for pages. Redirects to home if not admin.
  * Returns admin context if user is admin.
+ * Uses cached getUserWithRole to avoid duplicate queries.
  */
-export async function requireAdmin(): Promise<AdminContext> {
+export const requireAdmin = cache(async (): Promise<AdminContext> => {
   const userWithRole = await getUserWithRole();
 
   if (!userWithRole || userWithRole.role !== "admin") {
@@ -237,24 +243,62 @@ export async function requireAdmin(): Promise<AdminContext> {
     user: userWithRole.user,
     profile: userWithRole.profile as AdminContext["profile"],
   };
-}
+});
 
 /**
- * Requires admin access for API routes. Returns error response if not admin.
- * Returns admin context if user is admin.
+ * Gets the authenticated user. Uses React cache to prevent duplicate queries.
+ * Returns null if user is not authenticated.
  */
-export async function requireAdminAPI(): Promise<AdminContext | NextResponse> {
+export const getAuthenticatedUser = cache(async () => {
   const supabase = createServerSupabaseClient();
-
   const {
     data: { user },
     error: authError,
   } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    return NextResponse.json({ error: authError?.message ?? "Unauthorized" }, { status: 401 });
+    return null;
   }
 
+  return user;
+});
+
+/**
+ * Gets the full user profile. Uses React cache to prevent duplicate queries.
+ * Returns null if user is not authenticated or profile doesn't exist.
+ */
+export const getFullUserProfile = cache(async () => {
+  const user = await getAuthenticatedUser();
+  if (!user) {
+    return null;
+  }
+
+  const supabase = createServerSupabaseClient();
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("id, email, display_name, biography, phone, role")
+    .eq("id", user.id)
+    .single();
+
+  if (profileError || !profile) {
+    return null;
+  }
+
+  return { user, profile };
+});
+
+/**
+ * Requires admin access for API routes. Returns error response if not admin.
+ * Returns admin context if user is admin.
+ */
+export async function requireAdminAPI(): Promise<AdminContext | NextResponse> {
+  const user = await getAuthenticatedUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const supabase = createServerSupabaseClient();
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("id, email, role")

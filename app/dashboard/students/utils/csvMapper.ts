@@ -1,4 +1,4 @@
-import { Constants } from "@/lib/schema";
+import type { LookupItem } from "@/lib/lookup-data";
 
 // Map CSV headers to database column names for ESOL program
 const ESOL_COLUMN_MAPPING: Record<string, string> = {
@@ -493,12 +493,16 @@ export function convertToNameMismatches(mismatches: ReturnType<typeof detectName
 }
 
 /**
- * Map HCP Placement Decision CSV value to course_placement enum value
- * Converts format like "English TEAS - Spring 2025" to "HCP English TEAS"
+ * Map HCP Placement Decision CSV value to course_placement ID
+ * Converts format like "English TEAS - Spring 2025" to the ID of "HCP English TEAS"
  * @param placementDecision - The value from the "Placement Decision" column
- * @returns The mapped course_placement enum value, or null if invalid/missing
+ * @param coursePlacements - The list of valid course placements from the lookup table
+ * @returns The ID of the matched course_placement, or null if invalid/missing
  */
-export function mapHCPPlacementDecisionToEnum(placementDecision: string | undefined | null): string | null {
+export function mapHCPPlacementDecisionToId(
+  placementDecision: string | undefined | null,
+  coursePlacements: LookupItem[],
+): string | null {
   if (!placementDecision || typeof placementDecision !== "string") {
     return null;
   }
@@ -540,20 +544,14 @@ export function mapHCPPlacementDecisionToEnum(placementDecision: string | undefi
     return null;
   }
 
-  // Add "HCP " prefix to match enum format, ensure no extra whitespace
-  const enumValue = `HCP ${courseName.trim()}`.trim();
+  // Add "HCP " prefix to match the expected name format, ensure no extra whitespace
+  const expectedName = `HCP ${courseName.trim()}`.trim();
 
-  // Validate against known HCP enum values from Constants
-  const validHCPPlacements = Constants.public.Enums.course_placement_enum.filter((placement) =>
-    placement.startsWith("HCP "),
-  ) as string[];
+  // Find matching course placement from lookup table
+  const matchedPlacement = coursePlacements.find(
+    (placement) => placement.name.trim().toLowerCase() === expectedName.toLowerCase(),
+  );
 
-  // Check if the enum value matches any valid HCP placement (case-sensitive exact match)
-  const normalizedEnumValue = enumValue.trim();
-  if (validHCPPlacements.some((placement) => placement.trim() === normalizedEnumValue)) {
-    return normalizedEnumValue;
-  }
-
-  // Return null if it doesn't match any valid enum value
-  return null;
+  // Return the ID if found, null otherwise
+  return matchedPlacement?.id ?? null;
 }

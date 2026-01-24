@@ -45,6 +45,7 @@ export type Database = {
           assessment_id: string;
           course_offering_id: string | null;
           created_at: string;
+          enrollment_id: string | null;
           id: string;
           score: number | null;
           student_id: string;
@@ -53,6 +54,7 @@ export type Database = {
           assessment_id: string;
           course_offering_id?: string | null;
           created_at?: string;
+          enrollment_id?: string | null;
           id?: string;
           score?: number | null;
           student_id: string;
@@ -61,6 +63,7 @@ export type Database = {
           assessment_id?: string;
           course_offering_id?: string | null;
           created_at?: string;
+          enrollment_id?: string | null;
           id?: string;
           score?: number | null;
           student_id?: string;
@@ -78,6 +81,13 @@ export type Database = {
             columns: ["course_offering_id"];
             isOneToOne: false;
             referencedRelation: "course_placement";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "assessment_results_enrollment_id_fkey";
+            columns: ["enrollment_id"];
+            isOneToOne: false;
+            referencedRelation: "enrollments";
             referencedColumns: ["id"];
           },
           {
@@ -130,16 +140,19 @@ export type Database = {
       };
       course_placement: {
         Row: {
+          active: boolean;
           created_at: string;
           id: string;
           name: string;
         };
         Insert: {
+          active?: boolean;
           created_at?: string;
           id?: string;
           name: string;
         };
         Update: {
+          active?: boolean;
           created_at?: string;
           id?: string;
           name?: string;
@@ -166,6 +179,67 @@ export type Database = {
           program_id?: string;
         };
         Relationships: [];
+      };
+      enrollments: {
+        Row: {
+          created_at: string;
+          ended_at: string | null;
+          enrolled_at: string;
+          id: string;
+          is_current: boolean;
+          notes: string | null;
+          session_id: number;
+          status: Database["public"]["Enums"]["enrollment_status_enum"];
+          student_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          ended_at?: string | null;
+          enrolled_at?: string;
+          id?: string;
+          is_current?: boolean;
+          notes?: string | null;
+          session_id: number;
+          status?: Database["public"]["Enums"]["enrollment_status_enum"];
+          student_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          ended_at?: string | null;
+          enrolled_at?: string;
+          id?: string;
+          is_current?: boolean;
+          notes?: string | null;
+          session_id?: number;
+          status?: Database["public"]["Enums"]["enrollment_status_enum"];
+          student_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "enrollments_session_id_fkey";
+            columns: ["session_id"];
+            isOneToOne: false;
+            referencedRelation: "sessions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "enrollments_session_id_fkey";
+            columns: ["session_id"];
+            isOneToOne: false;
+            referencedRelation: "sessions_with_details";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "enrollments_student_id_fkey";
+            columns: ["student_id"];
+            isOneToOne: false;
+            referencedRelation: "students";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       profiles: {
         Row: {
@@ -196,16 +270,19 @@ export type Database = {
       };
       program: {
         Row: {
+          active: boolean;
           created_at: string;
           id: string;
           name: string;
         };
         Insert: {
+          active?: boolean;
           created_at?: string;
           id?: string;
           name?: string;
         };
         Update: {
+          active?: boolean;
           created_at?: string;
           id?: string;
           name?: string;
@@ -216,22 +293,34 @@ export type Database = {
         Row: {
           course_placement_id: string | null;
           created_at: string;
+          end_date: string | null;
           id: number;
           quarter: Database["public"]["Enums"]["quarter_enum"];
+          start_date: string | null;
+          status: Database["public"]["Enums"]["session_status_enum"] | null;
+          updated_at: string | null;
           year: number;
         };
         Insert: {
           course_placement_id?: string | null;
           created_at?: string;
+          end_date?: string | null;
           id?: number;
           quarter: Database["public"]["Enums"]["quarter_enum"];
+          start_date?: string | null;
+          status?: Database["public"]["Enums"]["session_status_enum"] | null;
+          updated_at?: string | null;
           year: number;
         };
         Update: {
           course_placement_id?: string | null;
           created_at?: string;
+          end_date?: string | null;
           id?: number;
           quarter?: Database["public"]["Enums"]["quarter_enum"];
+          start_date?: string | null;
+          status?: Database["public"]["Enums"]["session_status_enum"] | null;
+          updated_at?: string | null;
           year?: number;
         };
         Relationships: [
@@ -255,7 +344,6 @@ export type Database = {
           class_time_availability: string | null;
           computer_access: string | null;
           country_of_birth: string | null;
-          course_placement: Database["public"]["Enums"]["course_placement_enum"];
           course_placement_id: string | null;
           created_at: string;
           created_by: string | null;
@@ -264,8 +352,6 @@ export type Database = {
           education_location: string | null;
           email: string | null;
           employment: string | null;
-          enrollment_status: Database["public"]["Enums"]["enrollment_status_enum"] | null;
-          enrollment_status_id: string | null;
           ethnicity_hispanic_latino: boolean | null;
           gender: Database["public"]["Enums"]["gender"] | null;
           has_healthcare_certification: string | null;
@@ -284,7 +370,6 @@ export type Database = {
           native_language: string | null;
           phone: string | null;
           preferred_name: string | null;
-          program: Database["public"]["Enums"]["program_enum"];
           program_id: string | null;
           race: string[] | null;
           referral: string | null;
@@ -304,7 +389,6 @@ export type Database = {
           class_time_availability?: string | null;
           computer_access?: string | null;
           country_of_birth?: string | null;
-          course_placement: Database["public"]["Enums"]["course_placement_enum"];
           course_placement_id?: string | null;
           created_at?: string;
           created_by?: string | null;
@@ -313,8 +397,6 @@ export type Database = {
           education_location?: string | null;
           email?: string | null;
           employment?: string | null;
-          enrollment_status?: Database["public"]["Enums"]["enrollment_status_enum"] | null;
-          enrollment_status_id?: string | null;
           ethnicity_hispanic_latino?: boolean | null;
           gender?: Database["public"]["Enums"]["gender"] | null;
           has_healthcare_certification?: string | null;
@@ -333,7 +415,6 @@ export type Database = {
           native_language?: string | null;
           phone?: string | null;
           preferred_name?: string | null;
-          program: Database["public"]["Enums"]["program_enum"];
           program_id?: string | null;
           race?: string[] | null;
           referral?: string | null;
@@ -353,7 +434,6 @@ export type Database = {
           class_time_availability?: string | null;
           computer_access?: string | null;
           country_of_birth?: string | null;
-          course_placement?: Database["public"]["Enums"]["course_placement_enum"];
           course_placement_id?: string | null;
           created_at?: string;
           created_by?: string | null;
@@ -362,8 +442,6 @@ export type Database = {
           education_location?: string | null;
           email?: string | null;
           employment?: string | null;
-          enrollment_status?: Database["public"]["Enums"]["enrollment_status_enum"] | null;
-          enrollment_status_id?: string | null;
           ethnicity_hispanic_latino?: boolean | null;
           gender?: Database["public"]["Enums"]["gender"] | null;
           has_healthcare_certification?: string | null;
@@ -382,7 +460,6 @@ export type Database = {
           native_language?: string | null;
           phone?: string | null;
           preferred_name?: string | null;
-          program?: Database["public"]["Enums"]["program_enum"];
           program_id?: string | null;
           race?: string[] | null;
           referral?: string | null;
@@ -401,13 +478,6 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "students_enrollment_status_id_fkey";
-            columns: ["enrollment_status_id"];
-            isOneToOne: false;
-            referencedRelation: "enrollment_status";
-            referencedColumns: ["id"];
-          },
-          {
             foreignKeyName: "students_program_id_fkey";
             columns: ["program_id"];
             isOneToOne: false;
@@ -418,32 +488,41 @@ export type Database = {
       };
     };
     Views: {
-      [_ in never]: never;
+      sessions_with_details: {
+        Row: {
+          course_name: string | null;
+          course_placement_id: string | null;
+          created_at: string | null;
+          display_name: string | null;
+          end_date: string | null;
+          enrolled_count: number | null;
+          id: number | null;
+          quarter: Database["public"]["Enums"]["quarter_enum"] | null;
+          start_date: string | null;
+          status: Database["public"]["Enums"]["session_status_enum"] | null;
+          total_enrollment_count: number | null;
+          year: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "sessions_course_placement_id_fkey";
+            columns: ["course_placement_id"];
+            isOneToOne: false;
+            referencedRelation: "course_placement";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Functions: {
       isadmin: { Args: never; Returns: boolean };
     };
     Enums: {
-      course_placement_enum:
-        | "ESOL Beginner L1 part 1"
-        | "ESOL Beginner L1 part 2"
-        | "ESOL Beginner L1 part 3"
-        | "ESOL L2 part 1"
-        | "ESOL L2 part 2"
-        | "ESOL L2 part 3"
-        | "ESOL Intermediate part 1"
-        | "ESOL Intermediate part 2"
-        | "ESOL Intermediate part 3"
-        | "HCP English Pre-TEAS part 1"
-        | "HCP English Pre-TEAS part 2"
-        | "HCP English TEAS"
-        | "HCP Math TEAS"
-        | "Other";
-      enrollment_status_enum: "active" | "inactive";
+      enrollment_status_enum: "enrolled" | "completed" | "dropped" | "withdrawn";
       gender: "Male" | "Female" | "Non-binary" | "Other" | "Prefer not to say";
-      program_enum: "ESOL" | "HCP";
       quarter_enum: "Fall" | "Winter" | "Spring" | "Summer";
       role: "admin" | "teacher";
+      session_status_enum: "upcoming" | "active" | "completed";
       states:
         | "AL"
         | "AK"
@@ -614,27 +693,11 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      course_placement_enum: [
-        "ESOL Beginner L1 part 1",
-        "ESOL Beginner L1 part 2",
-        "ESOL Beginner L1 part 3",
-        "ESOL L2 part 1",
-        "ESOL L2 part 2",
-        "ESOL L2 part 3",
-        "ESOL Intermediate part 1",
-        "ESOL Intermediate part 2",
-        "ESOL Intermediate part 3",
-        "HCP English Pre-TEAS part 1",
-        "HCP English Pre-TEAS part 2",
-        "HCP English TEAS",
-        "HCP Math TEAS",
-        "Other",
-      ],
-      enrollment_status_enum: ["active", "inactive"],
+      enrollment_status_enum: ["enrolled", "completed", "dropped", "withdrawn"],
       gender: ["Male", "Female", "Non-binary", "Other", "Prefer not to say"],
-      program_enum: ["ESOL", "HCP"],
       quarter_enum: ["Fall", "Winter", "Spring", "Summer"],
       role: ["admin", "teacher"],
+      session_status_enum: ["upcoming", "active", "completed"],
       states: [
         "AL",
         "AK",

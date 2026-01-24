@@ -2,35 +2,99 @@
 
 import { Table } from "@radix-ui/themes";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import StudentModal from "../student-modal/student-modal";
 
 interface Student {
   id: string;
+  student_code: string | null;
   legal_first_name: string;
   legal_last_name: string;
   preferred_name: string | null;
-  program: string;
   email: string | null;
   phone: string | null;
-  course_placement: string;
+  program_id: string | null;
+  course_placement_id: string | null;
+  // Joined data from lookup tables
+  program: { id: string; name: string } | null;
+  course_placement: { id: string; name: string } | null;
 }
 
 export default function StudentsTable({
   students,
   programs,
   courses,
+  pagination,
+  initialFilters,
 }: {
   students: Student[];
   programs: { id: string; name: string }[];
   courses: { id: string; name: string }[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+  };
+  initialFilters: {
+    query: string;
+    program: string;
+    course: string;
+  };
 }) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [programFilter, setProgramFilter] = useState("all");
-  const [courseFilter, setCourseFilter] = useState("all");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
+
+  // Local state for immediate UI feedback
+  const [searchTerm, setSearchTerm] = useState(initialFilters.query);
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [showFilters, setShowFilters] = useState(false);
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
+  // Sync local state with props when they change (e.g. back button)
+  useEffect(() => {
+    setSearchTerm(initialFilters.query);
+  }, [initialFilters.query]);
+
+  const updateUrl = useCallback(
+    (updates: Record<string, string | number | null>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      Object.entries(updates).forEach(([key, value]) => {
+        if (value === null || value === "" || value === "all") {
+          params.delete(key);
+        } else {
+          params.set(key, String(value));
+        }
+      });
+      startTransition(() => {
+        router.push(`?${params.toString()}`);
+      });
+    },
+    [searchParams, router],
+  );
+
+  // Debounce search update
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchTerm !== initialFilters.query) {
+        updateUrl({ q: searchTerm, page: 1 });
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm, initialFilters.query, updateUrl]);
+
+  const handleProgramChange = (value: string) => {
+    updateUrl({ program: value, page: 1 });
+  };
+
+  const handleCourseChange = (value: string) => {
+    updateUrl({ course: value, page: 1 });
+  };
+
+  const handlePageChange = (newPage: number) => {
+    updateUrl({ page: newPage });
+  };
 
   // Checkbox
   const handleCheckboxChange = (studentId: string) => {
@@ -45,32 +109,34 @@ export default function StudentsTable({
     });
   };
 
-  // Select all checkbox
+  // Select all checkbox (current page only)
   const handleSelectAll = () => {
-    const allFilteredIds = new Set(sortedStudents.map((student) => student.id));
-    const allFilteredSelected = sortedStudents.every((student) => selectedRows.has(student.id));
+    const allOnPage = students.every((student) => selectedRows.has(student.id));
 
-    setSelectedRows((_prev) => {
-      if (allFilteredSelected) {
-        // Deselect all filtered students
-        return new Set();
-      } else {
-        // Select all filtered students
-        return allFilteredIds;
-      }
+    setSelectedRows((prev) => {
+      const newSet = new Set(prev);
+      students.forEach((student) => {
+        if (allOnPage) {
+          newSet.delete(student.id);
+        } else {
+          newSet.add(student.id);
+        }
+      });
+      return newSet;
     });
   };
 
-  // Export CSV
+  // Export CSV (Exports selected rows or ALL if none selected - logic adjusted for pagination)
+  // Note: For pagination, "Export All" might need to fetch all from server.
+  // For now, we keep existing logic which fetches by ID for selected rows.
+  // If no rows selected, we might want to alert user to select rows or implement "Export All Matches"
   const handleExportCSV = async () => {
-    // Check if any students are selected
     if (selectedRows.size === 0) {
       alert("Please select students to export");
       return;
     }
 
     try {
-      // Fetch full student data from Supabase for selected students
       const { createBrowserSupabaseClient } = await import("@/lib/client-utils");
       const supabase = createBrowserSupabaseClient();
 
@@ -89,67 +155,36 @@ export default function StudentsTable({
         return;
       }
 
-      // Get all column names from the first student record
       const firstStudent = fullStudentData[0];
-      if (!firstStudent) {
-        alert("No student data found to export");
-        return;
-      }
+      if (!firstStudent) return;
 
-      // Get all column names from the first student record
       const headers = Object.keys(firstStudent).filter((key) => key !== "id");
 
-      // Create CSV rows
       const rows = fullStudentData.map((student) =>
         headers.map((header) => {
           const value = student[header as keyof typeof student];
-          // Handle arrays
           if (Array.isArray(value)) {
             return value
               .map((item) => {
                 if (typeof item === "string") return item;
                 if (typeof item === "number" || typeof item === "boolean") return String(item);
-                // For objects, use JSON.stringify to avoid [object Object]
                 return JSON.stringify(item);
               })
               .join("; ");
           }
-          if (typeof value === "boolean") {
-            return value ? "Yes" : "No";
-          }
-          if (value && typeof value === "object") {
-            return JSON.stringify(value);
-          }
-          if (typeof value === "number" || typeof value === "string") {
-            return String(value);
-          }
+          if (typeof value === "boolean") return value ? "Yes" : "No";
+          if (value && typeof value === "object") return JSON.stringify(value);
+          if (typeof value === "number" || typeof value === "string") return String(value);
           return "";
         }),
       );
 
-      // Combine headers and rows
       const csvContent = [
         headers.join(","),
         ...rows.map((row) => row.map((cell) => `"${String(cell)}"`).join(",")),
       ].join("\n");
 
-      // Determine filename based on filters
-      let filename = "students_export.csv";
-
-      const hasFilters = programFilter !== "all" || courseFilter !== "all" || searchTerm !== "";
-      const isManualSelection = selectedRows.size !== sortedStudents.length;
-
-      if (hasFilters && !isManualSelection) {
-        const parts = [];
-        if (programFilter !== "all") parts.push(programFilter);
-        if (courseFilter !== "all") parts.push(courseFilter);
-        if (searchTerm) parts.push(searchTerm);
-        filename = `students_${parts.join("_").replace(/\s+/g, "_")}.csv`;
-      } else if (isManualSelection) {
-        filename = "students_custom.csv";
-      }
-
-      // Create blob and download
+      const filename = "students_export.csv";
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const link = document.createElement("a");
       const url = URL.createObjectURL(blob);
@@ -164,64 +199,28 @@ export default function StudentsTable({
     }
   };
 
-  // Filter students based on search and filters
-  const filteredStudents = students.filter((student) => {
-    // Search filter (name, email, phone)
-    const fullName = `${student.preferred_name ?? student.legal_first_name} ${student.legal_last_name}`.toLowerCase();
-    const email = (student.email ?? "").toLowerCase();
-    const matchesSearch =
-      searchTerm === "" || fullName.includes(searchTerm.toLowerCase()) || email.includes(searchTerm.toLowerCase());
-
-    // Program filter
-    const matchesProgram = programFilter === "all" || student.program === programFilter;
-
-    // Course filter
-    const matchesCourse = courseFilter === "all" || student.course_placement === courseFilter;
-
-    return matchesSearch && matchesProgram && matchesCourse;
-  });
-
-  // Sort students by name
-  const sortedStudents = [...filteredStudents].sort((a, b) => {
+  // Sort locally for current page
+  const sortedStudents = [...students].sort((a, b) => {
     const nameA = `${a.preferred_name ?? a.legal_first_name} ${a.legal_last_name}`.toLowerCase();
     const nameB = `${b.preferred_name ?? b.legal_first_name} ${b.legal_last_name}`.toLowerCase();
-
-    if (sortOrder === "asc") {
-      return nameA.localeCompare(nameB);
-    } else {
-      return nameB.localeCompare(nameA);
-    }
+    return sortOrder === "asc" ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
   });
 
-  // Toggle sort order
   const toggleSort = () => {
     setSortOrder(sortOrder === "asc" ? "desc" : "asc");
   };
 
-  // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 10;
-
-  const totalPages = Math.ceil(sortedStudents.length / rowsPerPage);
-  const paginatedStudents = sortedStudents.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
-
   const [mounted, setMounted] = useState(false);
-
-  // useEffect only runs on the client, so now we can safely show the UI
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  if (!mounted) {
-    return null;
-  }
+  if (!mounted) return null;
 
   return (
     <div className="px-2.5 py-10">
-      {/* Header Controls */}
       <div className="mb-6 space-y-4">
         <div className="flex items-center gap-4">
-          {/* Search Bar with icon */}
           <div className="relative max-w-md flex-1">
             <svg
               className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2"
@@ -240,14 +239,13 @@ export default function StudentsTable({
             </svg>
             <input
               type="text"
-              placeholder="Search students..."
+              placeholder="Search by name, email, or student code..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="bg-card border-border focus:border-muted-foreground w-full rounded-md border py-2 pr-3 pl-10 text-sm focus:outline-none"
             />
           </div>
 
-          {/* Filters Button to toggle filter panel */}
           <button
             onClick={() => setShowFilters(!showFilters)}
             className="bg-card border-border hover:bg-accent relative flex items-center gap-2 rounded-md border px-4 py-2 text-sm transition-colors"
@@ -261,18 +259,15 @@ export default function StudentsTable({
               />
             </svg>
             Filters
-            {/* Show count of active filters */}
-            {(programFilter !== "all" || courseFilter !== "all") && (
+            {(initialFilters.program !== "all" || initialFilters.course !== "all") && (
               <span className="ml-1 text-xs font-medium text-[#a51d31]">
-                ({[programFilter !== "all", courseFilter !== "all"].filter(Boolean).length})
+                ({[initialFilters.program !== "all", initialFilters.course !== "all"].filter(Boolean).length})
               </span>
             )}
           </button>
 
-          {/* Spacer to push export and add buttons to the right */}
           <div className="flex-1"></div>
 
-          {/* Export CSV Button */}
           <button
             onClick={() => void handleExportCSV()}
             className="bg-card border-border hover:bg-accent rounded-md border px-4 py-2 text-sm transition-colors"
@@ -280,7 +275,6 @@ export default function StudentsTable({
             Export CSV
           </button>
 
-          {/* Add Student Button */}
           <Link href="/dashboard/newstudent">
             <button className="rounded-md bg-[#a51d31] px-4 py-2 text-sm text-white transition-colors hover:bg-[#8b1929]">
               Add Student
@@ -288,20 +282,19 @@ export default function StudentsTable({
           </Link>
         </div>
 
-        {/* Collapsible Filter Panel */}
         {showFilters && (
           <div className="bg-card border-border rounded-lg border p-4">
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="text-foreground mb-1.5 block text-xs font-medium">Program</label>
                 <select
-                  value={programFilter}
-                  onChange={(e) => setProgramFilter(e.target.value)}
+                  value={initialFilters.program}
+                  onChange={(e) => handleProgramChange(e.target.value)}
                   className="bg-card border-border hover:bg-accent rounded-md border px-4 py-2 text-sm transition-colors"
                 >
                   <option value="all">All Programs</option>
                   {programs.map((program) => (
-                    <option key={program.id} value={program.name}>
+                    <option key={program.id} value={program.id}>
                       {program.name}
                     </option>
                   ))}
@@ -316,13 +309,13 @@ export default function StudentsTable({
               <div>
                 <label className="text-foreground mb-1.5 block text-xs font-medium">Course</label>
                 <select
-                  value={courseFilter}
-                  onChange={(e) => setCourseFilter(e.target.value)}
+                  value={initialFilters.course}
+                  onChange={(e) => handleCourseChange(e.target.value)}
                   className="bg-card border-border hover:bg-accent rounded-md border px-4 py-2 text-sm transition-colors"
                 >
                   <option value="all">All Courses</option>
                   {courses.map((course) => (
-                    <option key={course.id} value={course.name}>
+                    <option key={course.id} value={course.id}>
                       {course.name}
                     </option>
                   ))}
@@ -332,7 +325,6 @@ export default function StudentsTable({
           </div>
         )}
 
-        {/* Selection indicator to show number of students selected */}
         {selectedRows.size > 0 && (
           <div className="bg-card border-border flex items-center justify-between rounded-lg border px-4 py-2 text-sm">
             <span className="text-foreground font-medium">{selectedRows.size} student(s) selected</span>
@@ -340,8 +332,7 @@ export default function StudentsTable({
         )}
       </div>
 
-      {/* Radix Table */}
-      <div className="border-border overflow-hidden rounded-lg border">
+      <div className={`border-border overflow-hidden rounded-lg border ${isPending ? "opacity-50" : ""}`}>
         <Table.Root variant="surface" className="w-full">
           <Table.Header>
             <Table.Row className="bg-muted/50">
@@ -401,7 +392,7 @@ export default function StudentsTable({
                   letterSpacing: "0.05em",
                 }}
               >
-                Program
+                Student Code
               </Table.ColumnHeaderCell>
               <Table.ColumnHeaderCell
                 style={{
@@ -413,7 +404,7 @@ export default function StudentsTable({
                   letterSpacing: "0.05em",
                 }}
               >
-                Session
+                Program
               </Table.ColumnHeaderCell>
               <Table.ColumnHeaderCell
                 style={{
@@ -443,7 +434,7 @@ export default function StudentsTable({
           </Table.Header>
 
           <Table.Body>
-            {paginatedStudents.map((student) => (
+            {sortedStudents.map((student) => (
               <Table.Row
                 key={student.id}
                 className={`border-border border-b transition-colors ${selectedRows.has(student.id) ? "bg-accent" : "hover:bg-muted/50"} `}
@@ -465,14 +456,14 @@ export default function StudentsTable({
                 <Table.Cell className="text-muted-foreground" style={{ padding: "12px 16px", fontSize: "0.875rem" }}>
                   {student.phone}
                 </Table.Cell>
-                <Table.Cell className="text-muted-foreground" style={{ padding: "12px 16px", fontSize: "0.875rem" }}>
-                  {student.program}
+                <Table.Cell className="text-muted-foreground font-mono text-xs" style={{ padding: "12px 16px" }}>
+                  {student.student_code ?? "—"}
                 </Table.Cell>
                 <Table.Cell className="text-muted-foreground" style={{ padding: "12px 16px", fontSize: "0.875rem" }}>
-                  {/* Session - to be added later*/}
+                  {student.program?.name ?? "—"}
                 </Table.Cell>
                 <Table.Cell className="text-muted-foreground" style={{ padding: "12px 16px", fontSize: "0.875rem" }}>
-                  {student.course_placement}
+                  {student.course_placement?.name ?? "—"}
                 </Table.Cell>
                 <Table.Cell className="text-center" style={{ padding: "12px 16px" }}>
                   <StudentModal studentId={student.id}></StudentModal>
@@ -487,23 +478,26 @@ export default function StudentsTable({
       <div className="relative mt-4">
         <div className="flex items-center justify-between text-sm">
           <div className="text-muted-foreground">
-            Showing <span className="text-foreground font-medium">{sortedStudents.length}</span> of{" "}
-            <span className="text-foreground font-medium">{students.length}</span> students
+            Showing <span className="text-foreground font-medium">{(pagination.currentPage - 1) * 20 + 1}</span> to{" "}
+            <span className="text-foreground font-medium">
+              {Math.min(pagination.currentPage * 20, pagination.totalCount)}
+            </span>{" "}
+            of <span className="text-foreground font-medium">{pagination.totalCount}</span> students
           </div>
           <div className="absolute left-1/2 flex -translate-x-1/2 items-center gap-2">
             <button
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
+              onClick={() => handlePageChange(Math.max(1, pagination.currentPage - 1))}
+              disabled={pagination.currentPage === 1}
               className="bg-card border-border hover:bg-accent rounded-md border px-4 py-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
             >
               Prev
             </button>
             <span className="text-foreground px-3">
-              Page {currentPage} of {totalPages}
+              Page {pagination.currentPage} of {Math.max(1, pagination.totalPages)}
             </span>
             <button
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
+              onClick={() => handlePageChange(Math.min(pagination.totalPages, pagination.currentPage + 1))}
+              disabled={pagination.currentPage >= pagination.totalPages}
               className="bg-card border-border hover:bg-accent rounded-md border px-4 py-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
             >
               Next
