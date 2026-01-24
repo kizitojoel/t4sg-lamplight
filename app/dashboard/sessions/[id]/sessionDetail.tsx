@@ -16,24 +16,24 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { addStudentToSession, removeStudentFromSession, searchStudentsNotInSession, updateSessionStatus } from "../actions";
 
-type Student = {
+interface Student {
   id: string;
   student_code: string | null;
   legal_first_name: string;
   legal_last_name: string;
   preferred_name: string | null;
   email: string | null;
-};
+}
 
-type Enrollment = {
+interface Enrollment {
   id: string;
   is_current: boolean;
   status: string;
   enrolled_at: string;
   student: Student | null;
-};
+}
 
-type Session = {
+interface Session {
   id: number;
   course_name: string;
   quarter: string;
@@ -41,7 +41,7 @@ type Session = {
   status: string;
   display_name: string;
   enrolled_count: number;
-};
+}
 
 interface SessionDetailProps {
   session: Session;

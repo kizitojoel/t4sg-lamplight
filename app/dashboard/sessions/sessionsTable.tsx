@@ -219,7 +219,7 @@ export default function SessionsTable({ sessions, courses }: SessionsTableProps)
                         </Button>
                       </Link>
                       {session.status === "active" && (
-                        <Button variant="ghost" size="sm" onClick={() => handleMarkCompleted(session.id)}>
+                        <Button variant="ghost" size="sm" onClick={() => void handleMarkCompleted(session.id)}>
                           Complete
                         </Button>
                       )}

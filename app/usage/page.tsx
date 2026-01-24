@@ -17,16 +17,16 @@ export default function UsagePage() {
             <strong>Search</strong> — Type a name, email, or student code to find someone quickly.
           </li>
           <li>
-            <strong>Filter</strong> — Click "Filters" to narrow down by program or course.
+            <strong>Filter</strong> — Click &quot;Filters&quot; to narrow down by program or course.
           </li>
           <li>
-            <strong>View details</strong> — Click "View More" on any row to see the full student profile.
+            <strong>View details</strong> — Click &quot;View More&quot; on any row to see the full student profile.
           </li>
           <li>
-            <strong>Add a student</strong> — Click the red "Add Student" button to create a new record manually.
+            <strong>Add a student</strong> — Click the red &quot;Add Student&quot; button to create a new record manually.
           </li>
           <li>
-            <strong>Export</strong> — Select students with checkboxes, then click "Export CSV" to download their data.
+            <strong>Export</strong> — Select students with checkboxes, then click &quot;Export CSV&quot; to download their data.
           </li>
         </ul>
       </section>
@@ -38,14 +38,14 @@ export default function UsagePage() {
           You can import students in bulk from a CSV file (like a Google Sheets export).
         </p>
         <ol className="text-muted-foreground list-inside list-decimal space-y-2">
-          <li>Scroll to the bottom of the Students page and click "Import from Google Sheets".</li>
+          <li>Scroll to the bottom of the Students page and click &quot;Import from Google Sheets&quot;.</li>
           <li>Select the program (ESOL or HCP).</li>
-          <li>For ESOL, choose the course placement. For HCP, it reads from the "Placement Decision" column.</li>
+          <li>For ESOL, choose the course placement. For HCP, it reads from the &quot;Placement Decision&quot; column.</li>
           <li>Pick your CSV file. The system will validate and import the records.</li>
-          <li>If there are errors, you'll see a report explaining what went wrong.</li>
+          <li>If there are errors, you&apos;ll see a report explaining what went wrong.</li>
         </ol>
         <p className="text-muted-foreground mt-3 text-sm">
-          Tip: Make sure your CSV has an "Is returning" column. Returning students need a valid student code.
+          Tip: Make sure your CSV has an &quot;Is returning&quot; column. Returning students need a valid student code.
         </p>
       </section>
 
@@ -57,16 +57,16 @@ export default function UsagePage() {
         </p>
         <ul className="text-muted-foreground list-inside list-disc space-y-2">
           <li>
-            <strong>Create a session</strong> — Click "Create Session", pick a course, quarter (Winter/Spring/Summer/Fall), and year.
+            <strong>Create a session</strong> — Click &quot;Create Session&quot;, pick a course, quarter (Winter/Spring/Summer/Fall), and year.
           </li>
           <li>
-            <strong>Add students</strong> — Click "Manage" on a session, then "Add Students". Search for students and check the ones you want to add.
+            <strong>Add students</strong> — Click &quot;Manage&quot; on a session, then &quot;Add Students&quot;. Search for students and check the ones you want to add.
           </li>
           <li>
-            <strong>View enrolled students</strong> — Click "View Students" to see the Students page filtered to that session.
+            <strong>View enrolled students</strong> — Click &quot;View Students&quot; to see the Students page filtered to that session.
           </li>
           <li>
-            <strong>Complete a session</strong> — When the term ends, click "Complete" to archive it.
+            <strong>Complete a session</strong> — When the term ends, click &quot;Complete&quot; to archive it.
           </li>
         </ul>
         <p className="text-muted-foreground mt-3 text-sm">
@@ -92,7 +92,7 @@ export default function UsagePage() {
           </li>
         </ul>
         <p className="text-muted-foreground mt-3 text-sm">
-          Click "Edit" to make changes, then "Save" when you're done.
+          Click &quot;Edit&quot; to make changes, then &quot;Save&quot; when you&apos;re done.
         </p>
       </section>
 
@@ -103,7 +103,7 @@ export default function UsagePage() {
           <li>• Student codes look like <code className="bg-muted rounded px-1">STU-12345</code> — use them to find returning students.</li>
           <li>• The search bar works across names, emails, and student codes.</li>
           <li>• Sessions are organized by course + quarter + year. Create one for each class you run.</li>
-          <li>• You can have only one "current" session per student. Adding them to a new session archives the old one.</li>
+          <li>• You can have only one &quot;current&quot; session per student. Adding them to a new session archives the old one.</li>
         </ul>
       </section>
     </div>

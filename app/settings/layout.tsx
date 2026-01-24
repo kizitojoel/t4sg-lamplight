@@ -21,19 +21,15 @@ export default async function SettingsLayout({ children }: SettingsLayoutProps) 
 
   const sidebarNavItems = [
     {
-      title: "General",
-      href: "/settings/general",
-    },
-    {
       title: "Profile",
       href: "/settings/profile",
     },
-    {
-      title: "Admin",
-      href: "/settings/admin",
-    },
     ...(isAdmin
       ? [
+          {
+            title: "Admin",
+            href: "/settings/admin",
+          },
           {
             title: "Permissions",
             href: "/settings/permissions",

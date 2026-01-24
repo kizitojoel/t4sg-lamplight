@@ -1,4 +1,5 @@
+import { redirect } from "next/navigation";
+
 export default function Settings() {
-  // redirect("/settings/general");
-  return <>You are at the settings page</>;
+  redirect("/settings/profile");
 }

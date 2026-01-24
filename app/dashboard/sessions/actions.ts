@@ -4,18 +4,18 @@ import { createServerSupabaseClient } from "@/lib/server-utils";
 import { revalidatePath } from "next/cache";
 
 // Types
-export type CreateSessionInput = {
+export interface CreateSessionInput {
   course_placement_id: string;
   quarter: "Winter" | "Spring" | "Summer" | "Fall";
   year: number;
   status?: "upcoming" | "active" | "completed";
-};
+}
 
-export type ActionResult<T = void> = {
+export interface ActionResult<T = void> {
   success: boolean;
   data?: T;
   error?: string;
-};
+}
 
 /**
  * Create a new session
@@ -187,6 +187,7 @@ export async function getSessionStudents(sessionId: number) {
     .order("enrolled_at", { ascending: false });
 
   if (error) {
+    // eslint-disable-next-line no-console
     console.error("Failed to fetch session students:", error.message);
     return [];
   }
@@ -230,6 +231,7 @@ export async function searchStudentsNotInSession(sessionId: number, query: strin
   const { data, error } = await studentsQuery;
 
   if (error) {
+    // eslint-disable-next-line no-console
     console.error("Failed to search students:", error.message);
     return [];
   }

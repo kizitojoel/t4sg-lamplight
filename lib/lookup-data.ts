@@ -8,10 +8,10 @@ import { createServerSupabaseClient } from "./server-utils";
  * can call them without triggering duplicate queries.
  */
 
-export type LookupItem = { id: string; name: string };
+export interface LookupItem { id: string; name: string }
 
 /**
- * Fetches all programs from the lookup table.
+ * Fetches all active programs from the lookup table.
  * Cached per-request to prevent duplicate queries.
  */
 export const getPrograms = cache(async (): Promise<LookupItem[]> => {
@@ -19,9 +19,11 @@ export const getPrograms = cache(async (): Promise<LookupItem[]> => {
   const { data, error } = await supabase
     .from("program")
     .select("id, name")
+    .eq("active", true)
     .order("name");
 
   if (error) {
+    // eslint-disable-next-line no-console
     console.error("Failed to fetch programs:", error.message);
     return [];
   }
@@ -30,7 +32,7 @@ export const getPrograms = cache(async (): Promise<LookupItem[]> => {
 });
 
 /**
- * Fetches all course placements from the lookup table.
+ * Fetches all active course placements from the lookup table.
  * Cached per-request to prevent duplicate queries.
  */
 export const getCoursePlacements = cache(async (): Promise<LookupItem[]> => {
@@ -38,9 +40,11 @@ export const getCoursePlacements = cache(async (): Promise<LookupItem[]> => {
   const { data, error } = await supabase
     .from("course_placement")
     .select("id, name")
+    .eq("active", true)
     .order("name");
 
   if (error) {
+    // eslint-disable-next-line no-console
     console.error("Failed to fetch course placements:", error.message);
     return [];
   }
@@ -73,7 +77,7 @@ export function createLookupMaps(data: { programs: LookupItem[]; coursePlacement
 }
 
 // Session types
-export type Session = {
+export interface Session {
   id: number;
   course_placement_id: string;
   quarter: "Winter" | "Spring" | "Summer" | "Fall";
@@ -82,7 +86,7 @@ export type Session = {
   start_date: string | null;
   end_date: string | null;
   created_at: string;
-};
+}
 
 export type SessionWithDetails = Session & {
   course_name: string;
@@ -102,6 +106,7 @@ export const getSessions = cache(async (): Promise<SessionWithDetails[]> => {
     .order("quarter", { ascending: false });
 
   if (error) {
+    // eslint-disable-next-line no-console
     console.error("Failed to fetch sessions:", error.message);
     return [];
   }
@@ -122,6 +127,7 @@ export const getActiveSessions = cache(async (): Promise<SessionWithDetails[]> =
     .order("quarter", { ascending: false });
 
   if (error) {
+    // eslint-disable-next-line no-console
     console.error("Failed to fetch active sessions:", error.message);
     return [];
   }
