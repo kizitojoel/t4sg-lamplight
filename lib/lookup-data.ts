@@ -1,5 +1,5 @@
-import "server-only";
 import { cache } from "react";
+import "server-only";
 import { createServerSupabaseClient } from "./server-utils";
 
 /**
@@ -8,7 +8,10 @@ import { createServerSupabaseClient } from "./server-utils";
  * can call them without triggering duplicate queries.
  */
 
-export interface LookupItem { id: string; name: string }
+export interface LookupItem {
+  id: string;
+  name: string;
+}
 
 /**
  * Fetches all active programs from the lookup table.
@@ -16,11 +19,7 @@ export interface LookupItem { id: string; name: string }
  */
 export const getPrograms = cache(async (): Promise<LookupItem[]> => {
   const supabase = createServerSupabaseClient();
-  const { data, error } = await supabase
-    .from("program")
-    .select("id, name")
-    .eq("active", true)
-    .order("name");
+  const { data, error } = await supabase.from("program").select("id, name").eq("active", true).order("name");
 
   if (error) {
     // eslint-disable-next-line no-console
@@ -37,11 +36,7 @@ export const getPrograms = cache(async (): Promise<LookupItem[]> => {
  */
 export const getCoursePlacements = cache(async (): Promise<LookupItem[]> => {
   const supabase = createServerSupabaseClient();
-  const { data, error } = await supabase
-    .from("course_placement")
-    .select("id, name")
-    .eq("active", true)
-    .order("name");
+  const { data, error } = await supabase.from("course_placement").select("id, name").eq("active", true).order("name");
 
   if (error) {
     // eslint-disable-next-line no-console
@@ -57,10 +52,7 @@ export const getCoursePlacements = cache(async (): Promise<LookupItem[]> => {
  * Use this when you need multiple lookup tables at once.
  */
 export const getAllLookupData = cache(async () => {
-  const [programs, coursePlacements] = await Promise.all([
-    getPrograms(),
-    getCoursePlacements(),
-  ]);
+  const [programs, coursePlacements] = await Promise.all([getPrograms(), getCoursePlacements()]);
 
   return { programs, coursePlacements };
 });

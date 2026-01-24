@@ -13,10 +13,7 @@ export interface ActionResult<T = void> {
 
 export async function getPrograms() {
   const supabase = createServerSupabaseClient();
-  const { data, error } = await supabase
-    .from("program")
-    .select("id, name, active, created_at")
-    .order("name");
+  const { data, error } = await supabase.from("program").select("id, name, active, created_at").order("name");
 
   if (error) {
     // eslint-disable-next-line no-console
@@ -33,11 +30,7 @@ export async function createProgram(name: string): Promise<ActionResult<{ id: st
   }
 
   const supabase = createServerSupabaseClient();
-  const { data, error } = await supabase
-    .from("program")
-    .insert({ name, active: true })
-    .select("id")
-    .single();
+  const { data, error } = await supabase.from("program").insert({ name, active: true }).select("id").single();
 
   if (error) {
     return { success: false, error: error.message };
@@ -47,10 +40,7 @@ export async function createProgram(name: string): Promise<ActionResult<{ id: st
   return { success: true, data: { id: data.id } };
 }
 
-export async function updateProgram(
-  id: string,
-  updates: { name?: string; active?: boolean }
-): Promise<ActionResult> {
+export async function updateProgram(id: string, updates: { name?: string; active?: boolean }): Promise<ActionResult> {
   const isAdmin = await requireAdmin();
   if (!isAdmin) {
     return { success: false, error: "Unauthorized" };
@@ -76,10 +66,7 @@ export async function deleteProgram(id: string): Promise<ActionResult> {
   const supabase = createServerSupabaseClient();
 
   // Check if any students use this program
-  const { count } = await supabase
-    .from("students")
-    .select("id", { count: "exact", head: true })
-    .eq("program_id", id);
+  const { count } = await supabase.from("students").select("id", { count: "exact", head: true }).eq("program_id", id);
 
   if (count && count > 0) {
     return {
@@ -102,10 +89,7 @@ export async function deleteProgram(id: string): Promise<ActionResult> {
 
 export async function getCourses() {
   const supabase = createServerSupabaseClient();
-  const { data, error } = await supabase
-    .from("course_placement")
-    .select("id, name, active, created_at")
-    .order("name");
+  const { data, error } = await supabase.from("course_placement").select("id, name, active, created_at").order("name");
 
   if (error) {
     // eslint-disable-next-line no-console
@@ -122,11 +106,7 @@ export async function createCourse(name: string): Promise<ActionResult<{ id: str
   }
 
   const supabase = createServerSupabaseClient();
-  const { data, error } = await supabase
-    .from("course_placement")
-    .insert({ name, active: true })
-    .select("id")
-    .single();
+  const { data, error } = await supabase.from("course_placement").insert({ name, active: true }).select("id").single();
 
   if (error) {
     return { success: false, error: error.message };
@@ -136,10 +116,7 @@ export async function createCourse(name: string): Promise<ActionResult<{ id: str
   return { success: true, data: { id: data.id } };
 }
 
-export async function updateCourse(
-  id: string,
-  updates: { name?: string; active?: boolean }
-): Promise<ActionResult> {
+export async function updateCourse(id: string, updates: { name?: string; active?: boolean }): Promise<ActionResult> {
   const isAdmin = await requireAdmin();
   if (!isAdmin) {
     return { success: false, error: "Unauthorized" };
@@ -217,10 +194,7 @@ export async function getAssessments() {
   return data ?? [];
 }
 
-export async function createAssessment(
-  name: string,
-  courseId: string | null
-): Promise<ActionResult<{ id: string }>> {
+export async function createAssessment(name: string, courseId: string | null): Promise<ActionResult<{ id: string }>> {
   const isAdmin = await requireAdmin();
   if (!isAdmin) {
     return { success: false, error: "Unauthorized" };
@@ -243,7 +217,7 @@ export async function createAssessment(
 
 export async function updateAssessment(
   id: string,
-  updates: { name?: string; active?: boolean; course_id?: string | null }
+  updates: { name?: string; active?: boolean; course_id?: string | null },
 ): Promise<ActionResult> {
   const isAdmin = await requireAdmin();
   if (!isAdmin) {

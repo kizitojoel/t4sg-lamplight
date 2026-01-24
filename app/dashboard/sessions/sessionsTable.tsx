@@ -237,7 +237,9 @@ export default function SessionsTable({ sessions, courses }: SessionsTableProps)
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Create New Session</DialogTitle>
-            <DialogDescription>Create a new session for a course. Select the course, quarter, and year.</DialogDescription>
+            <DialogDescription>
+              Create a new session for a course. Select the course, quarter, and year.
+            </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             {error && (

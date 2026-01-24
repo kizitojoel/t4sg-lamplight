@@ -33,12 +33,7 @@ export async function middleware(request: NextRequest) {
   if (user && user.email) {
     // Batch both queries together for better performance
     const [allowlistResult, profileResult] = await Promise.all([
-      supabase
-        .from("allowed_emails")
-        .select("email")
-        .ilike("email", user.email)
-        .limit(1)
-        .maybeSingle(),
+      supabase.from("allowed_emails").select("email").ilike("email", user.email).limit(1).maybeSingle(),
       supabase.from("profiles").select("role").eq("id", user.id).single(),
     ]);
 

@@ -127,7 +127,7 @@ export default function StudentsTable({
   };
 
   // Export CSV (Exports selected rows or ALL if none selected - logic adjusted for pagination)
-  // Note: For pagination, "Export All" might need to fetch all from server. 
+  // Note: For pagination, "Export All" might need to fetch all from server.
   // For now, we keep existing logic which fetches by ID for selected rows.
   // If no rows selected, we might want to alert user to select rows or implement "Export All Matches"
   const handleExportCSV = async () => {
@@ -479,8 +479,10 @@ export default function StudentsTable({
         <div className="flex items-center justify-between text-sm">
           <div className="text-muted-foreground">
             Showing <span className="text-foreground font-medium">{(pagination.currentPage - 1) * 20 + 1}</span> to{" "}
-            <span className="text-foreground font-medium">{Math.min(pagination.currentPage * 20, pagination.totalCount)}</span> of{" "}
-            <span className="text-foreground font-medium">{pagination.totalCount}</span> students
+            <span className="text-foreground font-medium">
+              {Math.min(pagination.currentPage * 20, pagination.totalCount)}
+            </span>{" "}
+            of <span className="text-foreground font-medium">{pagination.totalCount}</span> students
           </div>
           <div className="absolute left-1/2 flex -translate-x-1/2 items-center gap-2">
             <button

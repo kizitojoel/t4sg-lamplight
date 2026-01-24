@@ -14,7 +14,12 @@ import { Table } from "@radix-ui/themes";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, useTransition } from "react";
-import { addStudentToSession, removeStudentFromSession, searchStudentsNotInSession, updateSessionStatus } from "../actions";
+import {
+  addStudentToSession,
+  removeStudentFromSession,
+  searchStudentsNotInSession,
+  updateSessionStatus,
+} from "../actions";
 
 interface Student {
   id: string;
@@ -137,7 +142,9 @@ export default function SessionDetail({ session, enrollments }: SessionDetailPro
   };
 
   const handleMarkCompleted = async () => {
-    const confirmed = confirm("Are you sure you want to mark this session as completed? This will affect all enrolled students.");
+    const confirmed = confirm(
+      "Are you sure you want to mark this session as completed? This will affect all enrolled students.",
+    );
     if (!confirmed) return;
 
     const result = await updateSessionStatus(session.id, "completed");
@@ -173,7 +180,10 @@ export default function SessionDetail({ session, enrollments }: SessionDetailPro
     <div className={isPending ? "opacity-50" : ""}>
       {/* Header */}
       <div className="mb-6">
-        <Link href="/dashboard/sessions" className="text-muted-foreground mb-2 flex items-center gap-1 text-sm hover:underline">
+        <Link
+          href="/dashboard/sessions"
+          className="text-muted-foreground mb-2 flex items-center gap-1 text-sm hover:underline"
+        >
           ← Back to Sessions
         </Link>
         <div className="flex items-center justify-between">
@@ -216,7 +226,9 @@ export default function SessionDetail({ session, enrollments }: SessionDetailPro
                 <Table.ColumnHeaderCell style={{ padding: "12px 16px", fontSize: "0.75rem", fontWeight: 600 }}>
                   ENROLLED
                 </Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell style={{ padding: "12px 16px", fontSize: "0.75rem", fontWeight: 600, textAlign: "center" }}>
+                <Table.ColumnHeaderCell
+                  style={{ padding: "12px 16px", fontSize: "0.75rem", fontWeight: 600, textAlign: "center" }}
+                >
                   ACTIONS
                 </Table.ColumnHeaderCell>
               </Table.Row>
@@ -225,7 +237,9 @@ export default function SessionDetail({ session, enrollments }: SessionDetailPro
               {currentEnrollments.length === 0 ? (
                 <Table.Row>
                   <Table.Cell colSpan={5} className="py-8 text-center">
-                    <p className="text-muted-foreground">No students currently enrolled. Add students to get started.</p>
+                    <p className="text-muted-foreground">
+                      No students currently enrolled. Add students to get started.
+                    </p>
                   </Table.Cell>
                 </Table.Row>
               ) : (
@@ -238,10 +252,16 @@ export default function SessionDetail({ session, enrollments }: SessionDetailPro
                       {enrollment.student?.preferred_name ?? enrollment.student?.legal_first_name}{" "}
                       {enrollment.student?.legal_last_name}
                     </Table.Cell>
-                    <Table.Cell className="text-muted-foreground" style={{ padding: "12px 16px", fontSize: "0.875rem" }}>
+                    <Table.Cell
+                      className="text-muted-foreground"
+                      style={{ padding: "12px 16px", fontSize: "0.875rem" }}
+                    >
                       {enrollment.student?.email ?? "—"}
                     </Table.Cell>
-                    <Table.Cell className="text-muted-foreground" style={{ padding: "12px 16px", fontSize: "0.875rem" }}>
+                    <Table.Cell
+                      className="text-muted-foreground"
+                      style={{ padding: "12px 16px", fontSize: "0.875rem" }}
+                    >
                       {new Date(enrollment.enrolled_at).toLocaleDateString()}
                     </Table.Cell>
                     <Table.Cell style={{ padding: "12px 16px", textAlign: "center" }}>
@@ -300,7 +320,10 @@ export default function SessionDetail({ session, enrollments }: SessionDetailPro
                       {enrollment.student?.legal_last_name}
                     </Table.Cell>
                     <Table.Cell style={{ padding: "12px 16px" }}>{getStatusBadge(enrollment.status)}</Table.Cell>
-                    <Table.Cell className="text-muted-foreground" style={{ padding: "12px 16px", fontSize: "0.875rem" }}>
+                    <Table.Cell
+                      className="text-muted-foreground"
+                      style={{ padding: "12px 16px", fontSize: "0.875rem" }}
+                    >
                       {new Date(enrollment.enrolled_at).toLocaleDateString()}
                     </Table.Cell>
                   </Table.Row>
@@ -317,7 +340,8 @@ export default function SessionDetail({ session, enrollments }: SessionDetailPro
           <DialogHeader>
             <DialogTitle>Add Students to Session</DialogTitle>
             <DialogDescription>
-              Search for students and select them to add to this session. Students already in this session are not shown.
+              Search for students and select them to add to this session. Students already in this session are not
+              shown.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
@@ -369,7 +393,10 @@ export default function SessionDetail({ session, enrollments }: SessionDetailPro
                         <Table.Cell className="font-medium" style={{ padding: "12px 16px", fontSize: "0.875rem" }}>
                           {student.preferred_name ?? student.legal_first_name} {student.legal_last_name}
                         </Table.Cell>
-                        <Table.Cell className="text-muted-foreground" style={{ padding: "12px 16px", fontSize: "0.875rem" }}>
+                        <Table.Cell
+                          className="text-muted-foreground"
+                          style={{ padding: "12px 16px", fontSize: "0.875rem" }}
+                        >
                           {student.email ?? "—"}
                         </Table.Cell>
                       </Table.Row>
@@ -379,9 +406,7 @@ export default function SessionDetail({ session, enrollments }: SessionDetailPro
               )}
             </div>
             {selectedStudents.size > 0 && (
-              <div className="mt-4 text-sm text-muted-foreground">
-                {selectedStudents.size} student(s) selected
-              </div>
+              <div className="text-muted-foreground mt-4 text-sm">{selectedStudents.size} student(s) selected</div>
             )}
           </div>
           <DialogFooter>

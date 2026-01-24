@@ -2,9 +2,7 @@ export default function UsagePage() {
   return (
     <div className="mx-auto max-w-3xl px-6 py-12">
       <h1 className="mb-2 text-3xl font-bold">How to Use Lamplight</h1>
-      <p className="text-muted-foreground mb-10">
-        A quick guide to managing students and sessions.
-      </p>
+      <p className="text-muted-foreground mb-10">A quick guide to managing students and sessions.</p>
 
       {/* Students Section */}
       <section className="mb-10">
@@ -23,10 +21,12 @@ export default function UsagePage() {
             <strong>View details</strong> — Click &quot;View More&quot; on any row to see the full student profile.
           </li>
           <li>
-            <strong>Add a student</strong> — Click the red &quot;Add Student&quot; button to create a new record manually.
+            <strong>Add a student</strong> — Click the red &quot;Add Student&quot; button to create a new record
+            manually.
           </li>
           <li>
-            <strong>Export</strong> — Select students with checkboxes, then click &quot;Export CSV&quot; to download their data.
+            <strong>Export</strong> — Select students with checkboxes, then click &quot;Export CSV&quot; to download
+            their data.
           </li>
         </ul>
       </section>
@@ -40,7 +40,9 @@ export default function UsagePage() {
         <ol className="text-muted-foreground list-inside list-decimal space-y-2">
           <li>Scroll to the bottom of the Students page and click &quot;Import from Google Sheets&quot;.</li>
           <li>Select the program (ESOL or HCP).</li>
-          <li>For ESOL, choose the course placement. For HCP, it reads from the &quot;Placement Decision&quot; column.</li>
+          <li>
+            For ESOL, choose the course placement. For HCP, it reads from the &quot;Placement Decision&quot; column.
+          </li>
           <li>Pick your CSV file. The system will validate and import the records.</li>
           <li>If there are errors, you&apos;ll see a report explaining what went wrong.</li>
         </ol>
@@ -57,13 +59,16 @@ export default function UsagePage() {
         </p>
         <ul className="text-muted-foreground list-inside list-disc space-y-2">
           <li>
-            <strong>Create a session</strong> — Click &quot;Create Session&quot;, pick a course, quarter (Winter/Spring/Summer/Fall), and year.
+            <strong>Create a session</strong> — Click &quot;Create Session&quot;, pick a course, quarter
+            (Winter/Spring/Summer/Fall), and year.
           </li>
           <li>
-            <strong>Add students</strong> — Click &quot;Manage&quot; on a session, then &quot;Add Students&quot;. Search for students and check the ones you want to add.
+            <strong>Add students</strong> — Click &quot;Manage&quot; on a session, then &quot;Add Students&quot;. Search
+            for students and check the ones you want to add.
           </li>
           <li>
-            <strong>View enrolled students</strong> — Click &quot;View Students&quot; to see the Students page filtered to that session.
+            <strong>View enrolled students</strong> — Click &quot;View Students&quot; to see the Students page filtered
+            to that session.
           </li>
           <li>
             <strong>Complete a session</strong> — When the term ends, click &quot;Complete&quot; to archive it.
@@ -77,9 +82,7 @@ export default function UsagePage() {
       {/* Student Profiles Section */}
       <section className="mb-10">
         <h2 className="mb-3 text-xl font-semibold">Student Profiles</h2>
-        <p className="text-muted-foreground mb-4">
-          Each student has a detailed profile with multiple tabs.
-        </p>
+        <p className="text-muted-foreground mb-4">Each student has a detailed profile with multiple tabs.</p>
         <ul className="text-muted-foreground list-inside list-disc space-y-2">
           <li>
             <strong>Info</strong> — Basic details like name, contact info, and demographics.
@@ -100,10 +103,16 @@ export default function UsagePage() {
       <section className="border-border rounded-lg border bg-gray-50 p-6 dark:bg-gray-900">
         <h2 className="mb-3 text-lg font-semibold">Quick Tips</h2>
         <ul className="text-muted-foreground space-y-2 text-sm">
-          <li>• Student codes look like <code className="bg-muted rounded px-1">STU-12345</code> — use them to find returning students.</li>
+          <li>
+            • Student codes look like <code className="bg-muted rounded px-1">STU-12345</code> — use them to find
+            returning students.
+          </li>
           <li>• The search bar works across names, emails, and student codes.</li>
           <li>• Sessions are organized by course + quarter + year. Create one for each class you run.</li>
-          <li>• You can have only one &quot;current&quot; session per student. Adding them to a new session archives the old one.</li>
+          <li>
+            • You can have only one &quot;current&quot; session per student. Adding them to a new session archives the
+            old one.
+          </li>
         </ul>
       </section>
     </div>

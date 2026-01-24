@@ -10,13 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PencilIcon, TrashIcon } from "@heroicons/react/24/solid";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -32,8 +26,18 @@ import {
   updateProgram,
 } from "./actions";
 
-interface Program { id: string; name: string; active: boolean; created_at: string }
-interface Course { id: string; name: string; active: boolean; created_at: string }
+interface Program {
+  id: string;
+  name: string;
+  active: boolean;
+  created_at: string;
+}
+interface Course {
+  id: string;
+  name: string;
+  active: boolean;
+  created_at: string;
+}
 interface Assessment {
   id: string;
   name: string;
@@ -88,7 +92,7 @@ export default function AdminDashboard({ programs, courses, assessments }: Admin
 
   const openEditModal = (
     type: ModalType,
-    item: { id: string; name: string; active: boolean; course_id?: string | null }
+    item: { id: string; name: string; active: boolean; course_id?: string | null },
   ) => {
     setModalType(type);
     setModalMode("edit");
@@ -185,17 +189,11 @@ export default function AdminDashboard({ programs, courses, assessments }: Admin
     });
   };
 
-  const filteredPrograms = programs.filter((p) =>
-    p.name.toLowerCase().includes(programSearch.toLowerCase())
-  );
+  const filteredPrograms = programs.filter((p) => p.name.toLowerCase().includes(programSearch.toLowerCase()));
 
-  const filteredCourses = courses.filter((c) =>
-    c.name.toLowerCase().includes(courseSearch.toLowerCase())
-  );
+  const filteredCourses = courses.filter((c) => c.name.toLowerCase().includes(courseSearch.toLowerCase()));
 
-  const filteredAssessments = assessments.filter((a) =>
-    a.name.toLowerCase().includes(assessmentSearch.toLowerCase())
-  );
+  const filteredAssessments = assessments.filter((a) => a.name.toLowerCase().includes(assessmentSearch.toLowerCase()));
 
   const getCourseName = (courseId: string | null) => {
     if (!courseId) return "All courses";
@@ -204,7 +202,7 @@ export default function AdminDashboard({ programs, courses, assessments }: Admin
   };
 
   return (
-    <div className={`space-y-10 ${isPending ? "opacity-50 pointer-events-none" : ""}`}>
+    <div className={`space-y-10 ${isPending ? "pointer-events-none opacity-50" : ""}`}>
       {/* Error display */}
       {error && (
         <div className="rounded-md bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
@@ -249,26 +247,16 @@ export default function AdminDashboard({ programs, courses, assessments }: Admin
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => toggleActive("program", program.id, program.active)}
-                  >
+                  <Button variant="ghost" size="sm" onClick={() => toggleActive("program", program.id, program.active)}>
                     {program.active ? "Deactivate" : "Activate"}
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => openEditModal("program", program)}
-                  >
+                  <Button variant="ghost" size="sm" onClick={() => openEditModal("program", program)}>
                     <PencilIcon className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() =>
-                      setDeleteModal({ type: "program", id: program.id, name: program.name })
-                    }
+                    onClick={() => setDeleteModal({ type: "program", id: program.id, name: program.name })}
                   >
                     <TrashIcon className="h-4 w-4 text-red-500" />
                   </Button>
@@ -313,26 +301,16 @@ export default function AdminDashboard({ programs, courses, assessments }: Admin
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => toggleActive("course", course.id, course.active)}
-                  >
+                  <Button variant="ghost" size="sm" onClick={() => toggleActive("course", course.id, course.active)}>
                     {course.active ? "Deactivate" : "Activate"}
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => openEditModal("course", course)}
-                  >
+                  <Button variant="ghost" size="sm" onClick={() => openEditModal("course", course)}>
                     <PencilIcon className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() =>
-                      setDeleteModal({ type: "course", id: course.id, name: course.name })
-                    }
+                    onClick={() => setDeleteModal({ type: "course", id: course.id, name: course.name })}
                   >
                     <TrashIcon className="h-4 w-4 text-red-500" />
                   </Button>
@@ -389,11 +367,7 @@ export default function AdminDashboard({ programs, courses, assessments }: Admin
                   >
                     {assessment.active ? "Deactivate" : "Activate"}
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => openEditModal("assessment", assessment)}
-                  >
+                  <Button variant="ghost" size="sm" onClick={() => openEditModal("assessment", assessment)}>
                     <PencilIcon className="h-4 w-4" />
                   </Button>
                   <Button
@@ -422,16 +396,10 @@ export default function AdminDashboard({ programs, courses, assessments }: Admin
           <DialogHeader>
             <DialogTitle>
               {modalMode === "create" ? "Create" : "Edit"}{" "}
-              {modalType === "program"
-                ? "Program"
-                : modalType === "course"
-                  ? "Course"
-                  : "Assessment"}
+              {modalType === "program" ? "Program" : modalType === "course" ? "Course" : "Assessment"}
             </DialogTitle>
             <DialogDescription>
-              {modalMode === "create"
-                ? `Add a new ${modalType} to the system.`
-                : `Update the ${modalType} details.`}
+              {modalMode === "create" ? `Add a new ${modalType} to the system.` : `Update the ${modalType} details.`}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -459,13 +427,8 @@ export default function AdminDashboard({ programs, courses, assessments }: Admin
             )}
             {modalType === "assessment" && (
               <div>
-                <label className="mb-1.5 block text-sm font-medium">
-                  Linked Course (optional)
-                </label>
-                <Select
-                  value={formCourseId ?? "none"}
-                  onValueChange={(v) => setFormCourseId(v === "none" ? null : v)}
-                >
+                <label className="mb-1.5 block text-sm font-medium">Linked Course (optional)</label>
+                <Select value={formCourseId ?? "none"} onValueChange={(v) => setFormCourseId(v === "none" ? null : v)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a course" />
                   </SelectTrigger>
@@ -481,8 +444,8 @@ export default function AdminDashboard({ programs, courses, assessments }: Admin
                   </SelectContent>
                 </Select>
                 <p className="text-muted-foreground mt-1 text-xs">
-                  Link this assessment to a specific course, or leave as &quot;All courses&quot; if it
-                  applies everywhere.
+                  Link this assessment to a specific course, or leave as &quot;All courses&quot; if it applies
+                  everywhere.
                 </p>
               </div>
             )}

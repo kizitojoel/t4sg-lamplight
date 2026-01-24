@@ -34,17 +34,17 @@ cp .env.example .env.local
 
 Required variables:
 
-| Variable | Description |
-|----------|-------------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon/public key |
-| `SUPABASE_PROJECT_REF` | Supabase project ID (for type generation) |
+| Variable                        | Description                               |
+| ------------------------------- | ----------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Supabase project URL                      |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon/public key                  |
+| `SUPABASE_PROJECT_REF`          | Supabase project ID (for type generation) |
 
 Optional (for Google OAuth locally):
 
-| Variable | Description |
-|----------|-------------|
-| `SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID` | Google OAuth client ID |
+| Variable                                      | Description                |
+| --------------------------------------------- | -------------------------- |
+| `SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID`     | Google OAuth client ID     |
 | `SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
 
 **Note:** The admin will provide these values. Never commit `.env.local` to version control.
@@ -59,14 +59,14 @@ The app should be running at [http://localhost:3000](http://localhost:3000).
 
 ## 5. Common Commands
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server |
-| `npm run build` | Create production build |
-| `npm run lint` | Check for linting errors |
-| `npm run lint:fix` | Auto-fix linting errors |
-| `npm run format` | Format code and fix linting |
-| `npm run types` | Regenerate TypeScript types from database |
+| Command            | Description                               |
+| ------------------ | ----------------------------------------- |
+| `npm run dev`      | Start development server                  |
+| `npm run build`    | Create production build                   |
+| `npm run lint`     | Check for linting errors                  |
+| `npm run lint:fix` | Auto-fix linting errors                   |
+| `npm run format`   | Format code and fix linting               |
+| `npm run types`    | Regenerate TypeScript types from database |
 
 ## Project Structure
 

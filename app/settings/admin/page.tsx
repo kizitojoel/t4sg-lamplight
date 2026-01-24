@@ -9,17 +9,7 @@ export default async function AdminPage() {
     redirect("/settings/profile");
   }
 
-  const [programs, courses, assessments] = await Promise.all([
-    getPrograms(),
-    getCourses(),
-    getAssessments(),
-  ]);
+  const [programs, courses, assessments] = await Promise.all([getPrograms(), getCourses(), getAssessments()]);
 
-  return (
-    <AdminDashboard
-      programs={programs}
-      courses={courses}
-      assessments={assessments}
-    />
-  );
+  return <AdminDashboard programs={programs} courses={courses} assessments={assessments} />;
 }
