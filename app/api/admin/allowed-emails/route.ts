@@ -139,9 +139,7 @@ export async function POST(request: Request) {
   const role = parseRoleWithDefault(body);
 
   // Insert into allowed_emails with the role that should be applied on first login
-  const { error: insertError } = await supabase
-    .from("allowed_emails")
-    .insert({ email, role, created_by: user.id });
+  const { error: insertError } = await supabase.from("allowed_emails").insert({ email, role, created_by: user.id });
 
   if (insertError) {
     const { status, message } = handleDbError(insertError);

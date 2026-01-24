@@ -3,9 +3,9 @@ import "server-only";
 // For more info on how to avoid poisoning your server/client components: https://www.youtube.com/watch?v=BZlwtR9pDp4
 import { env } from "@/env.mjs";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
-import { cookies as nextCookies, headers } from "next/headers";
-import { NextResponse, type NextRequest } from "next/server";
+import { headers, cookies as nextCookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { NextResponse, type NextRequest } from "next/server";
 import { type Database } from "./schema";
 
 /*
