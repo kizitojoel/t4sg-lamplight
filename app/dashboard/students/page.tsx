@@ -34,6 +34,7 @@ export default async function StudentsPage({
     .select(
       `
       id,
+      student_code,
       legal_first_name,
       legal_last_name,
       preferred_name,
@@ -50,9 +51,10 @@ export default async function StudentsPage({
     .range(offset, offset + ITEMS_PER_PAGE - 1);
 
   // Apply filters using IDs (more efficient than enum filtering)
+  // Search by name, email, or student_code
   if (query) {
     studentsQuery = studentsQuery.or(
-      `legal_first_name.ilike.%${query}%,legal_last_name.ilike.%${query}%,email.ilike.%${query}%`,
+      `legal_first_name.ilike.%${query}%,legal_last_name.ilike.%${query}%,email.ilike.%${query}%,student_code.ilike.%${query}%`,
     );
   }
 

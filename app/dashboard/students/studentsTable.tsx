@@ -8,6 +8,7 @@ import StudentModal from "../student-modal/student-modal";
 
 interface Student {
   id: string;
+  student_code: string | null;
   legal_first_name: string;
   legal_last_name: string;
   preferred_name: string | null;
@@ -238,7 +239,7 @@ export default function StudentsTable({
             </svg>
             <input
               type="text"
-              placeholder="Search students..."
+              placeholder="Search by name, email, or student code..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="bg-card border-border focus:border-muted-foreground w-full rounded-md border py-2 pr-3 pl-10 text-sm focus:outline-none"
@@ -391,7 +392,7 @@ export default function StudentsTable({
                   letterSpacing: "0.05em",
                 }}
               >
-                Program
+                Student Code
               </Table.ColumnHeaderCell>
               <Table.ColumnHeaderCell
                 style={{
@@ -403,7 +404,7 @@ export default function StudentsTable({
                   letterSpacing: "0.05em",
                 }}
               >
-                Session
+                Program
               </Table.ColumnHeaderCell>
               <Table.ColumnHeaderCell
                 style={{
@@ -455,11 +456,11 @@ export default function StudentsTable({
                 <Table.Cell className="text-muted-foreground" style={{ padding: "12px 16px", fontSize: "0.875rem" }}>
                   {student.phone}
                 </Table.Cell>
-                <Table.Cell className="text-muted-foreground" style={{ padding: "12px 16px", fontSize: "0.875rem" }}>
-                  {student.program?.name ?? "—"}
+                <Table.Cell className="text-muted-foreground font-mono text-xs" style={{ padding: "12px 16px" }}>
+                  {student.student_code ?? "—"}
                 </Table.Cell>
                 <Table.Cell className="text-muted-foreground" style={{ padding: "12px 16px", fontSize: "0.875rem" }}>
-                  {/* Session - to be added later*/}
+                  {student.program?.name ?? "—"}
                 </Table.Cell>
                 <Table.Cell className="text-muted-foreground" style={{ padding: "12px 16px", fontSize: "0.875rem" }}>
                   {student.course_placement?.name ?? "—"}
