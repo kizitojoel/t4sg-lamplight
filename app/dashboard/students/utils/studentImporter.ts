@@ -112,13 +112,14 @@ function findCSVDuplicates(
     if (rowNumbers.length > 1) {
       const firstRow = students[rowNumbers[0]! - rowOffset - 1];
       const { studentName } = getStudentName(firstRow ?? {});
+      const studentCode = firstRow?.student_code as string | undefined;
       emailDuplicates.push(
         createError(
           rowNumbers[0]!,
           studentName,
           "DUPLICATE_IN_CSV",
-          `Duplicate email "${email}" found in CSV at rows: ${rowNumbers.join(", ")}`,
-          undefined,
+          `Duplicate email found in CSV\nEmail: ${email}\nRows: ${rowNumbers.join(", ")}`,
+          studentCode,
           firstRow,
         ),
       );
@@ -130,13 +131,14 @@ function findCSVDuplicates(
     if (rowNumbers.length > 1) {
       const [firstName, lastName] = nameKey.split("|");
       const firstRow = students[rowNumbers[0]! - rowOffset - 1];
+      const studentCode = firstRow?.student_code as string | undefined;
       nameDuplicates.push(
         createError(
           rowNumbers[0]!,
           `${firstName} ${lastName}`,
           "DUPLICATE_IN_CSV",
-          `Duplicate name "${firstName} ${lastName}" found in CSV at rows: ${rowNumbers.join(", ")}`,
-          undefined,
+          `Duplicate name found in CSV\nName: ${firstName} ${lastName}\nRows: ${rowNumbers.join(", ")}`,
+          studentCode,
           firstRow,
         ),
       );
@@ -195,24 +197,41 @@ export async function validateNewStudents(students: StudentData[], rowOffset = 0
     const email = typeof student.email === "string" ? student.email.trim() : "";
 
     if (!email) {
+      const studentCode = student.student_code as string | undefined;
       errors.push(
-        createError(rowNumber, studentName, "MISSING_EMAIL", "Email is required for new students", undefined, student),
+        createError(
+          rowNumber,
+          studentName,
+          "MISSING_EMAIL",
+          "Email is required for new students",
+          studentCode,
+          student,
+        ),
       );
       continue;
     }
 
     const { firstName, lastName } = getStudentName(student);
     if (!firstName && !lastName) {
+      const studentCode = student.student_code as string | undefined;
       errors.push(
-        createError(rowNumber, "Unknown", "MISSING_NAME", "First name or last name is required", undefined, student),
+        createError(rowNumber, "Unknown", "MISSING_NAME", "First name or last name is required", studentCode, student),
       );
       continue;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
+      const studentCode = student.student_code as string | undefined;
       errors.push(
-        createError(rowNumber, studentName, "INVALID_EMAIL", `Invalid email format: ${email}`, undefined, student),
+        createError(
+          rowNumber,
+          studentName,
+          "INVALID_EMAIL",
+          `Invalid email format\nEmail: ${email}\nRow: ${rowNumber}`,
+          studentCode,
+          student,
+        ),
       );
     }
   }
@@ -242,15 +261,19 @@ export async function validateNewStudents(students: StudentData[], rowOffset = 0
         if (isDuplicate && existingStudent) {
           const existingStudentCode = existingStudent.student_code as string | undefined;
           const existingEmail = existingStudent.email as string | undefined;
+          let errorMessage = "Student already exists in database";
+          if (existingStudentCode || existingEmail) {
+            errorMessage += "\n";
+            if (existingStudentCode) {
+              errorMessage += `Code: ${existingStudentCode}`;
+            }
+            if (existingEmail) {
+              if (existingStudentCode) errorMessage += "\n";
+              errorMessage += `Email: ${existingEmail}`;
+            }
+          }
           errors.push(
-            createError(
-              rowNumber,
-              studentName,
-              "DUPLICATE_STUDENT",
-              `Student already exists in database${existingStudentCode ? ` (${existingStudentCode})` : ""}${existingEmail ? ` - Email: ${existingEmail}` : ""}`,
-              existingStudentCode,
-              student,
-            ),
+            createError(rowNumber, studentName, "DUPLICATE_STUDENT", errorMessage, existingStudentCode, student),
           );
         }
       }
@@ -323,7 +346,7 @@ export async function validateReturningStudents(students: StudentData[], rowOffs
           rowNumbers[0]!,
           studentName,
           "DUPLICATE_IN_CSV",
-          `Duplicate student_code "${studentCode}" found in CSV at rows: ${rowNumbers.join(", ")}`,
+          `Duplicate student code found in CSV\nCode: ${studentCode}\nRows: ${rowNumbers.join(", ")}`,
           studentCode,
           firstRow,
         ),

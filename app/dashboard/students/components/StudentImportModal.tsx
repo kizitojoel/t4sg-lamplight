@@ -19,7 +19,7 @@ type CoursePlacementEnum = (typeof Constants.public.Enums.course_placement_enum)
 interface StudentImportModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onFileSelect: (file: File, program: ProgramEnum, coursePlacement: CoursePlacementEnum) => void;
+  onFileSelect: (file: File, program: ProgramEnum, coursePlacement: CoursePlacementEnum | null) => void;
 }
 
 export function StudentImportModal({ open, onOpenChange, onFileSelect }: StudentImportModalProps) {
@@ -31,7 +31,10 @@ export function StudentImportModal({ open, onOpenChange, onFileSelect }: Student
   const programs = Constants.public.Enums.program_enum;
   const coursePlacements = Constants.public.Enums.course_placement_enum;
 
-  const canChooseFile = selectedProgram !== "" && selectedCoursePlacement !== "";
+  // For HCP, course placement is not required (will be read from CSV)
+  // For ESOL, course placement is required
+  const isHCP = selectedProgram === "HCP";
+  const canChooseFile = selectedProgram !== "" && (isHCP || selectedCoursePlacement !== "");
 
   const handleChooseFile = () => {
     fileInputRef.current?.click();
@@ -39,8 +42,14 @@ export function StudentImportModal({ open, onOpenChange, onFileSelect }: Student
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file && selectedProgram !== "" && selectedCoursePlacement !== "") {
-      onFileSelect(file, selectedProgram, selectedCoursePlacement);
+    if (file && selectedProgram !== "") {
+      // For HCP, pass null for coursePlacement (will be read from CSV)
+      // For ESOL, pass the selected coursePlacement
+      const coursePlacement = isHCP ? null : (selectedCoursePlacement as CoursePlacementEnum);
+      if (!isHCP && !coursePlacement) {
+        return; // ESOL requires course placement
+      }
+      onFileSelect(file, selectedProgram, coursePlacement);
       // Reset form
       setSelectedProgram("");
       setSelectedCoursePlacement("");
@@ -65,7 +74,9 @@ export function StudentImportModal({ open, onOpenChange, onFileSelect }: Student
           <DialogHeader>
             <DialogTitle>Import Students</DialogTitle>
             <DialogDescription>
-              Select the program and course placement for all students in your CSV file.
+              {isHCP
+                ? "Select the program. Course placement will be read from the 'Placement Decision' column in your CSV file."
+                : "Select the program and course placement for all students in your CSV file."}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -75,7 +86,11 @@ export function StudentImportModal({ open, onOpenChange, onFileSelect }: Student
               </label>
               <Select
                 value={selectedProgram ?? undefined}
-                onValueChange={(value) => setSelectedProgram(value as ProgramEnum)}
+                onValueChange={(value) => {
+                  setSelectedProgram(value as ProgramEnum);
+                  // Reset course placement when program changes
+                  setSelectedCoursePlacement("");
+                }}
               >
                 <SelectTrigger id="program">
                   <SelectValue placeholder="Select Program" />
@@ -89,26 +104,28 @@ export function StudentImportModal({ open, onOpenChange, onFileSelect }: Student
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid gap-2">
-              <label htmlFor="course-placement" className="text-sm font-medium">
-                Course Placement
-              </label>
-              <Select
-                value={selectedCoursePlacement ?? undefined}
-                onValueChange={(value) => setSelectedCoursePlacement(value as CoursePlacementEnum)}
-              >
-                <SelectTrigger id="course-placement">
-                  <SelectValue placeholder="Select Course Placement" />
-                </SelectTrigger>
-                <SelectContent>
-                  {coursePlacements.map((placement) => (
-                    <SelectItem key={placement} value={placement}>
-                      {placement}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {!isHCP && (
+              <div className="grid gap-2">
+                <label htmlFor="course-placement" className="text-sm font-medium">
+                  Course Placement
+                </label>
+                <Select
+                  value={selectedCoursePlacement ?? undefined}
+                  onValueChange={(value) => setSelectedCoursePlacement(value as CoursePlacementEnum)}
+                >
+                  <SelectTrigger id="course-placement">
+                    <SelectValue placeholder="Select Course Placement" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {coursePlacements.map((placement) => (
+                      <SelectItem key={placement} value={placement}>
+                        {placement}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={handleCancel}>

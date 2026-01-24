@@ -1,16 +1,15 @@
-import { TypographyH2, TypographyP } from "@/components/ui/typography";
+import { TypographyH2 } from "@/components/ui/typography";
+import Link from "next/link";
 
 export default function Home() {
   return (
     <>
       <TypographyH2>Welcome to the T4SG Lamplight Project!</TypographyH2>
-      <TypographyP>
-        This starter project is styled with Tailwind CSS and uses shadcn/ui as a component library. Feel free to add
-        your own components!
-      </TypographyP>
-      <TypographyP>
-        This page is an unprotected route accessible to anyone who visits the website. Log in to view more!
-      </TypographyP>
+      <Link href="/instructions">
+        <button className="mt-4 rounded-md bg-[#a51d31] px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-[#8b1929]">
+          View Instructions
+        </button>
+      </Link>
     </>
   );
 }

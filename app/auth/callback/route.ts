@@ -8,7 +8,7 @@ export async function GET(request: Request) {
   const next = searchParams.get("next") ?? "/dashboard/students/";
 
   if (code) {
-    const cookieStore = await nextCookies(); // ✅ must await
+    const cookieStore = await nextCookies(); //  must await
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
