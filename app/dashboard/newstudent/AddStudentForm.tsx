@@ -152,12 +152,8 @@ export default function AddStudentForm({ programs, courses }: AddStudentFormProp
     try {
       const supabase = createBrowserSupabaseClient();
 
-      // Look up the names for the selected IDs to populate the enum columns
-      // (Required until database schema is updated to remove enum columns)
-      const selectedProgram = programs.find((p) => p.id === _data.program_id);
-      const selectedCourse = courses.find((c) => c.id === _data.course_placement_id);
-
       // Transform the data to match database schema
+      // Only using ID columns - enum columns will be removed from DB
       const transformedData = {
         legal_first_name: _data.legal_first_name,
         legal_last_name: _data.legal_last_name,
@@ -176,26 +172,8 @@ export default function AddStudentForm({ programs, courses }: AddStudentFormProp
         race: _data.race ? [_data.race] : null,
         ethnicity_hispanic_latino: _data.ethnicity_hispanic_latino,
         enrollment_status: _data.enrollment_status,
-        // Set both ID and enum columns for backwards compatibility
         program_id: _data.program_id,
         course_placement_id: _data.course_placement_id,
-        // These are still required by the database schema
-        program: selectedProgram?.name as "ESOL" | "HCP",
-        course_placement: selectedCourse?.name as
-          | "ESOL Beginner L1 part 1"
-          | "ESOL Beginner L1 part 2"
-          | "ESOL Beginner L1 part 3"
-          | "ESOL L2 part 1"
-          | "ESOL L2 part 2"
-          | "ESOL L2 part 3"
-          | "ESOL Intermediate part 1"
-          | "ESOL Intermediate part 2"
-          | "ESOL Intermediate part 3"
-          | "HCP English Pre-TEAS part 1"
-          | "HCP English Pre-TEAS part 2"
-          | "HCP English TEAS"
-          | "HCP Math TEAS"
-          | "Other",
       };
 
       const { error } = await supabase.from("students").insert(transformedData);

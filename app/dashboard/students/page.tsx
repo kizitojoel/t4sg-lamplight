@@ -1,3 +1,4 @@
+import { getAllLookupData } from "@/lib/lookup-data";
 import { createServerSupabaseClient, getAuthenticatedUser } from "@/lib/server-utils";
 import { redirect } from "next/navigation";
 import StudentImportButton from "./components/StudentImportButton";
@@ -63,27 +64,15 @@ export default async function StudentsPage({
     studentsQuery = studentsQuery.eq("course_placement_id", courseFilter);
   }
 
-  // Fetch all data in parallel
-  const [studentsResult, programsResult, coursesResult] = await Promise.all([
-    studentsQuery,
-    supabase.from("program").select("id, name").order("name"),
-    supabase.from("course_placement").select("id, name").order("name"),
-  ]);
+  // Fetch students and lookup data in parallel
+  // getAllLookupData is cached, so it won't duplicate queries if called elsewhere
+  const [studentsResult, lookupData] = await Promise.all([studentsQuery, getAllLookupData()]);
 
   const { data: students, error: studentsError, count } = studentsResult;
-  const { data: programs, error: programsError } = programsResult;
-  const { data: courses, error: coursesError } = coursesResult;
+  const { programs, coursePlacements: courses } = lookupData;
 
   if (studentsError) {
     return <div>Error loading students: {studentsError.message}</div>;
-  }
-
-  if (programsError) {
-    return <div>Error loading programs: {programsError.message}</div>;
-  }
-
-  if (coursesError) {
-    return <div>Error loading courses: {coursesError.message}</div>;
   }
 
   const totalPages = count ? Math.ceil(count / ITEMS_PER_PAGE) : 0;
@@ -107,7 +96,7 @@ export default async function StudentsPage({
       />
       {/* Import from Google Sheets button at bottom */}
       <div className="mt-10">
-        <StudentImportButton />
+        <StudentImportButton programs={programs} coursePlacements={courses} />
       </div>
     </div>
   );

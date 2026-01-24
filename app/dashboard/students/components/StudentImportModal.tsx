@@ -10,31 +10,36 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Constants } from "@/lib/schema";
+import type { LookupItem } from "@/lib/lookup-data";
 import React, { useState } from "react";
-
-type ProgramEnum = (typeof Constants.public.Enums.program_enum)[number];
-type CoursePlacementEnum = (typeof Constants.public.Enums.course_placement_enum)[number];
 
 interface StudentImportModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onFileSelect: (file: File, program: ProgramEnum, coursePlacement: CoursePlacementEnum | null) => void;
+  onFileSelect: (file: File, programId: string, programName: string, coursePlacementId: string | null) => void;
+  programs: LookupItem[];
+  coursePlacements: LookupItem[];
 }
 
-export function StudentImportModal({ open, onOpenChange, onFileSelect }: StudentImportModalProps) {
-  const [selectedProgram, setSelectedProgram] = useState<ProgramEnum | "">("");
-  const [selectedCoursePlacement, setSelectedCoursePlacement] = useState<CoursePlacementEnum | "">("");
+export function StudentImportModal({
+  open,
+  onOpenChange,
+  onFileSelect,
+  programs,
+  coursePlacements,
+}: StudentImportModalProps) {
+  const [selectedProgramId, setSelectedProgramId] = useState<string>("");
+  const [selectedCoursePlacementId, setSelectedCoursePlacementId] = useState<string>("");
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const programs = Constants.public.Enums.program_enum;
-  const coursePlacements = Constants.public.Enums.course_placement_enum;
+  // Find the selected program to check if it's HCP
+  const selectedProgram = programs.find((p) => p.id === selectedProgramId);
 
   // For HCP, course placement is not required (will be read from CSV)
   // For ESOL, course placement is required
-  const isHCP = selectedProgram === "HCP";
-  const canChooseFile = selectedProgram !== "" && (isHCP || selectedCoursePlacement !== "");
+  const isHCP = selectedProgram?.name === "HCP";
+  const canChooseFile = selectedProgramId !== "" && (isHCP || selectedCoursePlacementId !== "");
 
   const handleChooseFile = () => {
     fileInputRef.current?.click();
@@ -42,17 +47,17 @@ export function StudentImportModal({ open, onOpenChange, onFileSelect }: Student
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file && selectedProgram !== "") {
+    if (file && selectedProgramId !== "" && selectedProgram) {
       // For HCP, pass null for coursePlacement (will be read from CSV)
-      // For ESOL, pass the selected coursePlacement
-      const coursePlacement = isHCP ? null : (selectedCoursePlacement as CoursePlacementEnum);
-      if (!isHCP && !coursePlacement) {
+      // For ESOL, pass the selected coursePlacement ID
+      const coursePlacementId = isHCP ? null : selectedCoursePlacementId;
+      if (!isHCP && !coursePlacementId) {
         return; // ESOL requires course placement
       }
-      onFileSelect(file, selectedProgram, coursePlacement);
+      onFileSelect(file, selectedProgramId, selectedProgram.name, coursePlacementId);
       // Reset form
-      setSelectedProgram("");
-      setSelectedCoursePlacement("");
+      setSelectedProgramId("");
+      setSelectedCoursePlacementId("");
       onOpenChange(false);
     }
     // Reset file input
@@ -62,8 +67,8 @@ export function StudentImportModal({ open, onOpenChange, onFileSelect }: Student
   };
 
   const handleCancel = () => {
-    setSelectedProgram("");
-    setSelectedCoursePlacement("");
+    setSelectedProgramId("");
+    setSelectedCoursePlacementId("");
     onOpenChange(false);
   };
 
@@ -85,11 +90,11 @@ export function StudentImportModal({ open, onOpenChange, onFileSelect }: Student
                 Program
               </label>
               <Select
-                value={selectedProgram ?? undefined}
+                value={selectedProgramId || undefined}
                 onValueChange={(value) => {
-                  setSelectedProgram(value as ProgramEnum);
+                  setSelectedProgramId(value);
                   // Reset course placement when program changes
-                  setSelectedCoursePlacement("");
+                  setSelectedCoursePlacementId("");
                 }}
               >
                 <SelectTrigger id="program">
@@ -97,8 +102,8 @@ export function StudentImportModal({ open, onOpenChange, onFileSelect }: Student
                 </SelectTrigger>
                 <SelectContent>
                   {programs.map((program) => (
-                    <SelectItem key={program} value={program}>
-                      {program}
+                    <SelectItem key={program.id} value={program.id}>
+                      {program.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -110,16 +115,16 @@ export function StudentImportModal({ open, onOpenChange, onFileSelect }: Student
                   Course Placement
                 </label>
                 <Select
-                  value={selectedCoursePlacement ?? undefined}
-                  onValueChange={(value) => setSelectedCoursePlacement(value as CoursePlacementEnum)}
+                  value={selectedCoursePlacementId || undefined}
+                  onValueChange={(value) => setSelectedCoursePlacementId(value)}
                 >
                   <SelectTrigger id="course-placement">
                     <SelectValue placeholder="Select Course Placement" />
                   </SelectTrigger>
                   <SelectContent>
                     {coursePlacements.map((placement) => (
-                      <SelectItem key={placement} value={placement}>
-                        {placement}
+                      <SelectItem key={placement.id} value={placement.id}>
+                        {placement.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
