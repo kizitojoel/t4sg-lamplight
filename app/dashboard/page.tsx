@@ -1,13 +1,10 @@
 import { TypographyH2, TypographyP } from "@/components/ui/typography";
-import { createServerSupabaseClient } from "@/lib/server-utils";
+import { getAuthenticatedUser } from "@/lib/server-utils";
 import { redirect } from "next/navigation";
 
 export default async function Dashboard() {
-  // Create supabase server component client and obtain user session from Supabase Auth
-  const supabase = createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Use cached function to get user efficiently
+  const user = await getAuthenticatedUser();
 
   if (!user) {
     // this is a protected route - only users who are signed in can view this route

@@ -21,51 +21,32 @@ export async function middleware(request: NextRequest) {
   const isPublicPath = publicPaths.some((path) => pathname.startsWith(path));
 
   // First, refresh the session (this updates cookies)
-  const response = await updateSession(request);
+  // We get the user and supabase client back to avoid re-fetching
+  const { response, user, supabase } = await updateSession(request);
 
   // If on a public path, skip allowlist check
   if (isPublicPath) {
     return response;
   }
 
-  // Create a supabase client to check allowlist (using cookies from request)
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value;
-        },
-        set() {
-          // No-op in middleware for read-only operations
-        },
-        remove() {
-          // No-op in middleware for read-only operations
-        },
-      },
-    },
-  );
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
   // If user is authenticated, check allowlist and cache role
   if (user && user.email) {
-    // Require every authenticated user to be present in allowed_emails
-    const { data: userAllowed, error: checkError } = await supabase
-      .from("allowed_emails")
-      .select("email")
-      .ilike("email", user.email)
-      .limit(1)
-      .maybeSingle();
+    // Batch both queries together for better performance
+    const [allowlistResult, profileResult] = await Promise.all([
+      supabase
+        .from("allowed_emails")
+        .select("email")
+        .ilike("email", user.email)
+        .limit(1)
+        .maybeSingle(),
+      supabase.from("profiles").select("role").eq("id", user.id).single(),
+    ]);
+
+    const { data: userAllowed, error: checkError } = allowlistResult;
+    const { data: profile } = profileResult;
 
     // If user's email is not in the allowlist, sign them out and redirect
     if (checkError || !userAllowed) {
-      // console.log("You are being signed out");
-      // console.log(checkError);
-      // console.log(userAllowed);
       // Create a client that can sign out
       const signOutClient = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -98,8 +79,6 @@ export async function middleware(request: NextRequest) {
 
     // Cache user role in response header for efficient access in server components
     // This minimizes database calls - role is queried once per request in middleware
-    const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-
     if (profile?.role) {
       response.headers.set("x-user-role", profile.role);
     }

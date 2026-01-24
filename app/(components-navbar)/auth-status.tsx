@@ -1,24 +1,16 @@
-import { createServerSupabaseClient } from "@/lib/server-utils";
-import { getUserProfile } from "@/lib/utils";
+import { getFullUserProfile } from "@/lib/server-utils";
 import LoginButton from "./login-button";
 import UserNav from "./user-nav";
 
 export default async function AuthStatus() {
-  // Create supabase server component client and obtain user session from Supabase Auth
-  const supabase = createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Use cached function to get user profile efficiently
+  const userProfile = await getFullUserProfile();
 
-  if (!user) {
+  if (!userProfile) {
     return <LoginButton />;
   }
 
-  const { profile, error } = await getUserProfile(supabase, user);
-
-  if (error) {
-    return;
-  }
+  const { profile } = userProfile;
 
   return <UserNav profile={profile} />;
 }

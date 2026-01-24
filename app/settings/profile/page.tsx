@@ -1,34 +1,17 @@
 import { Separator } from "@/components/ui/separator";
-import { createServerSupabaseClient } from "@/lib/server-utils";
-import { getUserProfile } from "@/lib/utils";
+import { getFullUserProfile } from "@/lib/server-utils";
 import { redirect } from "next/navigation";
 import ProfileForm from "./profile-form";
 
-function SettingsError({ message }: { message: string }) {
-  return (
-    <>
-      <h3 className="text-lg font-medium">Error</h3>
-      <p>{message}</p>
-    </>
-  );
-}
-
 export default async function Settings() {
-  const supabase = createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const userProfile = await getFullUserProfile();
 
-  if (!user) {
+  if (!userProfile) {
     // this is a protected route - only users who are signed in can view this route
     redirect("/");
   }
 
-  const { profile, error } = await getUserProfile(supabase, user);
-
-  if (error) {
-    return <SettingsError message={error.message} />;
-  }
+  const { profile } = userProfile;
 
   return (
     <>

@@ -8,6 +8,9 @@ export const env = createEnv({
    */
   server: {
     NODE_ENV: z.enum(["development", "test", "production"]),
+    SUPABASE_PROJECT_REF: z.string().optional(),
+    SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID: z.string().optional(),
+    SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET: z.string().optional(),
   },
 
   /**

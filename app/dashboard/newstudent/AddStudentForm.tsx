@@ -13,6 +13,12 @@ import { toast } from "@/components/ui/use-toast";
 import { useRouter } from "next/navigation";
 import { useState, type BaseSyntheticEvent, type MouseEvent } from "react";
 
+// Props interface for lookup data from server
+interface AddStudentFormProps {
+  programs: { id: string; name: string }[];
+  courses: { id: string; name: string }[];
+}
+
 const addStudentFormSchema = z.object({
   legal_first_name: z
     .string()
@@ -57,10 +63,7 @@ const addStudentFormSchema = z.object({
     })
     .nullable()
     .transform((val) => val ?? null),
-  gender: z
-    .string()
-    .nullable()
-    .transform((val) => (val?.trim() === "" ? null : (val?.trim() ?? null))),
+  gender: z.enum(["Male", "Female", "Non-binary", "Other", "Prefer not to say"]).nullable(),
   address_street: z
     .string()
     .nullable()
@@ -97,30 +100,20 @@ const addStudentFormSchema = z.object({
     .transform((val) => (val?.trim() === "" ? null : (val?.trim() ?? null))),
   race: z.string().nullable().optional(),
   ethnicity_hispanic_latino: z.boolean().nullable(),
-  course_placement: z.enum([
-    "ESOL Beginner L1 part 1",
-    "ESOL Beginner L1 part 2",
-    "ESOL Beginner L1 part 3",
-    "ESOL L2 part 1",
-    "ESOL L2 part 2",
-    "ESOL L2 part 3",
-    "ESOL Intermediate part 1",
-    "ESOL Intermediate part 2",
-    "ESOL Intermediate part 3",
-    "HCP English Pre-TEAS part 1",
-    "HCP English Pre-TEAS part 2",
-    "HCP English TEAS",
-    "HCP Math TEAS",
-    "Other",
-  ]),
-  program: z.enum(["ESOL", "HCP"]),
+  // Use IDs for lookup tables
+  program_id: z.string().min(1, { message: "Program is required." }),
+  course_placement_id: z.string().min(1, { message: "Course placement is required." }),
   enrollment_status: z.enum(["active", "inactive"]).optional(),
 });
 
 type AddStudentFormValues = z.infer<typeof addStudentFormSchema>;
 
-export default function AddStudentForm() {
+export default function AddStudentForm({ programs, courses }: AddStudentFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Get default IDs from the first items in lookup tables
+  const defaultProgramId = programs[0]?.id ?? "";
+  const defaultCourseId = courses[0]?.id ?? "";
 
   // Default values for the form fields - all empty for new student
   const defaultValues = {
@@ -140,8 +133,8 @@ export default function AddStudentForm() {
     native_language: null,
     race: null,
     ethnicity_hispanic_latino: null,
-    course_placement: "ESOL Beginner L1 part 1" as const,
-    program: "ESOL" as const,
+    program_id: defaultProgramId,
+    course_placement_id: defaultCourseId,
     enrollment_status: "active" as const,
   };
 
@@ -159,10 +152,50 @@ export default function AddStudentForm() {
     try {
       const supabase = createBrowserSupabaseClient();
 
+      // Look up the names for the selected IDs to populate the enum columns
+      // (Required until database schema is updated to remove enum columns)
+      const selectedProgram = programs.find((p) => p.id === _data.program_id);
+      const selectedCourse = courses.find((c) => c.id === _data.course_placement_id);
+
       // Transform the data to match database schema
       const transformedData = {
-        ..._data,
+        legal_first_name: _data.legal_first_name,
+        legal_last_name: _data.legal_last_name,
+        preferred_name: _data.preferred_name,
+        email: _data.email,
+        phone: _data.phone,
+        age: _data.age,
+        gender: _data.gender,
+        address_street: _data.address_street,
+        address_city: _data.address_city,
+        address_state: _data.address_state,
+        address_zip: _data.address_zip,
+        country_of_birth: _data.country_of_birth,
+        language_spoken_at_home: _data.language_spoken_at_home,
+        native_language: _data.native_language,
         race: _data.race ? [_data.race] : null,
+        ethnicity_hispanic_latino: _data.ethnicity_hispanic_latino,
+        enrollment_status: _data.enrollment_status,
+        // Set both ID and enum columns for backwards compatibility
+        program_id: _data.program_id,
+        course_placement_id: _data.course_placement_id,
+        // These are still required by the database schema
+        program: selectedProgram?.name as "ESOL" | "HCP",
+        course_placement: selectedCourse?.name as
+          | "ESOL Beginner L1 part 1"
+          | "ESOL Beginner L1 part 2"
+          | "ESOL Beginner L1 part 3"
+          | "ESOL L2 part 1"
+          | "ESOL L2 part 2"
+          | "ESOL L2 part 3"
+          | "ESOL Intermediate part 1"
+          | "ESOL Intermediate part 2"
+          | "ESOL Intermediate part 3"
+          | "HCP English Pre-TEAS part 1"
+          | "HCP English Pre-TEAS part 2"
+          | "HCP English TEAS"
+          | "HCP Math TEAS"
+          | "Other",
       };
 
       const { error } = await supabase.from("students").insert(transformedData);
@@ -178,12 +211,11 @@ export default function AddStudentForm() {
       // Reset form to default values
       form.reset(defaultValues);
 
-      // Navigate back to dashboard
-      router.push("/dashboard");
+      // Navigate back to students list
+      router.push("/dashboard/students");
 
       return toast({
-        title: "Student form submitted!",
-        description: "Form data logged to console (database save disabled).",
+        title: "Student added successfully!",
       });
     } catch {
       return toast({
@@ -310,9 +342,20 @@ export default function AddStudentForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Gender</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter gender" {...field} value={field.value ?? ""} />
-                  </FormControl>
+                  <Select onValueChange={field.onChange} value={field.value ?? undefined}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select gender" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Male">Male</SelectItem>
+                      <SelectItem value="Female">Female</SelectItem>
+                      <SelectItem value="Non-binary">Non-binary</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                      <SelectItem value="Prefer not to say">Prefer not to say</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -489,19 +532,22 @@ export default function AddStudentForm() {
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <FormField
               control={form.control}
-              name="program"
+              name="program_id"
               render={({ field }) => (
                 <FormItem className="max-w-xs">
                   <FormLabel>Program *</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select program" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent side="bottom" position="popper" sideOffset={4} avoidCollisions={false}>
-                      <SelectItem value="ESOL">ESOL</SelectItem>
-                      <SelectItem value="HCP">HCP</SelectItem>
+                      {programs.map((program) => (
+                        <SelectItem key={program.id} value={program.id}>
+                          {program.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -534,11 +580,11 @@ export default function AddStudentForm() {
 
           <FormField
             control={form.control}
-            name="course_placement"
+            name="course_placement_id"
             render={({ field }) => (
               <FormItem className="max-w-md">
                 <FormLabel>Course Placement *</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select course placement" />
@@ -551,20 +597,11 @@ export default function AddStudentForm() {
                     avoidCollisions={false}
                     collisionPadding={100}
                   >
-                    <SelectItem value="ESOL Beginner L1 part 1">ESOL Beginner L1 part 1</SelectItem>
-                    <SelectItem value="ESOL Beginner L1 part 2">ESOL Beginner L1 part 2</SelectItem>
-                    <SelectItem value="ESOL Beginner L1 part 3">ESOL Beginner L1 part 3</SelectItem>
-                    <SelectItem value="ESOL L2 part 1">ESOL L2 part 1</SelectItem>
-                    <SelectItem value="ESOL L2 part 2">ESOL L2 part 2</SelectItem>
-                    <SelectItem value="ESOL L2 part 3">ESOL L2 part 3</SelectItem>
-                    <SelectItem value="ESOL Intermediate part 1">ESOL Intermediate part 1</SelectItem>
-                    <SelectItem value="ESOL Intermediate part 2">ESOL Intermediate part 2</SelectItem>
-                    <SelectItem value="ESOL Intermediate part 3">ESOL Intermediate part 3</SelectItem>
-                    <SelectItem value="HCP English Pre-TEAS part 1">HCP English Pre-TEAS part 1</SelectItem>
-                    <SelectItem value="HCP English Pre-TEAS part 2">HCP English Pre-TEAS part 2</SelectItem>
-                    <SelectItem value="HCP English TEAS">HCP English TEAS</SelectItem>
-                    <SelectItem value="HCP Math TEAS">HCP Math TEAS</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
+                    {courses.map((course) => (
+                      <SelectItem key={course.id} value={course.id}>
+                        {course.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />

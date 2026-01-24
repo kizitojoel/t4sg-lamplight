@@ -348,14 +348,16 @@ export default function AdvisingForm({ student }: { student: Student }) {
 
       <div>
         {Array.isArray(student.advising_comments) && student.advising_comments
-          ? student.advising_comments.map((comment, index) => (
-              <div key={index} className="mt-2 flex">
-                <Comment comment={comment}></Comment>
-                <Button className="mr-1 ml-1" onClick={() => void deleteComment(index)} variant="destructive">
-                  Delete
-                </Button>
-              </div>
-            ))
+          ? student.advising_comments
+              .filter((comment) => comment !== null && typeof comment === "object" && !Array.isArray(comment))
+              .map((comment, index) => (
+                <div key={index} className="mt-2 flex">
+                  <Comment comment={comment as Record<string, unknown>}></Comment>
+                  <Button className="mr-1 ml-1" onClick={() => void deleteComment(index)} variant="destructive">
+                    Delete
+                  </Button>
+                </div>
+              ))
           : "Comments are not in the right format!"}
       </div>
     </>
