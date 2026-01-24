@@ -51,11 +51,6 @@ export async function GET(request: Request) {
 
       if (!allowedEmail) {
         await supabase.auth.signOut();
-
-        console.log("You are being signed out");
-        console.log(allowedEmail);
-
-        // This is where I'm being signed out, so my email is not on the
         return NextResponse.redirect(`${origin}/auth/not-allowed`);
       }
 

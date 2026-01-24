@@ -158,17 +158,17 @@ export async function updateSession(request: NextRequest) {
 }
 
 // Type definitions for role helpers
-type UserWithRole = {
+interface UserWithRole {
   user: { id: string; email: string | undefined };
   profile: { id: string; email: string; role: "admin" | "teacher" };
   role: "admin" | "teacher";
-};
+}
 
-type AdminContext = {
+interface AdminContext {
   supabase: ReturnType<typeof createServerSupabaseClient>;
   user: { id: string; email: string | undefined };
   profile: { id: string; email: string; role: "admin" };
-};
+}
 
 /**
  * Gets user and profile with role in a single optimized query.
@@ -252,7 +252,7 @@ export async function requireAdminAPI(): Promise<AdminContext | NextResponse> {
   } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    return NextResponse.json({ error: authError?.message || "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: authError?.message ?? "Unauthorized" }, { status: 401 });
   }
 
   const { data: profile, error: profileError } = await supabase
@@ -262,7 +262,7 @@ export async function requireAdminAPI(): Promise<AdminContext | NextResponse> {
     .single();
 
   if (profileError || !profile) {
-    return NextResponse.json({ error: profileError?.message || "Profile not found" }, { status: 403 });
+    return NextResponse.json({ error: profileError?.message ?? "Profile not found" }, { status: 403 });
   }
 
   if (profile.role !== "admin") {

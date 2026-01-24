@@ -1,14 +1,15 @@
-import { createServerSupabaseClient, requireAdminAPI } from "@/lib/server-utils";
+import type { createServerSupabaseClient } from "@/lib/server-utils";
+import { requireAdminAPI } from "@/lib/server-utils";
 import { NextResponse } from "next/server";
 
 type JsonResponse = { error?: string } | { data?: unknown };
 
-type AdminContext = {
-  supabase: ReturnType<typeof import("@/lib/server-utils").createServerSupabaseClient>;
+interface AdminContext {
+  supabase: ReturnType<typeof createServerSupabaseClient>;
   user: { id: string };
   profile: { id: string; email: string; role: "admin" };
   emailLower: string; // Pre-computed lowercase email for performance
-};
+}
 
 /**
  * Validates admin access and returns admin context or error response
@@ -150,7 +151,7 @@ export async function POST(request: Request) {
   const profileUpdate = await updateProfileRole(supabase, email, role);
   if (profileUpdate.error) {
     // Log error but don't fail the request since allowed_email was created successfully
-    console.error("Failed to update profile role:", profileUpdate.error);
+    // Consider surfaced logging later if needed
   }
 
   return NextResponse.json({ data: { email, role } } satisfies JsonResponse, { status: 201 });
