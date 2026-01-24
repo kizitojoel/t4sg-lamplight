@@ -1,39 +1,46 @@
 import { SidebarNav } from "@/components/global/sidebar-nav";
 import { Separator } from "@/components/ui/separator";
 import { PageHeader1, PageSubHeader1 } from "@/components/ui/typography";
-import { createServerSupabaseClient } from "@/lib/server-utils";
+import { getUserRole } from "@/lib/server-utils";
 import { redirect } from "next/navigation";
-
-const sidebarNavItems = [
-  {
-    title: "General",
-    href: "/settings/general",
-  },
-  {
-    title: "Profile",
-    href: "/settings/profile",
-  },
-  {
-    title: "Admin",
-    href: "/settings/admin",
-  },
-];
 
 interface SettingsLayoutProps {
   children: React.ReactNode;
 }
 
 export default async function SettingsLayout({ children }: SettingsLayoutProps) {
-  // Create supabase server component client and obtain user session from Supabase Auth
-  const supabase = createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Get user role efficiently (checks cached header first, then DB)
+  const role = await getUserRole();
 
-  if (!user) {
+  if (!role) {
     // this is a protected route - only users who are signed in can view this route
     redirect("/");
   }
+
+  const isAdmin = role === "admin";
+
+  const sidebarNavItems = [
+    {
+      title: "General",
+      href: "/settings/general",
+    },
+    {
+      title: "Profile",
+      href: "/settings/profile",
+    },
+    {
+      title: "Admin",
+      href: "/settings/admin",
+    },
+    ...(isAdmin
+      ? [
+          {
+            title: "Permissions",
+            href: "/settings/permissions",
+          },
+        ]
+      : []),
+  ];
 
   return (
     <>
@@ -43,10 +50,10 @@ export default async function SettingsLayout({ children }: SettingsLayoutProps) 
       </div>
       <Separator className="my-6" />
       <div className="flex flex-col space-y-8 lg:flex-row lg:space-y-0 lg:space-x-12">
-        <aside className="lg:w-1/5">
+        <aside className="relative z-10 -mx-4 mb-8 lg:static lg:mx-0 lg:mr-12 lg:mb-0 lg:w-1/5">
           <SidebarNav items={sidebarNavItems} />
         </aside>
-        <div className="flex-1 lg:max-w-2xl">{children}</div>
+        <div className="z-0 ml-0 flex-1 lg:ml-0 lg:max-w-2xl">{children}</div>
       </div>
     </>
   );

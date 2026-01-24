@@ -3,7 +3,8 @@ import "server-only";
 // For more info on how to avoid poisoning your server/client components: https://www.youtube.com/watch?v=BZlwtR9pDp4
 import { env } from "@/env.mjs";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
-import { cookies as nextCookies } from "next/headers";
+import { headers, cookies as nextCookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { NextResponse, type NextRequest } from "next/server";
 import { type Database } from "./schema";
 
@@ -154,4 +155,123 @@ export async function updateSession(request: NextRequest) {
   await supabase.auth.getUser();
 
   return response;
+}
+
+// Type definitions for role helpers
+interface UserWithRole {
+  user: { id: string; email: string | undefined };
+  profile: { id: string; email: string; role: "admin" | "teacher" };
+  role: "admin" | "teacher";
+}
+
+interface AdminContext {
+  supabase: ReturnType<typeof createServerSupabaseClient>;
+  user: { id: string; email: string | undefined };
+  profile: { id: string; email: string; role: "admin" };
+}
+
+/**
+ * Gets user and profile with role in a single optimized query.
+ * Returns null if user is not authenticated or profile doesn't exist.
+ */
+export async function getUserWithRole(): Promise<UserWithRole | null> {
+  const supabase = createServerSupabaseClient();
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return null;
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("id, email, role")
+    .eq("id", user.id)
+    .single();
+
+  if (profileError || !profile) {
+    return null;
+  }
+
+  return {
+    user: { id: user.id, email: user.email },
+    profile,
+    role: profile.role,
+  };
+}
+
+/**
+ * Gets user role efficiently by checking cached header first, then falling back to DB.
+ * Returns null if user is not authenticated or profile doesn't exist.
+ */
+export async function getUserRole(): Promise<"admin" | "teacher" | null> {
+  // First, try to read from cached header (set by middleware)
+  const headersList = await headers();
+  const cachedRole = headersList.get("x-user-role");
+  if (cachedRole === "admin" || cachedRole === "teacher") {
+    return cachedRole;
+  }
+
+  // Fallback to database query if header not available
+  const userWithRole = await getUserWithRole();
+  return userWithRole?.role ?? null;
+}
+
+/**
+ * Requires admin access for pages. Redirects to home if not admin.
+ * Returns admin context if user is admin.
+ */
+export async function requireAdmin(): Promise<AdminContext> {
+  const userWithRole = await getUserWithRole();
+
+  if (!userWithRole || userWithRole.role !== "admin") {
+    redirect("/");
+  }
+
+  const supabase = createServerSupabaseClient();
+  return {
+    supabase,
+    user: userWithRole.user,
+    profile: userWithRole.profile as AdminContext["profile"],
+  };
+}
+
+/**
+ * Requires admin access for API routes. Returns error response if not admin.
+ * Returns admin context if user is admin.
+ */
+export async function requireAdminAPI(): Promise<AdminContext | NextResponse> {
+  const supabase = createServerSupabaseClient();
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return NextResponse.json({ error: authError?.message ?? "Unauthorized" }, { status: 401 });
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("id, email, role")
+    .eq("id", user.id)
+    .single();
+
+  if (profileError || !profile) {
+    return NextResponse.json({ error: profileError?.message ?? "Profile not found" }, { status: 403 });
+  }
+
+  if (profile.role !== "admin") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  return {
+    supabase,
+    user: { id: user.id, email: user.email },
+    profile: profile as AdminContext["profile"],
+  };
 }

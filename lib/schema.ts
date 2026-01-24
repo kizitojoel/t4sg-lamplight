@@ -1,11 +1,5 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
-export type Comment = {
-  author: string;
-  timestamp: string;
-  comment_body: string;
-};
-
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
@@ -14,6 +8,38 @@ export type Database = {
   };
   public: {
     Tables: {
+      allowed_emails: {
+        Row: {
+          created_at: string;
+          created_by: string | null;
+          email: string;
+          id: number;
+          role: Database["public"]["Enums"]["role"];
+        };
+        Insert: {
+          created_at?: string;
+          created_by?: string | null;
+          email: string;
+          id?: number;
+          role?: Database["public"]["Enums"]["role"];
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string | null;
+          email?: string;
+          id?: number;
+          role?: Database["public"]["Enums"]["role"];
+        };
+        Relationships: [
+          {
+            foreignKeyName: "allowed_emails_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       assessment_results: {
         Row: {
           assessment_id: string;
@@ -66,23 +92,41 @@ export type Database = {
       assessments: {
         Row: {
           active: boolean;
+          course_id: string | null;
           created_at: string;
           id: string;
           name: string;
         };
         Insert: {
           active?: boolean;
+          course_id?: string | null;
           created_at?: string;
           id?: string;
           name: string;
         };
         Update: {
           active?: boolean;
+          course_id?: string | null;
           created_at?: string;
           id?: string;
           name?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "assessments_course_id_fkey";
+            columns: ["course_id"];
+            isOneToOne: false;
+            referencedRelation: "course_placement";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fk_course_id";
+            columns: ["course_id"];
+            isOneToOne: false;
+            referencedRelation: "course_placement";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       course_placement: {
         Row: {
@@ -170,18 +214,35 @@ export type Database = {
       };
       sessions: {
         Row: {
+          course_placement_id: string | null;
           created_at: string;
           id: number;
+          quarter: Database["public"]["Enums"]["quarter_enum"];
+          year: number;
         };
         Insert: {
+          course_placement_id?: string | null;
           created_at?: string;
           id?: number;
+          quarter: Database["public"]["Enums"]["quarter_enum"];
+          year: number;
         };
         Update: {
+          course_placement_id?: string | null;
           created_at?: string;
           id?: number;
+          quarter?: Database["public"]["Enums"]["quarter_enum"];
+          year?: number;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "sessions_course_placement_id_fkey";
+            columns: ["course_placement_id"];
+            isOneToOne: false;
+            referencedRelation: "course_placement";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       students: {
         Row: {
@@ -189,7 +250,7 @@ export type Database = {
           address_state: string | null;
           address_street: string | null;
           address_zip: string | null;
-          advising_comments: Comment[];
+          advising_comments: Json;
           age: number | null;
           class_time_availability: string | null;
           computer_access: string | null;
@@ -238,7 +299,7 @@ export type Database = {
           address_state?: string | null;
           address_street?: string | null;
           address_zip?: string | null;
-          advising_comments?: Comment[];
+          advising_comments?: Json;
           age?: number | null;
           class_time_availability?: string | null;
           computer_access?: string | null;
@@ -287,7 +348,7 @@ export type Database = {
           address_state?: string | null;
           address_street?: string | null;
           address_zip?: string | null;
-          advising_comments?: Comment[];
+          advising_comments?: Json;
           age?: number | null;
           class_time_availability?: string | null;
           computer_access?: string | null;
@@ -381,6 +442,7 @@ export type Database = {
       enrollment_status_enum: "active" | "inactive";
       gender: "Male" | "Female" | "Non-binary" | "Other" | "Prefer not to say";
       program_enum: "ESOL" | "HCP";
+      quarter_enum: "Fall" | "Winter" | "Spring" | "Summer";
       role: "admin" | "teacher";
       states:
         | "AL"
@@ -571,6 +633,7 @@ export const Constants = {
       enrollment_status_enum: ["active", "inactive"],
       gender: ["Male", "Female", "Non-binary", "Other", "Prefer not to say"],
       program_enum: ["ESOL", "HCP"],
+      quarter_enum: ["Fall", "Winter", "Spring", "Summer"],
       role: ["admin", "teacher"],
       states: [
         "AL",

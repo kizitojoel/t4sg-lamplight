@@ -114,20 +114,16 @@ export default function StudentsTable({
               })
               .join("; ");
           }
-          // Handle booleans
           if (typeof value === "boolean") {
             return value ? "Yes" : "No";
           }
-          // Handle null/undefined
-          if (value == null) {
-            return "";
+          if (value && typeof value === "object") {
+            return JSON.stringify(value);
           }
-          // Handle primitives
-          if (typeof value === "string" || typeof value === "number") {
+          if (typeof value === "number" || typeof value === "string") {
             return String(value);
           }
-          // For objects, use JSON.stringify to avoid [object Object]
-          return JSON.stringify(value);
+          return "";
         }),
       );
 
