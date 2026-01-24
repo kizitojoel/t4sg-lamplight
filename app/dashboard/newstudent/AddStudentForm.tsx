@@ -103,7 +103,6 @@ const addStudentFormSchema = z.object({
   // Use IDs for lookup tables
   program_id: z.string().min(1, { message: "Program is required." }),
   course_placement_id: z.string().min(1, { message: "Course placement is required." }),
-  enrollment_status: z.enum(["active", "inactive"]).optional(),
 });
 
 type AddStudentFormValues = z.infer<typeof addStudentFormSchema>;
@@ -135,7 +134,6 @@ export default function AddStudentForm({ programs, courses }: AddStudentFormProp
     ethnicity_hispanic_latino: null,
     program_id: defaultProgramId,
     course_placement_id: defaultCourseId,
-    enrollment_status: "active" as const,
   };
 
   const form = useForm<AddStudentFormValues>({
@@ -171,7 +169,6 @@ export default function AddStudentForm({ programs, courses }: AddStudentFormProp
         native_language: _data.native_language,
         race: _data.race ? [_data.race] : null,
         ethnicity_hispanic_latino: _data.ethnicity_hispanic_latino,
-        enrollment_status: _data.enrollment_status,
         program_id: _data.program_id,
         course_placement_id: _data.course_placement_id,
       };
@@ -507,54 +504,30 @@ export default function AddStudentForm({ programs, courses }: AddStudentFormProp
         <div className="space-y-6">
           <h2 className="text-xl font-semibold">Program Information</h2>
 
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <FormField
-              control={form.control}
-              name="program_id"
-              render={({ field }) => (
-                <FormItem className="max-w-xs">
-                  <FormLabel>Program *</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select program" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent side="bottom" position="popper" sideOffset={4} avoidCollisions={false}>
-                      {programs.map((program) => (
-                        <SelectItem key={program.id} value={program.id}>
-                          {program.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="enrollment_status"
-              render={({ field }) => (
-                <FormItem className="max-w-xs">
-                  <FormLabel>Enrollment Status</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select enrollment status" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent side="bottom" position="popper" sideOffset={4} avoidCollisions={false}>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+          <FormField
+            control={form.control}
+            name="program_id"
+            render={({ field }) => (
+              <FormItem className="max-w-xs">
+                <FormLabel>Program *</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select program" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent side="bottom" position="popper" sideOffset={4} avoidCollisions={false}>
+                    {programs.map((program) => (
+                      <SelectItem key={program.id} value={program.id}>
+                        {program.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
           <FormField
             control={form.control}

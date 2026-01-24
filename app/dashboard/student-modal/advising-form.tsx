@@ -15,10 +15,7 @@ import { redirect, useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type BaseSyntheticEvent } from "react";
 import Comment from "./comments";
 
-const enrollment_statuses = z.enum(["active", "inactive"]);
-
 const advisingSchema = z.object({
-  enrollment_status: enrollment_statuses,
   course_placement: z.string().nullable(),
   program: z.string().nullable(),
 });
@@ -69,7 +66,6 @@ export default function AdvisingForm({ student }: { student: Student }) {
   }, [supabase]);
 
   const defaultValues = {
-    enrollment_status: student.enrollment_status ?? "inactive",
     course_placement: student.course_placement_id,
     program: student.program_id,
   };
@@ -85,7 +81,6 @@ export default function AdvisingForm({ student }: { student: Student }) {
     const { error } = await supabase
       .from("students")
       .update({
-        enrollment_status: data.enrollment_status,
         course_placement_id: data.course_placement,
         program_id: data.program,
       })
@@ -242,38 +237,6 @@ export default function AdvisingForm({ student }: { student: Student }) {
             );
           }}
         /> */}
-          <FormField
-            control={form.control}
-            name="enrollment_status"
-            render={({ field }) => {
-              return (
-                <FormItem>
-                  <FormLabel>Enrollment Status</FormLabel>
-                  <Select
-                    onValueChange={(value) => field.onChange(enrollment_statuses.parse(value))}
-                    value={field.value}
-                    disabled={!editing}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select enrollment status" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectGroup>
-                        {enrollment_statuses.options.map((status, index) => (
-                          <SelectItem key={index} value={status}>
-                            {status}
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              );
-            }}
-          />
           <FormField
             control={form.control}
             name="program"

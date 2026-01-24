@@ -45,6 +45,7 @@ export type Database = {
           assessment_id: string;
           course_offering_id: string | null;
           created_at: string;
+          enrollment_id: string | null;
           id: string;
           score: number | null;
           student_id: string;
@@ -53,6 +54,7 @@ export type Database = {
           assessment_id: string;
           course_offering_id?: string | null;
           created_at?: string;
+          enrollment_id?: string | null;
           id?: string;
           score?: number | null;
           student_id: string;
@@ -61,6 +63,7 @@ export type Database = {
           assessment_id?: string;
           course_offering_id?: string | null;
           created_at?: string;
+          enrollment_id?: string | null;
           id?: string;
           score?: number | null;
           student_id?: string;
@@ -78,6 +81,13 @@ export type Database = {
             columns: ["course_offering_id"];
             isOneToOne: false;
             referencedRelation: "course_placement";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "assessment_results_enrollment_id_fkey";
+            columns: ["enrollment_id"];
+            isOneToOne: false;
+            referencedRelation: "enrollments";
             referencedColumns: ["id"];
           },
           {
@@ -167,6 +177,67 @@ export type Database = {
         };
         Relationships: [];
       };
+      enrollments: {
+        Row: {
+          created_at: string;
+          ended_at: string | null;
+          enrolled_at: string;
+          id: string;
+          is_current: boolean;
+          notes: string | null;
+          session_id: number;
+          status: Database["public"]["Enums"]["enrollment_status_enum"];
+          student_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          ended_at?: string | null;
+          enrolled_at?: string;
+          id?: string;
+          is_current?: boolean;
+          notes?: string | null;
+          session_id: number;
+          status?: Database["public"]["Enums"]["enrollment_status_enum"];
+          student_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          ended_at?: string | null;
+          enrolled_at?: string;
+          id?: string;
+          is_current?: boolean;
+          notes?: string | null;
+          session_id?: number;
+          status?: Database["public"]["Enums"]["enrollment_status_enum"];
+          student_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "enrollments_session_id_fkey";
+            columns: ["session_id"];
+            isOneToOne: false;
+            referencedRelation: "sessions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "enrollments_session_id_fkey";
+            columns: ["session_id"];
+            isOneToOne: false;
+            referencedRelation: "sessions_with_details";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "enrollments_student_id_fkey";
+            columns: ["student_id"];
+            isOneToOne: false;
+            referencedRelation: "students";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       profiles: {
         Row: {
           biography: string | null;
@@ -216,22 +287,34 @@ export type Database = {
         Row: {
           course_placement_id: string | null;
           created_at: string;
+          end_date: string | null;
           id: number;
           quarter: Database["public"]["Enums"]["quarter_enum"];
+          start_date: string | null;
+          status: Database["public"]["Enums"]["session_status_enum"] | null;
+          updated_at: string | null;
           year: number;
         };
         Insert: {
           course_placement_id?: string | null;
           created_at?: string;
+          end_date?: string | null;
           id?: number;
           quarter: Database["public"]["Enums"]["quarter_enum"];
+          start_date?: string | null;
+          status?: Database["public"]["Enums"]["session_status_enum"] | null;
+          updated_at?: string | null;
           year: number;
         };
         Update: {
           course_placement_id?: string | null;
           created_at?: string;
+          end_date?: string | null;
           id?: number;
           quarter?: Database["public"]["Enums"]["quarter_enum"];
+          start_date?: string | null;
+          status?: Database["public"]["Enums"]["session_status_enum"] | null;
+          updated_at?: string | null;
           year?: number;
         };
         Relationships: [
@@ -263,7 +346,6 @@ export type Database = {
           education_location: string | null;
           email: string | null;
           employment: string | null;
-          enrollment_status: Database["public"]["Enums"]["enrollment_status_enum"] | null;
           ethnicity_hispanic_latino: boolean | null;
           gender: Database["public"]["Enums"]["gender"] | null;
           has_healthcare_certification: string | null;
@@ -309,7 +391,6 @@ export type Database = {
           education_location?: string | null;
           email?: string | null;
           employment?: string | null;
-          enrollment_status?: Database["public"]["Enums"]["enrollment_status_enum"] | null;
           ethnicity_hispanic_latino?: boolean | null;
           gender?: Database["public"]["Enums"]["gender"] | null;
           has_healthcare_certification?: string | null;
@@ -355,7 +436,6 @@ export type Database = {
           education_location?: string | null;
           email?: string | null;
           employment?: string | null;
-          enrollment_status?: Database["public"]["Enums"]["enrollment_status_enum"] | null;
           ethnicity_hispanic_latino?: boolean | null;
           gender?: Database["public"]["Enums"]["gender"] | null;
           has_healthcare_certification?: string | null;
@@ -402,16 +482,41 @@ export type Database = {
       };
     };
     Views: {
-      [_ in never]: never;
+      sessions_with_details: {
+        Row: {
+          course_name: string | null;
+          course_placement_id: string | null;
+          created_at: string | null;
+          display_name: string | null;
+          end_date: string | null;
+          enrolled_count: number | null;
+          id: number | null;
+          quarter: Database["public"]["Enums"]["quarter_enum"] | null;
+          start_date: string | null;
+          status: Database["public"]["Enums"]["session_status_enum"] | null;
+          total_enrollment_count: number | null;
+          year: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "sessions_course_placement_id_fkey";
+            columns: ["course_placement_id"];
+            isOneToOne: false;
+            referencedRelation: "course_placement";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Functions: {
       isadmin: { Args: never; Returns: boolean };
     };
     Enums: {
-      enrollment_status_enum: "active" | "inactive";
+      enrollment_status_enum: "enrolled" | "completed" | "dropped" | "withdrawn";
       gender: "Male" | "Female" | "Non-binary" | "Other" | "Prefer not to say";
       quarter_enum: "Fall" | "Winter" | "Spring" | "Summer";
       role: "admin" | "teacher";
+      session_status_enum: "upcoming" | "active" | "completed";
       states:
         | "AL"
         | "AK"
@@ -582,10 +687,11 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      enrollment_status_enum: ["active", "inactive"],
+      enrollment_status_enum: ["enrolled", "completed", "dropped", "withdrawn"],
       gender: ["Male", "Female", "Non-binary", "Other", "Prefer not to say"],
       quarter_enum: ["Fall", "Winter", "Spring", "Summer"],
       role: ["admin", "teacher"],
+      session_status_enum: ["upcoming", "active", "completed"],
       states: [
         "AL",
         "AK",

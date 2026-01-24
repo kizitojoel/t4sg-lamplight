@@ -71,3 +71,60 @@ export function createLookupMaps(data: { programs: LookupItem[]; coursePlacement
     coursePlacementMap: new Map(data.coursePlacements.map((c) => [c.id, c.name])),
   };
 }
+
+// Session types
+export type Session = {
+  id: number;
+  course_placement_id: string;
+  quarter: "Winter" | "Spring" | "Summer" | "Fall";
+  year: number;
+  status: "upcoming" | "active" | "completed";
+  start_date: string | null;
+  end_date: string | null;
+  created_at: string;
+};
+
+export type SessionWithDetails = Session & {
+  course_name: string;
+  display_name: string;
+  enrolled_count: number;
+};
+
+/**
+ * Fetches all sessions with details.
+ */
+export const getSessions = cache(async (): Promise<SessionWithDetails[]> => {
+  const supabase = createServerSupabaseClient();
+  const { data, error } = await supabase
+    .from("sessions_with_details")
+    .select("*")
+    .order("year", { ascending: false })
+    .order("quarter", { ascending: false });
+
+  if (error) {
+    console.error("Failed to fetch sessions:", error.message);
+    return [];
+  }
+
+  return (data ?? []) as SessionWithDetails[];
+});
+
+/**
+ * Fetches active sessions only.
+ */
+export const getActiveSessions = cache(async (): Promise<SessionWithDetails[]> => {
+  const supabase = createServerSupabaseClient();
+  const { data, error } = await supabase
+    .from("sessions_with_details")
+    .select("*")
+    .eq("status", "active")
+    .order("year", { ascending: false })
+    .order("quarter", { ascending: false });
+
+  if (error) {
+    console.error("Failed to fetch active sessions:", error.message);
+    return [];
+  }
+
+  return (data ?? []) as SessionWithDetails[];
+});
