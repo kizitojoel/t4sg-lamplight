@@ -25,12 +25,14 @@ export default function StudentsTable({
   students,
   programs,
   courses,
+  sessions,
   pagination,
   initialFilters,
 }: {
   students: Student[];
   programs: { id: string; name: string }[];
   courses: { id: string; name: string }[];
+  sessions: { id: number; display_name: string }[];
   pagination: {
     currentPage: number;
     totalPages: number;
@@ -40,6 +42,7 @@ export default function StudentsTable({
     query: string;
     program: string;
     course: string;
+    session: string;
   };
 }) {
   const router = useRouter();
@@ -90,6 +93,10 @@ export default function StudentsTable({
 
   const handleCourseChange = (value: string) => {
     updateUrl({ course: value, page: 1 });
+  };
+
+  const handleSessionChange = (value: string) => {
+    updateUrl({ session: value === "all" ? null : value, page: 1 });
   };
 
   const handlePageChange = (newPage: number) => {
@@ -259,9 +266,19 @@ export default function StudentsTable({
               />
             </svg>
             Filters
-            {(initialFilters.program !== "all" || initialFilters.course !== "all") && (
+            {(initialFilters.program !== "all" ||
+              initialFilters.course !== "all" ||
+              (initialFilters.session !== "" && initialFilters.session !== "all")) && (
               <span className="ml-1 text-xs font-medium text-[#a51d31]">
-                ({[initialFilters.program !== "all", initialFilters.course !== "all"].filter(Boolean).length})
+                (
+                {
+                  [
+                    initialFilters.program !== "all",
+                    initialFilters.course !== "all",
+                    initialFilters.session !== "" && initialFilters.session !== "all",
+                  ].filter(Boolean).length
+                }
+                )
               </span>
             )}
           </button>
@@ -302,8 +319,17 @@ export default function StudentsTable({
               </div>
               <div>
                 <label className="text-foreground mb-1.5 block text-xs font-medium">Session</label>
-                <select className="bg-card border-border hover:bg-accent rounded-md border px-4 py-2 text-sm transition-colors">
-                  <option>All Sessions</option>
+                <select
+                  value={initialFilters.session && initialFilters.session !== "all" ? initialFilters.session : "all"}
+                  onChange={(e) => handleSessionChange(e.target.value)}
+                  className="bg-card border-border hover:bg-accent rounded-md border px-4 py-2 text-sm transition-colors"
+                >
+                  <option value="all">All Sessions</option>
+                  {sessions.map((session) => (
+                    <option key={session.id} value={session.id}>
+                      {session.display_name}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div>

@@ -126,3 +126,37 @@ export const getActiveSessions = cache(async (): Promise<SessionWithDetails[]> =
 
   return (data ?? []) as SessionWithDetails[];
 });
+
+/** Lightweight list for filter dropdowns: id + display_name only, no enrolled_count. */
+export interface SessionFilterOption {
+  id: number;
+  display_name: string;
+}
+
+/**
+ * Fetches active sessions for filter dropdowns. Uses sessions + course_placement join
+ * instead of sessions_with_details view to avoid per-row enrollment count subqueries.
+ */
+export const getActiveSessionsForFilter = cache(async (): Promise<SessionFilterOption[]> => {
+  const supabase = createServerSupabaseClient();
+  const { data, error } = await supabase
+    .from("sessions")
+    .select("id, quarter, year, course_placement:course_placement_id(name)")
+    .eq("status", "active")
+    .order("year", { ascending: false })
+    .order("quarter", { ascending: false });
+
+  if (error) {
+    // eslint-disable-next-line no-console
+    console.error("Failed to fetch active sessions for filter:", error.message);
+    return [];
+  }
+
+  return (data ?? []).map((row: { id: number; quarter: string; year: number; course_placement: { name: string } | null }) => {
+    const name = row.course_placement?.name ?? "";
+    return {
+      id: row.id,
+      display_name: name ? `${name} - ${row.quarter} ${row.year}` : `${row.quarter} ${row.year}`,
+    };
+  });
+});
