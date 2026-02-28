@@ -1,4 +1,4 @@
-import { getAllLookupData } from "@/lib/lookup-data";
+import { getActiveSessionsForFilter, getAllLookupData } from "@/lib/lookup-data";
 import { createServerSupabaseClient, getAuthenticatedUser } from "@/lib/server-utils";
 import { redirect } from "next/navigation";
 import StudentImportButton from "./components/StudentImportButton";
@@ -35,25 +35,34 @@ export default async function StudentsPage({
   if (sessionFilter) {
     const sessionId = parseInt(sessionFilter);
     if (!isNaN(sessionId)) {
-      // Get session info for display
-      const { data: session } = await supabase
-        .from("sessions_with_details")
-        .select("display_name")
-        .eq("id", sessionId)
-        .single();
-      if (session?.display_name) {
-        sessionInfo = { display_name: session.display_name };
+      const [sessionRes, enrollmentsRes] = await Promise.all([
+        supabase
+          .from("sessions")
+          .select("id, quarter, year, course_placement:course_placement_id(name)")
+          .eq("id", sessionId)
+          .single(),
+        supabase
+          .from("enrollments")
+          .select("student_id")
+          .eq("session_id", sessionId)
+          .eq("is_current", true)
+          .eq("status", "enrolled"),
+      ]);
+      const sessionRow = sessionRes.data as {
+        id: number;
+        quarter: string;
+        year: number;
+        course_placement: { name: string } | null;
+      } | null;
+      if (sessionRow) {
+        const name = sessionRow.course_placement?.name ?? "";
+        sessionInfo = {
+          display_name: name
+            ? `${name} - ${sessionRow.quarter} ${sessionRow.year}`
+            : `${sessionRow.quarter} ${sessionRow.year}`,
+        };
       }
-
-      // Get enrolled student IDs
-      const { data: enrollments } = await supabase
-        .from("enrollments")
-        .select("student_id")
-        .eq("session_id", sessionId)
-        .eq("is_current", true)
-        .eq("status", "enrolled");
-
-      sessionStudentIds = (enrollments ?? []).map((e) => e.student_id);
+      sessionStudentIds = (enrollmentsRes.data ?? []).map((e) => e.student_id);
     }
   }
 
@@ -75,7 +84,7 @@ export default async function StudentsPage({
       program:program_id(id, name),
       course_placement:course_placement_id(id, name)
     `,
-      { count: "exact" },
+      { count: "planned" },
     )
     .order("legal_last_name", { ascending: true })
     .range(offset, offset + ITEMS_PER_PAGE - 1);
@@ -106,9 +115,12 @@ export default async function StudentsPage({
     studentsQuery = studentsQuery.eq("course_placement_id", courseFilter);
   }
 
-  // Fetch students and lookup data in parallel
-  // getAllLookupData is cached, so it won't duplicate queries if called elsewhere
-  const [studentsResult, lookupData] = await Promise.all([studentsQuery, getAllLookupData()]);
+  // Fetch students, lookup data, and active sessions (lightweight) in parallel
+  const [studentsResult, lookupData, sessions] = await Promise.all([
+    studentsQuery,
+    getAllLookupData(),
+    getActiveSessionsForFilter(),
+  ]);
 
   const { data: students, error: studentsError, count } = studentsResult;
   const { programs, coursePlacements: courses } = lookupData;
@@ -145,7 +157,9 @@ export default async function StudentsPage({
           query,
           program: programFilter,
           course: courseFilter,
+          session: sessionFilter,
         }}
+        sessions={sessions}
       />
       {/* Import from Google Sheets button at bottom */}
       <div className="mt-10">
