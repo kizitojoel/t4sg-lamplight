@@ -1,4 +1,4 @@
-import { getAllLookupData, getActiveSessionsForFilter } from "@/lib/lookup-data";
+import { getActiveSessionsForFilter, getAllLookupData } from "@/lib/lookup-data";
 import { createServerSupabaseClient, getAuthenticatedUser } from "@/lib/server-utils";
 import { redirect } from "next/navigation";
 import StudentImportButton from "./components/StudentImportButton";
@@ -48,13 +48,18 @@ export default async function StudentsPage({
           .eq("is_current", true)
           .eq("status", "enrolled"),
       ]);
-      const sessionRow = sessionRes.data as
-        | { id: number; quarter: string; year: number; course_placement: { name: string } | null }
-        | null;
+      const sessionRow = sessionRes.data as {
+        id: number;
+        quarter: string;
+        year: number;
+        course_placement: { name: string } | null;
+      } | null;
       if (sessionRow) {
         const name = sessionRow.course_placement?.name ?? "";
         sessionInfo = {
-          display_name: name ? `${name} - ${sessionRow.quarter} ${sessionRow.year}` : `${sessionRow.quarter} ${sessionRow.year}`,
+          display_name: name
+            ? `${name} - ${sessionRow.quarter} ${sessionRow.year}`
+            : `${sessionRow.quarter} ${sessionRow.year}`,
         };
       }
       sessionStudentIds = (enrollmentsRes.data ?? []).map((e) => e.student_id);

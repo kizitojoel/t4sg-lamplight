@@ -152,11 +152,13 @@ export const getActiveSessionsForFilter = cache(async (): Promise<SessionFilterO
     return [];
   }
 
-  return (data ?? []).map((row: { id: number; quarter: string; year: number; course_placement: { name: string } | null }) => {
-    const name = row.course_placement?.name ?? "";
-    return {
-      id: row.id,
-      display_name: name ? `${name} - ${row.quarter} ${row.year}` : `${row.quarter} ${row.year}`,
-    };
-  });
+  return (data ?? []).map(
+    (row: { id: number; quarter: string; year: number; course_placement: { name: string } | null }) => {
+      const name = row.course_placement?.name ?? "";
+      return {
+        id: row.id,
+        display_name: name ? `${name} - ${row.quarter} ${row.year}` : `${row.quarter} ${row.year}`,
+      };
+    },
+  );
 });
